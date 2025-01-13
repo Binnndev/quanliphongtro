@@ -6,9 +6,7 @@ export default function Login() {
     <div className="w-full h-screen flex items-center justify-center tracking-wider">
       <div className="w-11/12 glass sm:w-5/12 md:w-3/12 text-sm glass">
         <div className="w-full text-center my-3">
-          <h2 className="text-2xl text-white font-poppins font-bold">
-            Đăng Nhập
-          </h2>
+          <h2 className="text-2xl text-white font-poppins font-bold">Login</h2>
         </div>
 
         <form className="my-2">
