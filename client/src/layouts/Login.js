@@ -41,13 +41,13 @@ export default function Login() {
 
           <div className="mx-5 my-7 py-2">
             <button className="bg-white w-full h-[35px] rounded-full text-black font-poppins font-bold">
-              Đăng Nhập
+              Login
             </button>
           </div>
 
           <Link
             to="/register"
-            className="mx-5 my-7 py-2 flex items-center justify-center cursor-pointer rounded-full"
+            className="mx-5 my-7 py-2 flex items-center justify-center cursor-pointer rounded-full font-poppins "
           >
             <p className="text-sm text-white">
               Bạn chưa có tài khoản? / Đăng kí

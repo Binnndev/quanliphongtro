@@ -7,7 +7,7 @@ export default function Register() {
       <div className="w-11/12 glass sm:w-5/12 md:w-3/12 text-sm glass">
         <div className="w-full text-center my-3">
           <h2 className="text-2xl text-white font-poppins font-bold">
-            Đăng Ký
+            Register
           </h2>
         </div>
 
@@ -47,13 +47,13 @@ export default function Register() {
 
           <div className="mx-5 my-7 py-2">
             <button className="bg-white w-full h-[35px] rounded-full text-black font-poppins font-bold">
-              Đăng Ký
+              Register
             </button>
           </div>
 
           <Link
             to="/"
-            className="mx-5 my-7 py-2 flex items-center justify-center cursor-pointer rounded-full font-poppins"
+            className="mx-5 my-7 py-2 flex items-center justify-center cursor-pointer rounded-full font-poppins "
           >
             <p className="text-sm text-white">
               Bạn đã có tài khoản? / Đăng nhập
