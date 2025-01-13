@@ -1,15 +1,20 @@
-import { Routes, Route } from "react-dom";
-import { Home, Login } from "./containers/public";
-import { path } from "./ultils/constant";
-function app() {
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import "./App.css";
+import "./index.css";
+import Register from "./layouts/Register";
+import Login from "./layouts/Login";
+
+function App() {
   return (
-    <div className="h-screen w-screen bg-primary">
-      <Routes>
-        <Route path={path.Home} element={<Home />} />
-        <Route path={path.Login} element={<Login />} />
-      </Routes>
+    <div className="w-full h-screen bg ">
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+        </Routes>
+      </BrowserRouter>
     </div>
   );
 }
 
-export default app;
+export default App;
