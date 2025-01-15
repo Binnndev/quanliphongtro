@@ -4,7 +4,7 @@ const startBrowser = async () => {
   let browser;
   try {
     browser = await puppeteer.launch({
-      headless: false,
+      headless: true,
       args: ["--disable-setuid-sanbox"],
       ignoreHTTPSErrors: true,
     });
@@ -15,4 +15,4 @@ const startBrowser = async () => {
   }
 };
 
-module.exports = startBrowser();
+module.exports = startBrowser;
