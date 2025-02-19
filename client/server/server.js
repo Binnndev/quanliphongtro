@@ -1,28 +1,35 @@
-require("dotenv").config();
-const express = require("express");
-const bodyParser = require("body-parser");
-const cors = require("cors");
+const mysql = require('mysql2');
 
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-// Middleware
-app.use(cors());
-app.use(bodyParser.json());
-
-// Kết nối MySQL với Sequelize
-const { Sequelize } = require("sequelize");
-const sequelize = new Sequelize("quanlyphongtro", "root", "1234", {
-  host: "localhost",
-  dialect: "mysql",
+const connection = mysql.createConnection({
+    host: '127.0.0.1',
+    port: 3307,  
+    user: 'admin',
+    password: 'quanlynhatro',
+    database: 'QuanLyNhaTro'
 });
 
-sequelize
-  .authenticate()
-  .then(() => console.log("Kết nối cơ sở dữ liệu thành công!"))
-  .catch((err) => console.error("Không thể kết nối cơ sở dữ liệu:", err));
+connection.connect(err => {
+    if (err) {
+        console.error('❌ Kết nối thất bại:', err);
+        return;
+    }
+    console.log('✅ Kết nối thành công đến RDS!');
 
-// Khởi chạy server
-app.listen(PORT, () => {
-  console.log(`Server đang chạy tại http://localhost:${PORT}`);
+    connection.query('SHOW TABLES;', (err, results) => {
+        if (err) {
+            console.error('❌ Truy vấn thất bại:', err);
+        } else {
+            console.log('📌 Danh sách bảng:', results);
+        }
+        connection.end();
+    });
+
+    connection.query('SELECT * FROM NhaTro;', (err, results) => {
+        if (err) {
+            console.error('❌ Truy vấn thất bại:', err);
+        } else {
+            console.log('📌 Danh sách:', results);
+        }
+        connection.end();
+    });
 });
