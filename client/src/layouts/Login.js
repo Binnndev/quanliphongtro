@@ -1,58 +1,80 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import AnimatedSignature from "../components/AnimatedSignature";
 
 export default function Login() {
-  return (
-    <div className="w-full h-screen flex items-center justify-center tracking-wider">
-      <div className="w-11/12 glass sm:w-5/12 md:w-3/12 text-sm glass">
-        <div className="w-full text-center my-3">
-          <h2 className="text-2xl text-white font-poppins font-bold">Login</h2>
-        </div>
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [errors, setErrors] = useState({});
 
-        <form className="my-2">
-          <div className="flex border b-white border-b-2 mx-5 my-7 py-1 rounded-full">
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.email || !formData.password) {
+      setErrors({ submit: "Vui lòng nhập đầy đủ email và mật khẩu." });
+      return;
+    }
+    try {
+      // Nếu cấu hình proxy được đặt trong package.json, bạn chỉ cần gọi "/api/auth/login"
+      const response = await axios.post("/api/auth/login", formData);
+      console.log("Đăng nhập thành công", response.data);
+      localStorage.setItem("token", response.data.token);
+      navigate("/");
+    } catch (error) {
+      console.error("Đăng nhập thất bại", error.response.data);
+      setErrors({ submit: error.response.data.error || "Đăng nhập thất bại" });
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center">
+      <div className="bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg rounded-xl shadow-lg p-8 w-full max-w-md">
+        <AnimatedSignature text="Đăng nhập" />
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
             <input
               type="email"
-              className="w-11/12 bg-transparent outline-none placeholder-white text-white rounded-full px-3"
-              placeholder="Địa Chỉ Email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Email"
+              className="w-full px-4 py-3 rounded-full bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-purple-400"
             />
-            <div className="w-2/12 flex items-center justify-center rounded-full">
-              <i className="fa-solid fa-envelope text-xl text-white"></i>
-            </div>
           </div>
-
-          <div className="flex border b-white border-b-2 mx-5 my-7 py-1 rounded-full">
+          <div className="mb-6">
             <input
               type="password"
-              className="w-11/12 bg-transparent outline-none placeholder-white text-white rounded-full px-3"
-              placeholder="Mật Khẩu"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Mật khẩu"
+              className="w-full px-4 py-3 rounded-full bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-purple-400"
             />
-            <div className="w-2/12 flex items-center justify-center rounded-full">
-              <i className="fa-solid fa-lock text-xl text-white"></i>
-            </div>
           </div>
-
-          <div className="mx-5 flex items-center justify-between cursor-pointer tracking-wider text-xs text-white">
-            <label className="flex items-center">
-              <input type="checkbox" className="mr-2" /> Remember me
-            </label>
-            <p>Quên Mật Khẩu</p>
-          </div>
-
-          <div className="mx-5 my-7 py-2">
-            <button className="bg-white w-full h-[35px] rounded-full text-black font-poppins font-bold">
-              Login
-            </button>
-          </div>
-
-          <Link
-            to="/register"
-            className="mx-5 my-7 py-2 flex items-center justify-center cursor-pointer rounded-full font-poppins "
+          {errors.submit && (
+            <p className="text-red-400 text-xs mb-4">{errors.submit}</p>
+          )}
+          <button
+            type="submit"
+            className="w-full py-3 bg-white text-purple-700 rounded-full font-semibold hover:bg-white hover:shadow-lg transition-all"
           >
-            <p className="text-sm text-white">
-              Bạn chưa có tài khoản? / Đăng kí
-            </p>
-          </Link>
+            Đăng nhập
+          </button>
+          <div className="mt-4 flex justify-between text-white text-sm">
+            <Link to="/forgot-password" className="hover:underline">
+              Quên mật khẩu?
+            </Link>
+            <Link
+              to="/register"
+              className="text-purple-300 font-bold hover:underline"
+            >
+              Đăng ký
+            </Link>
+          </div>
         </form>
       </div>
     </div>

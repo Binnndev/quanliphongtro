@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
+
 
 .bg {
   background-image: url('./images/background.jpg');
@@ -23,4 +25,47 @@ box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 
 .font-poppins {
   font-family: 'Poppins', sans-serif;
+}
+
+.marquee {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  animation: marquee 10s linear infinite;
+  font-family: 'Dancing Script', cursive;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.signature-text {
+  font-family: 'Great Vibes', cursive; /* Font chữ signature sang trọng */
+  font-size: 3rem;
+  font-weight: bold;
+  text-align: center;
+  position: relative;
+  display: inline-block;
+  white-space: nowrap; /* Đảm bảo chữ không xuống dòng */
+  /* Hiệu ứng gradient ánh sáng chạy qua chữ */
+  background: linear-gradient(90deg, #a0a0a0, #f0f0f0, #a0a0a0);
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: shine 3s linear infinite;
+}
+
+@keyframes shine {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
 }
