@@ -15,11 +15,11 @@ app.use(bodyParser.json());
 app.use("/api/auth", authRoutes);
 
 const connection = mysql.createConnection({
-  host: "127.0.0.1",
-  port: 3307,
-  user: "admin",
-  password: "quanlynhatro",
-  database: "QuanLyNhaTro",
+  host: process.env.DB_HOST || "127.0.0.1",
+  port: process.env.DB_PORT || 3306,
+  user: process.env.DB_USER || "admin",
+  password: process.env.DB_PASSWORD || "quanlynhatro",
+  database: process.env.DB_NAME || "QuanLyNhaTro",
 });
 
 // Phục vụ file tĩnh từ thư mục build của client
