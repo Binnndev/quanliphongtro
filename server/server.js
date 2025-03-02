@@ -14,21 +14,24 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use("/api/auth", authRoutes);
 
-app.use(express.static(path.join(__dirname, "../build")));
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../build", "index.html"));
-});
-
-app.listen(5000, () => {
-  console.log("✅ Server đang chạy tại http://localhost:5000");
-});
-
 const connection = mysql.createConnection({
   host: "127.0.0.1",
   port: 3307,
   user: "admin",
   password: "quanlynhatro",
   database: "QuanLyNhaTro",
+});
+
+// Phục vụ file tĩnh từ thư mục build của client
+app.use(express.static(path.join(__dirname, "../client/build")));
+
+// Đối với mọi route không khớp, trả về file index.html của client
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../client/build", "index.html"));
+});
+
+app.listen(5000, () => {
+  console.log("✅ Server đang chạy tại http://localhost:5000");
 });
 
 connection.connect((err) => {
