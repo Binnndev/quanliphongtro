@@ -3,20 +3,16 @@ const router = express.Router();
 const {
   register,
   login,
-  forgotPassword,
-  resetPassword,
+  verifyEmail,
 } = require("../controllers/authController");
 
-// Đăng ký
+// Endpoint đăng ký
 router.post("/register", register);
 
-// Đăng nhập
+// Endpoint đăng nhập
 router.post("/login", login);
 
-// Quên mật khẩu
-router.post("/forgot-password", forgotPassword);
-
-// Đặt lại mật khẩu
-router.post("/reset-password", resetPassword);
+// Endpoint xác thực email (token truyền qua query)
+router.get("/verify-email", verifyEmail);
 
 module.exports = router;

@@ -19,13 +19,11 @@ export default function Login() {
       return;
     }
     try {
-      // Nếu cấu hình proxy được đặt trong package.json, bạn chỉ cần gọi "/api/auth/login"
       const response = await axios.post("/api/auth/login", formData);
       console.log("Đăng nhập thành công", response.data);
       localStorage.setItem("token", response.data.token);
       navigate("/");
     } catch (error) {
-      console.error("Đăng nhập thất bại", error.response.data);
       setErrors({ submit: error.response.data.error || "Đăng nhập thất bại" });
     }
   };

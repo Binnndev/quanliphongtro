@@ -1,12 +1,10 @@
-"use strict";
-
 const fs = require("fs");
 const path = require("path");
 const Sequelize = require("sequelize");
-const process = require("process");
 const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || "development";
-const config = require(__dirname + "/../config/config.json")[env];
+// Đảm bảo đường dẫn file config đúng với cấu trúc của bạn
+const config = require(path.join(__dirname, "/../config/config.json"))[env];
 const db = {};
 
 let sequelize;
@@ -31,11 +29,10 @@ fs.readdirSync(__dirname)
     );
   })
   .forEach((file) => {
-    const modelDef = require(path.join(__dirname, file));
-    const model =
-      typeof modelDef === "function"
-        ? modelDef(sequelize, Sequelize.DataTypes)
-        : modelDef;
+    const model = require(path.join(__dirname, file))(
+      sequelize,
+      Sequelize.DataTypes
+    );
     db[model.name] = model;
   });
 
