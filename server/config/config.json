@@ -2,10 +2,10 @@
   "development": {
     "username": "admin",
     "password": "quanlynhatro",
-    "database": "quanlynhatro",
-    "host": "quanlynhatro.cv4cy2ucoenv.ap-southeast-1.rds.amazonaws.com",
-    "dialect": "mysql",
-    "port": 3306
+    "database": "QuanLyNhaTro",
+    "host": "127.0.0.1",
+    "port": 3307,
+    "dialect": "mysql"
   },
   "test": {
     "username": "root",

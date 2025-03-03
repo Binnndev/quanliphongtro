@@ -35,8 +35,8 @@ exports.register = async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: process.env.EMAIL_USER, // ví dụ: penhouse791@gmail.com
-        pass: process.env.EMAIL_PASS, // App password nếu dùng Gmail
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
       },
     });
     // Link xác minh (sử dụng CLIENT_URL từ .env, ví dụ http://localhost:3000)

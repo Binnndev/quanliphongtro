@@ -7,16 +7,25 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const authRoutes = require("./routes/auth");
+const userRoutes = require("./routes/user");
 const path = require("path");
+const db = require("./models");
 
-const guestRoutes = require("./routes/guest");
+// Khởi tạo database và đồng bộ models
+db.sequelize
+  .sync({ alter: true }) // hoặc { force: true } để xoá và tạo lại bảng (chỉ dùng trong development)
+  .then(() => {
+    console.log("✅ Đồng bộ database thành công.");
+  })
+  .catch((err) => {
+    console.error("❌ Lỗi đồng bộ database:", err);
+  });
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 app.use("/api/auth", authRoutes);
-
-app.use("/api/guests", guestRoutes);
+app.use("/api/users", userRoutes);
 
 const connection = mysql.createConnection({
   host: process.env.DB_HOST || "127.0.0.1",
@@ -63,6 +72,3 @@ connection.connect((err) => {
     connection.end();
   });
 });
-
-
-

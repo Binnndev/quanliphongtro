@@ -45,7 +45,7 @@ export default function Register() {
         username: formData.username,
         email: formData.email,
         password: formData.password,
-        role: "tenant", // Hoặc "landlord" nếu cần
+        role: "tenant",
       });
       console.log("Đăng ký thành công", response.data);
       navigate("/");
