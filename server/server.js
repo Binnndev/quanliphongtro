@@ -9,10 +9,14 @@ const bodyParser = require("body-parser");
 const authRoutes = require("./routes/auth");
 const path = require("path");
 
+const guestRoutes = require("./routes/guest");
+
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 app.use("/api/auth", authRoutes);
+
+app.use("/api/guests", guestRoutes);
 
 const connection = mysql.createConnection({
   host: process.env.DB_HOST || "127.0.0.1",
@@ -59,3 +63,6 @@ connection.connect((err) => {
     connection.end();
   });
 });
+
+
+
