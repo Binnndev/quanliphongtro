@@ -27,6 +27,9 @@ app.use(bodyParser.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 
+// Guest
+app.use("/api/guests", require("./routes/guest"));
+
 const connection = mysql.createConnection({
   host: process.env.DB_HOST || "127.0.0.1",
   port: process.env.DB_PORT || 3306,
