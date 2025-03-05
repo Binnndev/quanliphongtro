@@ -24,6 +24,8 @@ db.sequelize
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+
+// Sử dụng các route API
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 
