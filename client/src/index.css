@@ -69,3 +69,136 @@ box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
     background-position: 200% 0;
   }
 }
+
+
+.baritem {
+  margin: 10px 0;
+  width: 100%;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.baritem:hover {
+  background-color: #1F3136 !important;
+}
+
+.passenger-btn {
+  background-color: #4DD0A9;
+  border-radius: 10px;
+  color: #fff;
+  padding: 10px 20px;
+  font-weight: 600;
+}
+.passenger-btn:hover {
+  background-color: #31836a;
+}
+
+.blue-btn-item {
+  background-color: #5660EC;
+  border-radius: 10px;
+  color: #fff;
+  padding: 10px 20px;
+  font-weight: 600;
+  width: 100%;
+}
+
+.blue-btn {
+  background-color: #5660EC;
+  border-radius: 10px;
+  color: #fff;
+  padding: 10px 20px;
+  font-weight: 600;
+}
+
+.blue-btn:hover, .blue-btn-item:hover {
+  background-color: #2b3075;
+}
+
+.orange-btn {
+  background-color: #F69046;
+  border-radius: 10px;
+  color: #fff;
+  padding: 10px 20px;
+  font-weight: 600;
+  margin: 0 45px 0 20px;
+}
+
+.orange-btn:hover {
+  background-color: #794621;
+}
+
+.active-btn {
+  background-color: #fff !important;
+}
+
+.address-btn {
+  background-color: #CCCCCC;
+  border-radius: 10px;
+  color: #000;
+  padding: 10px 20px;
+  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+}
+
+.delete-btn {
+  background-color: #F64C46;
+  border-radius: 10px;
+  color: #fff;
+  padding: 10px 20px;
+  font-weight: 600;
+}
+
+.delete-btn-item {
+  background-color: #F64C46;
+  border-radius: 10px;
+  color: #fff;
+  padding: 10px 20px;
+  font-weight: 600;
+  width: 30%;
+}
+
+.delete-btn:hover, .delete-btn-item:hover {
+  background-color: #7c2623;
+}
+
+.green-btn-item:hover, .green-btn:hover {
+  background-color: #286634;
+}
+
+.green-btn {
+  background-color: #4DC864;
+  color: #fff;
+  padding: 10px 20px;
+  font-weight: 600;
+  border-radius: 10px;
+}
+.green-btn-item {
+  background-color: #4DC864;
+  color: #fff;
+  padding: 10px 20px;
+  font-weight: 600;
+  border-radius: 10px;
+  width: 60%;
+}
+
+.btn {
+  margin: 0 10px;
+  border-radius: 10px;
+}
+
+.btn-2 {
+  margin: 0 20px;
+}
+
+.address-btn:hover {
+  background-color: #fff;
+}
+
+.text-info-rents {
+  color: #000;
+  font-size: 16px;
+  margin: 0 10px;
+}
+
+.active {
+  background-color: #A9B5DF !important;
+}
