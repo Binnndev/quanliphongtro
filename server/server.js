@@ -30,7 +30,10 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 
 // Guest
-app.use("/api/guests", require("./routes/guest"));
+app.use("/api/guests", require("./routes/guests"));
+
+// Contract
+app.use("/api/contracts", require("./routes/contracts"));
 
 const connection = mysql.createConnection({
   host: process.env.DB_HOST || "127.0.0.1",

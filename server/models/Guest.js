@@ -1,10 +1,8 @@
-const { Sequelize, DataTypes, Model } = require("sequelize");
-const sequelize = require("../config/database.js");
+const { Sequelize, DataTypes } = require("sequelize");
 
 module.exports = (sequelize, DataTypes) => {
-    class Guest extends Model {}
-  
-    Guest.init(
+    const Guest = sequelize.define(
+        "Guest",
       {
         MaKH: {
           type: DataTypes.INTEGER,
@@ -55,7 +53,6 @@ module.exports = (sequelize, DataTypes) => {
       },
       {
         sequelize,
-        modelName: "Guest",
         tableName: "KhachHang", // Tên bảng trong database
         timestamps: false,
       }
