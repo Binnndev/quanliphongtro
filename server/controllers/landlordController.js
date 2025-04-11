@@ -1,4 +1,4 @@
-const { Landlord, House, Room, Tenant, User, sequelize, Sequelize } = require('../models'); // Đường dẫn có thể khác tùy cấu trúc dự án của bạn
+const { Landlord, RentalHouse, Room, Tenant, User, sequelize, Sequelize } = require('../models'); // Đường dẫn có thể khác tùy cấu trúc dự án của bạn
 const { Op } = Sequelize; // Import Op nếu bạn dùng nó để query (như trong ví dụ getLandlordTenantsWithAccount)
 
 
@@ -11,7 +11,7 @@ exports.getLandlordHouses = async (req, res) => {
             return res.status(404).send({ message: 'Không tìm thấy thông tin chủ trọ.' });
         }
 
-        const houses = await House.findAll({
+        const houses = await RentalHouse.findAll({
             where: { MaChuTro: landlord.MaChuTro },
             include: [{ // Tùy chọn: Lấy luôn danh sách phòng thuộc nhà trọ
                 model: Room,
@@ -45,8 +45,8 @@ exports.getLandlordTenantsWithAccount = async (req, res) => {
                     required: true, // INNER JOIN để đảm bảo tenant phải thuộc 1 phòng
                     attributes: ['MaPhong', 'TenPhong', 'MaNhaTro'],
                     include: [{
-                        model: House,
-                        as: 'House', // Đảm bảo alias này đúng với association trong Room model
+                        model: RentalHouse,
+                        // as: 'House', // Đảm bảo alias này đúng với association trong Room model
                         required: true, // INNER JOIN
                         attributes: ['MaNhaTro', 'TenNhaTro'],
                         where: { MaChuTro: landlord.MaChuTro } // Lọc theo nhà trọ của chủ trọ

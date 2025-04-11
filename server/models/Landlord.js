@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
   
     Landlord.associate = (models) => {
         Landlord.hasOne(models.User, { foreignKey: "MaTK" });
-        Landlord.hasMany(models.House, { foreignKey: "MaChuTro" });
+        Landlord.hasMany(models.RentalHouse, { foreignKey: "MaChuTro" });
     };
   
     return Landlord;

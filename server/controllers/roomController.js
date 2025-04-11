@@ -1,4 +1,4 @@
-const { Room, Landlord, House } = require("../models");
+const { Room, Landlord, RentalHouse } = require("../models");
 const { Op } = require("sequelize");
 
 exports.getRooms = async (req, res) => {
@@ -62,8 +62,8 @@ exports.getRoomsByLandlord = async (req, res) => {
         // 2. Tìm tất cả các phòng thuộc các nhà trọ của chủ trọ đó
         const rooms = await Room.findAll({
             include: [{
-                model: House,
-                as: 'House', // Sử dụng alias đã định nghĩa trong Room.associate
+                model: RentalHouse,
+                // as: 'House', // Sử dụng alias đã định nghĩa trong Room.associate
                 attributes: [], // Không cần lấy thông tin từ House, chỉ dùng để lọc
                 required: true, // INNER JOIN - chỉ lấy phòng nào có nhà trọ tồn tại
                 where: {
@@ -73,7 +73,7 @@ exports.getRoomsByLandlord = async (req, res) => {
             // attributes: ['MaPhong', 'TenPhong', 'MaNhaTro', 'TrangThai', 'GhiChu'], // Chọn các trường cần lấy của Room
             order: [
                 // Optional: Sắp xếp kết quả, ví dụ theo MaNhaTro rồi đến TenPhong
-                [{ model: House, as: 'House' }, 'MaNhaTro', 'ASC'],
+                [{ model: RentalHouse}, 'MaNhaTro', 'ASC'],
                 ['TenPhong', 'ASC']
             ]
         });
