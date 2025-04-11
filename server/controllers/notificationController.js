@@ -48,7 +48,7 @@ exports.createNotification = async (req, res) => {
             include: [{
                 model: User,
                 as: 'SenderAccount', // Use the correct alias
-                attributes: ['MaTK', 'HoTen', 'Avatar'] // Include desired User attributes (adjust as needed)
+                attributes: ['MaTK'] // Include desired User attributes (adjust as needed)
             }]
         });
 
@@ -120,8 +120,8 @@ exports.getNotificationById = async (req, res) => {
     try {
         const notification = await Notification.findByPk(notificationId, {
              include: [
-                 { model: User, as: 'SenderAccount', attributes: ['MaTK', 'HoTen', 'Avatar'] }, // Use User model and correct alias
-                 { model: User, as: 'ReceiverAccount', attributes: ['MaTK', 'HoTen', 'Avatar'] } // Use User model and correct alias
+                 { model: User, as: 'SenderAccount', attributes: ['MaTK'] }, // Use User model and correct alias
+                 { model: User, as: 'ReceiverAccount', attributes: ['MaTK'] } // Use User model and correct alias
              ]
         });
         if (!notification) {

@@ -77,8 +77,10 @@ module.exports = (sequelize, DataTypes) => {
         }
     );
 
-    Tenant.associate = function(models) {
-        Tenant.hasMany(models.Notification, { foreignKey: 'MaNguoiNhan', as: 'ReceivedNotifications' });
+    Tenant.associate = function (models) {
+        Tenant.belongsTo(models.Room, { foreignKey: "MaPhong", as: "Room" });
+        Tenant.belongsTo(models.User, { foreignKey: "MaTK", as: "User" });
+        Tenant.hasMany(models.Invoice, { foreignKey: "MaKhachThue", as: "Invoices" });
     };
   
     return Tenant;

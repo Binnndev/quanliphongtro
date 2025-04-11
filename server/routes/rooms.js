@@ -19,6 +19,7 @@ const upload = multer({ storage });
 // Định nghĩa các endpoint CRUD cho Room
 router.get("/", roomController.getRooms); // Lấy danh sách (có lọc trạng thái, tìm kiếm)
 router.get("/:id", roomController.getRoomById); // Lấy chi tiết 1 phòng theo ID
+router.get("/landlord/:landlordId", roomController.getRoomsByLandlord); // Lấy danh sách phòng theo chủ trọ
 router.post("/", upload.single("image"), roomController.createRoom); // Tạo phòng mới
 router.put("/:id", upload.single("image"), roomController.updateRoom); // Cập nhật phòng
 router.delete("/:id", roomController.deleteRoom); // Xóa phòng
