@@ -1,37 +1,25 @@
 module.exports = (sequelize, DataTypes) => {
-  const Room = sequelize.define(
-    "Room",
-    {
-      title: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      description: {
-        type: DataTypes.TEXT,
-        allowNull: true,
-      },
-      price: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
-      },
-      status: {
-        type: DataTypes.ENUM("vacant", "rented"),
-        defaultValue: "vacant",
-      },
-      imageUrl: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      amenities: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
+  const Room = sequelize.define("Room", {
+    MaPhong: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
     },
-    {
-      tableName: "Rooms",
-      timestamps: true,
-    }
-  );
+    TenPhong: DataTypes.STRING,
+    MaNhaTro: DataTypes.INTEGER,
+    MaLoaiPhong: DataTypes.INTEGER,
+    TrangThai: DataTypes.ENUM("Còn phòng", "Hết phòng", "Đang bảo trì"),
+    GhiChu: DataTypes.TEXT,
+  }, {
+    tableName: "Phong",
+    timestamps: false,
+  });
 
+  Room.associate = (models) => {
+    Room.belongsTo(models.RentalHouse, { foreignKey: "MaNhaTro" });
+    Room.hasMany(models.Tenant, { foreignKey: "MaPhong" });
+    Room.hasMany(models.Invoice, { foreignKey: "MaPhong" });
+  };
+  
   return Room;
 };
