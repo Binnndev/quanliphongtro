@@ -117,9 +117,9 @@ const PaymentIndex = () => {
                 <td>{item.TenNhaTro}</td>
                 <td>{item.TenPhong}</td>
                 <td>{item.TenKhachThue}</td>
-                <td>{item.TongTien.toLocaleString()}</td>
-                <td>{item.DaTra.toLocaleString()}</td>
-                <td>{item.ConLai.toLocaleString()}</td>
+                <td>{item.TongTien.toLocaleString("vi-VN")}</td>
+                <td>{item.DaTra.toLocaleString("vi-VN")}</td>
+                <td>{item.ConLai.toLocaleString("vi-VN")}</td>
                 <td>{item.TrangThaiThanhToan}</td>
                 <td>
                   <button
