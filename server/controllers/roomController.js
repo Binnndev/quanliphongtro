@@ -1,4 +1,4 @@
-const { Room } = require("../models");
+const { Room, Landlord, House } = require("../models");
 const { Op } = require("sequelize");
 
 exports.getRooms = async (req, res) => {
@@ -32,6 +32,60 @@ exports.getRoomById = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+exports.getRoomsByLandlord = async (req, res) => {
+    const landlordUserId = req.params.landlordId; // Đây là MaTK của User chủ trọ
+
+    if (!landlordUserId) {
+        return res.status(400).send({ message: "Thiếu ID của chủ trọ." });
+    }
+
+    try {
+        // 1. Tìm MaChuTro dựa vào MaTK (landlordUserId)
+        const landlord = await Landlord.findOne({
+            where: { MaTK: landlordUserId },
+            attributes: ['MaChuTro'], // Chỉ cần lấy MaChuTro
+        });
+
+        if (!landlord) {
+            // Quan trọng: Trả về mảng rỗng thay vì 404 nếu chủ trọ không tồn tại
+            // Vì React component có thể vẫn render bình thường với danh sách rỗng.
+            // Nếu muốn báo lỗi rõ ràng thì dùng 404.
+            console.log(`Không tìm thấy chủ trọ với MaTK: ${landlordUserId}`);
+            return res.status(200).json([]);
+            // Hoặc nếu muốn báo lỗi:
+            // return res.status(404).send({ message: `Không tìm thấy chủ trọ với ID ${landlordUserId}.` });
+        }
+
+        const landlordMaChuTro = landlord.MaChuTro;
+
+        // 2. Tìm tất cả các phòng thuộc các nhà trọ của chủ trọ đó
+        const rooms = await Room.findAll({
+            include: [{
+                model: House,
+                as: 'House', // Sử dụng alias đã định nghĩa trong Room.associate
+                attributes: [], // Không cần lấy thông tin từ House, chỉ dùng để lọc
+                required: true, // INNER JOIN - chỉ lấy phòng nào có nhà trọ tồn tại
+                where: {
+                    MaChuTro: landlordMaChuTro // Lọc theo MaChuTro của chủ trọ
+                }
+            }],
+            // attributes: ['MaPhong', 'TenPhong', 'MaNhaTro', 'TrangThai', 'GhiChu'], // Chọn các trường cần lấy của Room
+            order: [
+                // Optional: Sắp xếp kết quả, ví dụ theo MaNhaTro rồi đến TenPhong
+                [{ model: House, as: 'House' }, 'MaNhaTro', 'ASC'],
+                ['TenPhong', 'ASC']
+            ]
+        });
+
+        res.status(200).json(rooms);
+
+    } catch (error) {
+        console.error(`Error fetching rooms for landlord MaTK ${landlordUserId}:`, error);
+        res.status(500).send({ message: "Lỗi xảy ra khi lấy danh sách phòng." });
+    }
+};
+
 
 exports.createRoom = async (req, res) => {
   try {

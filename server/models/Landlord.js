@@ -3,14 +3,16 @@ module.exports = (sequelize, DataTypes) => {
       MaChuTro: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
       HoTen: DataTypes.STRING,
       Email: DataTypes.STRING,
-      SoDienThoai: DataTypes.STRING,
+        SoDienThoai: DataTypes.STRING,
+      MaTK: DataTypes.INTEGER,
     }, {
       tableName: "ChuTro",
       timestamps: false,
     });
   
     Landlord.associate = (models) => {
-      Landlord.hasMany(models.RentalHouse, { foreignKey: "MaChuTro" });
+        Landlord.hasOne(models.User, { foreignKey: "MaTK" });
+        Landlord.hasMany(models.House, { foreignKey: "MaChuTro" });
     };
   
     return Landlord;

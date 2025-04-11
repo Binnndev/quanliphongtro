@@ -41,6 +41,9 @@ app.use(bodyParser.json());
 // Sử dụng các route API
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/rooms", require("./routes/rooms"));
+app.use("/api/houses", require("./routes/houses"));
+app.use("/api/landlords", require("./routes/landlords"));
 // Tenant
 app.use("/api/tenants", require("./routes/tenants"));
 
