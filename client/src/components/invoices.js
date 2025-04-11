@@ -51,7 +51,7 @@ const Invoice = ({ isOpen, onClose, invoiceData }) => {
           </table>
 
           <div className="total" style={{ marginTop: 10 }}>
-            <strong>TỔNG CỘNG:</strong> {invoiceData.tongTien.toLocaleString()} đ
+            <strong>TỔNG CỘNG:</strong> {invoiceData.tongTien.toLocaleString("vi-VN")} đ
             <p className="text-italic">(Bằng chữ: {invoiceData.bangChu})</p>
           </div>
 
