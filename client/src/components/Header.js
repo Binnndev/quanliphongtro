@@ -8,7 +8,7 @@ import UserGreeting from './UserGreeting';
 
 const Header = () => {
     return (
-        <div style={{ width: '80%', height: 83, right: 0, top: 0, position: 'fixed', background: 'white', borderBottom: '1px #D2D2D2 solid' }}>
+        <div className='control-content' style={{ width: '80%', height: 83, right: 0, top: 0, position: 'fixed', background: 'white', borderBottom: '1px #D2D2D2 solid' }}>
             <SearchBar />
             <StatusRoom />
             <StatusFee />

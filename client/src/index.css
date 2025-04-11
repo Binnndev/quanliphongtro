@@ -82,6 +82,12 @@ box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
   background-color: #1F3136 !important;
 }
 
+.baritem-icon {
+  color: #fff;
+  text-align: center;
+  font-size: 20px;
+}
+
 .passenger-btn {
   background-color: #4DD0A9;
   border-radius: 10px;
@@ -254,4 +260,488 @@ box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 
 .active {
   background-color: #A9B5DF !important;
+}
+
+@media (max-width: 1344px) {
+  .control-content {
+      width: 75% !important;
+  }
+}
+
+/* Overlay */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+/* Popup box */
+.popup-box {
+  background: white;
+  width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 0 10px #555;
+  position: relative;
+}
+
+/* Header */
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 10px;
+}
+.popup-header h2 {
+  margin: 0;
+  color: #1d4ed8;
+}
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: red;
+  cursor: pointer;
+}
+
+/* Content */
+.popup-content {
+  margin-top: 15px;
+  font-size: 14px;
+  color: #333;
+}
+.invoice-table {
+  width: 100%;
+  margin-top: 15px;
+  border-collapse: collapse;
+}
+.invoice-table td {
+  padding: 5px 0;
+}
+.text-right {
+  text-align: right;
+}
+.total {
+  margin-top: 15px;
+  font-weight: bold;
+  color: green;
+}
+.text-italic {
+  font-style: italic;
+  font-weight: normal;
+  color: #666;
+  font-size: 13px;
+}
+
+/* Bank info */
+.bank-info {
+  margin-top: 20px;
+  font-size: 13px;
+  color: #444;
+}
+
+/* Actions */
+.popup-actions {
+  margin-top: 20px;
+  text-align: right;
+}
+.btn {
+  padding: 8px 16px;
+  margin-left: 10px;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  cursor: pointer;
+}
+.btn.blue {
+  background: #2563eb;
+}
+.btn.cyan {
+  background: #0891b2;
+}
+.btn.red {
+  background: #dc2626;
+}
+
+.electric-water {
+  padding: 20px;
+  background: white;
+  border-radius: 10px;
+  width: 98%;
+  margin: 20px auto;
+}
+
+.electric-water__title {
+  color: #0d6efd;
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+.electric-water__month {
+  font-size: 14px;
+  margin-bottom: 15px;
+}
+
+.electric-water__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.electric-water__table th,
+.electric-water__table td {
+  padding: 8px;
+  text-align: center;
+  border: 1px solid #ccc;
+}
+
+.electric-water__input {
+  width: 80px;
+  padding: 5px;
+}
+
+.electric-water__button-save {
+  padding: 6px 12px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* payment */
+
+.invoice__wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center; /* căn giữa ngang */
+  align-items: flex-start;     /* căn giữa dọc */
+  padding: 20px;
+}
+
+.invoice__container {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  width: 100%;
+  max-width: 100%;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.invoice__table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.invoice__table thead {
+  background-color: #f5f5f5;
+  font-weight: 600;
+}
+
+.invoice__table th,
+.invoice__table td {
+  border-width: 1px;
+  border: 1px solid #ccc;
+  padding: 10px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+/* Nút hành động cơ bản */
+.invoice__action {
+  margin: 0 4px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* Màu theo modifier */
+.invoice__action--view {
+  background-color: #3498db;
+}
+
+.invoice__action--save {
+  background-color: #7f8c8d;
+}
+
+.invoice__action--pay {
+  background-color: #2ecc71;
+}
+
+.invoice__action--delete {
+  background-color: #e74c3c;
+}
+.service {
+  width: 98%;
+  padding: 20px;
+  margin: 15px 0;
+  background-color: #fff;
+  border-radius: 10px;
+}
+
+.service__title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.service__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 16px;
+}
+
+.service__row--head {
+  background-color: #f5f5f5;
+}
+
+.service__row {
+  border-bottom: 1px solid #ddd;
+}
+
+.service__cell {
+  padding: 12px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.service__cell--header {
+  font-weight: bold;
+}
+.modal-dichvu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.modal-dichvu__content {
+  width: 400px;
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.modal-dichvu__title {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.modal-dichvu__field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+}
+
+.modal-dichvu__field input,
+.modal-dichvu__field select {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.modal-dichvu__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.modal-dichvu__btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.modal-dichvu__btn--save {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.modal-dichvu__btn--cancel {
+  background-color: #ccc;
+}
+.service__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.service__btn-add {
+  padding: 8px 16px;
+  border-radius: 6px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.service__btn-edit {
+  padding: 4px 10px;
+  border-radius: 4px;
+  background-color: #f39c12;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+.service__btn-delete {
+  padding: 4px 10px;
+  margin-left: 5px;
+  border-radius: 4px;
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+.confirm-modal {
+  position: fixed;
+  z-index: 1000;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.confirm-modal__content {
+  width: 350px;
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+}
+
+.confirm-modal__title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.confirm-modal__message {
+  margin-bottom: 20px;
+  font-size: 16px;
+}
+
+.confirm-modal__actions {
+  display: flex;
+  justify-content: space-around;
+}
+
+.confirm-modal__btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.confirm-modal__btn--yes {
+  background-color: #27ae60;
+  color: white;
+}
+
+.confirm-modal__btn--no {
+  background-color: #bdc3c7;
+}
+.popup-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.popup-box {
+  background: white;
+  padding: 20px 30px;
+  border-radius: 10px;
+  width: 400px;
+  max-width: 90%;
+}
+
+.btn.green {
+  background: #27ae60;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn.gray {
+  background: #ccc;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.dien-nuoc__modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.dien-nuoc__modal-box {
+  background: white;
+  padding: 20px 30px;
+  border-radius: 10px;
+  width: 400px;
+  max-width: 90%;
+}
+
+.dien-nuoc__modal-title {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.dien-nuoc__modal-message {
+  font-size: 14px;
+  margin-bottom: 15px;
+}
+
+.dien-nuoc__button {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.dien-nuoc__button--close {
+  background: #aaa;
+  color: white;
 }
