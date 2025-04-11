@@ -15,14 +15,36 @@ module.exports = (sequelize, DataTypes) => {
                 type: DataTypes.DATE,
                 allowNull: false,
             },
-            MaKH: {
-                type: DataTypes.INTEGER,
-                allowNull: false,
-            },
             MaPhong: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
             },
+            NgayLap: {
+                type: DataTypes.DATE,
+                allowNull: false,
+            },
+            
+            TienCoc: {
+                type: DataTypes.INTEGER,
+                allowNull: false,
+            },
+            TrangThai: {
+                type: DataTypes.ENUM("Có hiệu lực", "Hết hiệu lực", "Đã hủy"),
+                defaultValue: "Có hiệu lực",
+            },
+            MaKhachThue: {
+                type: DataTypes.INTEGER,
+                allowNull: false,
+                references: {
+                    model: "KhachThue",
+                    key: "MaKhachThue",
+                },
+            },
+            FileHopDong: {
+                type: DataTypes.STRING,
+                allowNull: false,
+            },
+            
         
         },
         {
@@ -30,5 +52,11 @@ module.exports = (sequelize, DataTypes) => {
             tableName: "HopDong",
             timestamps: false,
         });
+    
+        Contract.associate = function(models) {
+            // Định nghĩa association ở đây nếu cần
+            Contract.belongsTo(models.Tenant, { foreignKey: 'MaKhachThue' }); // Đặt alias nếu muốn
+          };
+        
     return Contract;
 };

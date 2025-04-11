@@ -29,11 +29,14 @@ app.use(bodyParser.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 
-// Guest
-app.use("/api/guests", require("./routes/guests"));
+// Tenant
+app.use("/api/tenants", require("./routes/tenants"));
 
 // Contract
 app.use("/api/contracts", require("./routes/contracts"));
+
+// Notification
+app.use("/api/notifications", require("./routes/notifications"));
 
 const connection = mysql.createConnection({
   host: process.env.DB_HOST || "127.0.0.1",
@@ -45,6 +48,9 @@ const connection = mysql.createConnection({
 
 // Phục vụ file tĩnh từ thư mục build của client
 app.use(express.static(path.join(__dirname, "../client/build")));
+
+// *** THÊM DÒNG NÀY: Phục vụ file tĩnh từ thư mục uploads (hoặc thư mục chứa ảnh của bạn) ***
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // '/uploads' là URL prefix, 'uploads' là tên thư mục
 
 // Đối với mọi route không khớp, trả về file index.html của client
 app.get("*", (req, res) => {

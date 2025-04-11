@@ -4,6 +4,10 @@ import Register from "./layouts/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Homepage from "./pages/homepage";
+import Renter from "./pages/Renter";
+import SendNotificationPage from "./pages/SendNotificationPage";
+import TenantDashboardPage from "./pages/TenantDashboardPage";
+
 
 function App() {
   return (
@@ -14,6 +18,10 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/homepage" element={<Homepage />} />
+              <Route path="/room/:roomId/tenants" element={<Renter />} />
+              
+              <Route path="/notifications/send" element={<SendNotificationPage />} />
+        <Route path="/tenant/notifications" element={<TenantDashboardPage />} />
       </Routes>
     </BrowserRouter>
   );

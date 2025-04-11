@@ -1,0 +1,352 @@
+const { Tenant } = require("../models");
+const fs = require('fs');
+const path = require('path'); // Giữ lại path nếu cần dùng ở chỗ khác
+
+// 🟢 Lấy danh sách khách thuê
+exports.getAllTenants = async (req, res) => {
+    try {
+        const tenants = await Tenant.findAll();
+        res.json(tenants);
+    } catch (error) {
+        console.error("❌ Lỗi khi lấy danh sách khách:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// 🟢 Lấy thông tin khách theo ID
+exports.getTenantById = async (req, res) => {
+    try {
+        const tenant = await Tenant.findByPk(req.params.id);
+        if (!tenant) {
+            return res.status(404).json({ message: "Không tìm thấy khách hàng" });
+        }
+        res.json(tenant);
+    } catch (error) {
+        console.error("❌ Lỗi khi lấy thông tin khách:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// 🟢 Lấy thông tin khách theo phòng
+exports.getTenantByRoom = async (req, res) => {
+    try {
+        const tenants = await Tenant.findAll({
+            where: { MaPhong: req.params.roomId }
+        });
+        res.json(tenants);
+    } catch (error) {
+        console.error("❌ Lỗi khi lấy thông tin khách:", error);
+        res.status(500).json({ message: error.message });
+    }
+}
+
+// 🟢 Lấy thông tin khách theo giới tính
+exports.getTenantByGender = async (req, res) => {
+    try {
+        const tenants = await Tenant.findAll({
+            where: { GioiTinh: req.params.sex }
+        });
+        res.json(tenants);
+    } catch (error) {
+        console.error("❌ Lỗi khi lấy thông tin khách:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// 🟢 Lấy thông tin đại diện theo phòng
+exports.getRepresentativeByRoom = async (req, res) => {
+    try {
+        const tenant = await Tenant.findOne({
+            where: { MaPhong: req.params.roomId, LaNguoiDaiDien: true, TrangThai: "Đang thuê" }
+        });
+
+        if (!tenant) {
+            return res.status(404).json({ message: "Không tìm thấy đại diện phòng" });
+        }
+
+        res.json(tenant);
+    } catch (error) {
+        console.error("❌ Lỗi khi lấy thông tin đại diện:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// 🟢 Lấy danh sách thành viên theo phòng
+exports.getMembersByRoom = async (req, res) => {
+    try {
+        const tenants = await Tenant.findAll({
+            where: { MaPhong: req.params.roomId, LaNguoiDaiDien: false, TrangThai: "Đang thuê" }
+        });
+        res.json(tenants);
+    } catch (error) {
+        console.error("❌ Lỗi khi lấy danh sách thành viên:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// 🟢 Cập nhật thông tin khách
+exports.updateTenant = async (req, res) => {
+    const tenantId = req.params.id;
+    try {
+        const tenant = await Tenant.findByPk(tenantId);
+        if (!tenant) {
+            // Nếu có file mới upload nhưng không tìm thấy khách, xóa file đó đi
+            if (req.file) {
+                 fs.unlink(req.file.path, (err) => {
+                     if (err) console.error("❌ Lỗi khi xóa file upload thừa:", err);
+                 });
+            }
+            return res.status(404).json({ message: "Không tìm thấy khách hàng" });
+        }
+
+        // 1. Lấy dữ liệu từ req.body (đã được multer xử lý)
+        //    Lưu ý: tên key trong req.body phải khớp với tên cột trong Model
+        const updateData = {
+            HoTen: req.body.HoTen,
+            CCCD: req.body.CCCD,
+            SoDienThoai: req.body.SoDienThoai,
+            Email: req.body.Email ? req.body.Email : null, // Nếu có trường này trong body
+            NgaySinh: req.body.NgaySinh ? new Date(req.body.NgaySinh) : null, // Chuyển đổi date string
+            GioiTinh: req.body.GioiTinh,
+            NgayThue: req.body.NgayThue ? new Date(req.body.NgayThue) : null, // Giả sử có cột NgayThue
+            GhiChu: req.body.GhiChu,
+            TrangThai: req.body.TrangThai,
+            LaNguoiDaiDien: req.body.LaNguoiDaiDien === 'true', // Chuyển đổi từ string sang boolean
+            AnhGiayTo: req.body.AnhGiayTo // Nếu có trường này trong body
+        };
+
+        // 2. Kiểm tra nếu có file ảnh mới được upload
+        let oldPhotoPath = tenant.AnhGiayTo ? path.join('uploads', tenant.AnhGiayTo) : null; // Lưu đường dẫn ảnh cũ
+
+        if (req.file) {
+            console.log("📁 Có file mới:", req.file.filename);
+            updateData.AnhGiayTo = req.file.filename; // Cập nhật tên file ảnh mới vào data
+        } else {
+             // Nếu không có file mới, giữ nguyên ảnh cũ (không cần làm gì với updateData.AnhGiayTo)
+             console.log("🚫 Không có file mới.");
+        }
+
+        // Loại bỏ các trường undefined hoặc null khỏi updateData để tránh ghi đè không mong muốn
+        Object.keys(updateData).forEach(key => (updateData[key] === undefined || updateData[key] === null) && delete updateData[key]);
+
+        // 3. Thực hiện cập nhật
+        await tenant.update(updateData);
+
+        // 4. (Tùy chọn) Xóa ảnh cũ nếu có ảnh mới và ảnh cũ tồn tại
+        if (req.file && oldPhotoPath) {
+            // Kiểm tra file cũ có tồn tại không trước khi xóa
+            fs.access(oldPhotoPath, fs.constants.F_OK, (err) => {
+                if (!err) {
+                    // File tồn tại, tiến hành xóa
+                    fs.unlink(oldPhotoPath, (unlinkErr) => {
+                        if (unlinkErr) {
+                            console.error("❌ Lỗi khi xóa ảnh cũ:", oldPhotoPath, unlinkErr);
+                        } else {
+                            console.log("🗑️ Đã xóa ảnh cũ:", oldPhotoPath);
+                        }
+                    });
+                } else {
+                    console.log("ℹ️ Không tìm thấy file ảnh cũ để xóa:", oldPhotoPath);
+                }
+            });
+        }
+
+        // Lấy lại thông tin tenant sau khi update để trả về (bao gồm cả tên file ảnh mới nếu có)
+        const updatedTenant = await Tenant.findByPk(tenantId);
+
+        res.json({ message: "Cập nhật thành công", tenant: updatedTenant });
+
+    } catch (error) {
+        console.error("❌ Lỗi khi cập nhật thông tin khách:", error);
+        // Nếu có lỗi trong quá trình xử lý DB mà đã upload file, hãy xóa file đó đi
+        if (req.file) {
+             fs.unlink(req.file.path, (err) => {
+                 if (err) console.error("❌ Lỗi khi xóa file upload do lỗi DB:", err);
+             });
+        }
+        // Nếu lỗi là do validation của Sequelize hoặc multer file filter
+        if (error.name === 'SequelizeValidationError' || error.message.includes('Chỉ chấp nhận file ảnh')) {
+             res.status(400).json({ message: error.message });
+        } else {
+             res.status(500).json({ message: "Lỗi máy chủ khi cập nhật thông tin khách." });
+        }
+    }
+};
+
+// 🟢 Thêm khách mới
+exports.addTenant = async (req, res) => {
+    try {
+        // Log cả body và file để debug
+        console.log("📌 Dữ liệu body nhận được:", req.body);
+        console.log("📁 File nhận được:", req.file); // Kiểm tra xem multer đã xử lý file chưa
+
+        // Lấy các trường text từ req.body
+        const { MaPhong, HoTen, MaTK, CCCD, SoDienThoai, Email, NgaySinh, GioiTinh, GhiChu, LaNguoiDaiDien, TrangThai } = req.body;
+
+        // --- Validation được cải thiện ---
+        // Kiểm tra các trường text bắt buộc từ body
+        // (Bỏ AnhGiayTo ra khỏi check này)
+        if (!HoTen || !CCCD || !SoDienThoai || !MaPhong || !NgaySinh || !GioiTinh ) {
+            // Thông báo lỗi chính xác hơn cho các trường text
+            return res.status(400).json({ message: "Vui lòng điền đầy đủ thông tin bắt buộc: Họ tên, CCCD, Số điện thoại, Mã phòng, Ngày sinh, Giới tính." });
+        }
+
+        // Kiểm tra xem file có được upload bởi multer không
+        if (!req.file) {
+             // Thông báo lỗi cụ thể khi thiếu file
+            return res.status(400).json({ message: "Vui lòng tải lên ảnh giấy tờ." });
+        }
+
+        // Lấy tên file từ kết quả của multer
+        const anhGiayToFilename = req.file.filename;
+
+        // --- Tạo bản ghi Tenant ---
+        const tenant = await Tenant.create({
+            MaPhong, // Nên đảm bảo MaPhong là kiểu dữ liệu đúng (số?)
+            HoTen,
+            MaTK: MaTK || null, // Cho phép MaTK là tùy chọn
+            CCCD,
+            SoDienThoai,
+            Email: Email || null, // Cho phép Email là tùy chọn
+            NgaySinh, // Đảm bảo định dạng ngày gửi lên tương thích hoặc xử lý ở đây
+            GioiTinh,
+            GhiChu: GhiChu || null, // Cho phép GhiChu là tùy chọn
+            AnhGiayTo: anhGiayToFilename, // *** Dùng tên file từ req.file ***
+            // Chuyển đổi giá trị từ FormData (thường là string) nếu cần
+            LaNguoiDaiDien: LaNguoiDaiDien === 'true' ? true : false,
+            TrangThai: TrangThai || 'Đang thuê' // Dùng trạng thái gửi lên hoặc mặc định
+        });
+
+        res.status(201).json(tenant); // Trả về 201 Created và dữ liệu khách mới
+
+    } catch (error) {
+        console.error("❌ Lỗi khi tạo khách mới:", error);
+
+        // --- Xử lý dọn dẹp file nếu có lỗi xảy ra sau khi upload ---
+        if (req.file) {
+            fs.unlink(req.file.path, (err) => { // Xóa file đã upload nếu có lỗi DB
+                if (err) console.error("❌ Lỗi khi xóa file upload do lỗi DB:", err);
+                else console.log("🗑️ Đã xóa file upload do lỗi DB:", req.file.path);
+            });
+        }
+
+        // --- Xử lý các loại lỗi cụ thể ---
+        // Lỗi validation từ Sequelize (ví dụ: unique constraint)
+         if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
+             const messages = error.errors.map(e => e.message); // Lấy thông báo lỗi cụ thể
+             return res.status(400).json({ message: messages.join(', ') }); // Trả về lỗi 400 với thông báo
+         }
+
+        // Các lỗi máy chủ khác
+        res.status(500).json({ message: "Lỗi máy chủ khi tạo khách mới." });
+    }
+};
+
+// 🟢 "Xoá" khách (Thực chất là cập nhật trạng thái thành 'Đã rời đi')
+exports.deleteTenant = async (req, res) => {
+    try {
+        const tenant = await Tenant.findByPk(req.params.id);
+        if (!tenant) {
+            return res.status(404).json({ message: "Không tìm thấy khách hàng" });
+        }
+
+        // --- Thay đổi ở đây ---
+        // Thay vì tenant.destroy(), cập nhật trạng thái
+        const currentDate = new Date(); // Lấy ngày giờ hiện tại
+        await tenant.update({
+            NgayRoiDi: currentDate,     // Cập nhật ngày rời đi
+            TrangThai: 'Đã rời đi'     // Đồng thời cập nhật trạng thái (tùy chọn nhưng nên làm)
+        });
+
+        console.log(`✅ Đã cập nhật trạng thái khách ID ${req.params.id} thành 'Đã rời đi'.`);
+        // Trả về thông báo thành công (hoặc có thể trả về chính tenant đã cập nhật nếu muốn)
+        res.json({ message: "Đã cập nhật trạng thái khách thành 'Đã rời đi' thành công" });
+        // --- Kết thúc thay đổi ---
+
+    } catch (error) {
+        console.error("❌ Lỗi khi cập nhật trạng thái khách hàng:", error);
+        res.status(500).json({ message: "Lỗi máy chủ khi cập nhật trạng thái khách hàng." });
+    }
+};
+
+// ⭐⭐⭐ HÀM MỚI: Thay đổi người đại diện phòng ⭐⭐⭐
+exports.changeRoomRepresentative = async (req, res) => {
+    const { roomId, newRepresentativeTenantId } = req.body; // Lấy roomId và ID người mới từ body
+    let transaction;
+
+    try {
+        // Validate input
+        if (!roomId || !newRepresentativeTenantId) {
+            return res.status(400).json({ message: "Thiếu thông tin Phòng hoặc Người đại diện mới." });
+        }
+
+        transaction = await sequelize.transaction();
+
+        // 1. Tìm người đại diện mới được chọn (phải đang ở trong phòng và đang thuê)
+        const newRep = await Tenant.findOne({
+            where: {
+                MaKhachThue: newRepresentativeTenantId,
+                MaPhong: roomId,
+                NgayRoiDi: null // Phải đang thuê
+            },
+            transaction
+        });
+        if (!newRep) {
+            await transaction.rollback();
+            return res.status(404).json({ message: "Không tìm thấy người thuê được chọn làm đại diện mới trong phòng này hoặc họ đã rời đi." });
+        }
+        if (newRep.LaNguoiDaiDien) {
+             await transaction.rollback();
+             return res.status(400).json({ message: "Người này hiện đã là người đại diện rồi." });
+        }
+
+
+        // 2. Tìm và bỏ trạng thái đại diện của người cũ (nếu có) trong cùng phòng
+        const [updateCount] = await Tenant.update(
+            { LaNguoiDaiDien: false },
+            {
+                where: {
+                    MaPhong: roomId,
+                    LaNguoiDaiDien: true,
+                    NgayRoiDi: null // Chỉ tìm người đang thuê
+                    // Không cần loại trừ newRep vì nó đang là false
+                },
+                transaction
+            }
+        );
+        console.log(`Đã bỏ đại diện ${updateCount} người cũ trong phòng ${roomId}.`);
+
+        // 3. Cập nhật người mới thành đại diện
+        await newRep.update({ LaNguoiDaiDien: true }, { transaction });
+        console.log(`Đã đặt tenant ${newRepresentativeTenantId} làm đại diện mới cho phòng ${roomId}.`);
+
+        // 4. Commit transaction
+        await transaction.commit();
+        console.log("✅ Transaction đổi đại diện committed.");
+
+        res.json({ message: `Đã đổi người đại diện phòng ${roomId} thành công.` });
+
+    } catch (error) {
+        console.error(`❌ Lỗi khi đổi người đại diện phòng ${roomId}:`, error);
+        if (transaction) await transaction.rollback();
+        console.log("⏪ Transaction đổi đại diện rolled back.");
+        res.status(500).json({ message: error.message || "Lỗi máy chủ khi đổi người đại diện." });
+    }
+};
+
+// 🟢 Tìm kiếm khách theo tên
+exports.searchTenantByName = async (req, res) => {
+    try {
+        const tenants = await Tenant.findAll({
+            where: {
+                TenKH: {
+                    [Op.like]: `%${req.query.name}%`
+                }
+            }
+        });
+        res.json(tenants);
+    } catch (error) {
+        console.error("❌ Lỗi khi tìm kiếm khách hàng:", error);
+        res.status(500).json({ message: error.message });
+    }
+}

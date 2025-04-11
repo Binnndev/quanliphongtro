@@ -2,36 +2,35 @@ module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define(
     "User",
     {
-      username: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,
-      },
-      email: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,
-        validate: { isEmail: true },
-      },
-      password: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      role: {
-        type: DataTypes.ENUM("admin", "owner", "tenant"),
-        defaultValue: "tenant",
-      },
-      emailToken: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      emailVerified: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
-      },
+      MaTK: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+        },
+        TenDangNhap: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            unique: true,
+        },
+        MatKhau: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+        LoaiTaiKhoan: {
+            type: DataTypes.ENUM("Chủ trọ", "Khách thuê"),
+            allowNull: false,
+        },
+        TrangThai: {
+            type: DataTypes.ENUM("Kích hoạt", "Vô hiệu hóa", "Chờ duyệt", "Tạm khóa"),
+            allowNull: false,
+        },
+        NgayTao: {
+            type: DataTypes.DATE,
+            defaultValue: DataTypes.NOW,
+        }
     },
     {
-      tableName: "Users",
+      tableName: "TaiKhoan",
       timestamps: true,
       hooks: {
         beforeCreate: async (user) => {
@@ -44,7 +43,8 @@ module.exports = (sequelize, DataTypes) => {
 
   // Định nghĩa các associations nếu cần
   User.associate = function (models) {
-    // Ví dụ: User.hasMany(models.Post);
+    User.hasMany(models.Notification, { foreignKey: 'MaNguoiGui', as: 'SentNotifications' });
+     User.hasMany(models.Notification, { foreignKey: 'MaNguoiNhan', as: 'ReceivedNotifications' });
   };
 
   return User;
