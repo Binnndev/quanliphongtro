@@ -76,13 +76,10 @@ module.exports = (sequelize, DataTypes) => {
             timestamps: false,
         }
     );
-<<<<<<< HEAD
 
     Tenant.associate = function(models) {
         Tenant.hasMany(models.Notification, { foreignKey: 'MaNguoiNhan', as: 'ReceivedNotifications' });
     };
-=======
->>>>>>> 5b93809faeffe45ff3f42a64ba051338fd1799fa
   
     return Tenant;
   };
