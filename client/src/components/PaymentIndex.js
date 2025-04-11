@@ -31,9 +31,12 @@ const PaymentIndex = () => {
         axios.get(`/api/invoice-detail/${maHoaDon}`),
       ]);
 
-      const invoice = invoiceRes.data;
+        const invoice = invoiceRes.data;
+        console.log("detailRes", detailRes.data);
       const chiTietDichVu = detailRes.data.map((ct) => ({
-        moTa: `Dịch vụ #${ct.MaDV}`,
+          moTa: ct.Service?.TenDV || `Dịch vụ #${ct.MaDV}`,
+          soLuong: ct.SoLuong,
+            donGia: ct.DonGia,
         gia: ct.ThanhTien,
       }));
 
@@ -48,9 +51,7 @@ const PaymentIndex = () => {
           year: "numeric",
         }),
         danhSachChiTiet: [
-          { moTa: "Tiền nhà", gia: invoice.TienPhong },
-          { moTa: "Tiền điện", gia: invoice.TienDien },
-          { moTa: "Tiền nước", gia: invoice.TienNuoc },
+          { moTa: "Tiền nhà", soLuong: 1, donGia: invoice.TienPhong, gia: invoice.TienPhong },
           ...chiTietDichVu,
         ],
         tongTien: invoice.TongTien,
