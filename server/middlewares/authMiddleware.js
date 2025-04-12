@@ -31,3 +31,16 @@ exports.authorize = (roles = []) => {
     },
   ];
 };
+
+exports.getUserRole = (req, res, next) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).json({ error: "Không có token" });
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.role = decoded.loaiTaiKhoan; // Chủ Trọ | Khách Thuê
+    req.userId = decoded.id;
+    next();
+  } catch (err) {
+    return res.status(403).json({ error: "Token không hợp lệ" });
+  }
+};
