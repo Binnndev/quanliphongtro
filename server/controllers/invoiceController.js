@@ -1,5 +1,5 @@
-const { Invoice, InvoiceDetail, Service, Tenant, Room, RentalHouse, Landlord, PaymentDetail } = require("../models");
-
+const { Invoice, InvoiceDetail, Service, Room, RentalHouse, Landlord, Tenant, ElectricWater, PaymentDetail  } = require("../models");
+const { Op } = require("sequelize");
 
 exports.getAll = async (req, res) => {
   try {
@@ -114,6 +114,31 @@ exports.getById = async (req, res) => {
       return res.status(404).json({ error: "Không tìm thấy hóa đơn" });
     }
 
+    const dienNuocList = await ElectricWater.findAll({
+      where: {
+        MaPhong: invoice.MaPhong,
+        NgayGhi: {
+          [Op.lte]: invoice.NgayLap,
+        },
+      },
+    });
+    const danhSachChiTiet = invoice.InvoiceDetails.map((item) => {
+      const tenDV = item.Service?.TenDV?.toLowerCase();
+      const dienNuoc = dienNuocList.find((dn) =>
+        (tenDV.includes("điện") && dn.Loai === "Điện") ||
+        (tenDV.includes("nước") && dn.Loai === "Nước")
+      );
+
+      return {
+        moTa: item.Service?.TenDV || `Dịch vụ #${item.MaDV}`,
+        chiSoDau: dienNuoc?.ChiSoDau || "",
+        chiSoCuoi: dienNuoc?.ChiSoCuoi || "",
+        soLuong: item.SoLuong,
+        donGia: item.DonGia?.toLocaleString("vi-VN") + " đ",
+        gia: item.ThanhTien?.toLocaleString("vi-VN") + " đ",
+      };
+    });
+
     const totalPaid = invoice.PaymentDetails.reduce(
       (sum, p) => sum + parseFloat(p.SoTien),
       0
@@ -138,12 +163,7 @@ exports.getById = async (req, res) => {
       ConLai: conLai,
       TrangThaiThanhToan:
         totalPaid >= invoice.TongTien ? "Đã thanh toán" : "Chưa thanh toán",
-        danhSachChiTiet: invoice.InvoiceDetails.map((item) => ({
-          moTa: item.Service?.TenDV || `Dịch vụ #${item.MaDV}`,
-          soLuong: item.SoLuong,
-          donGia: item.DonGia,
-          gia: item.ThanhTien,
-        })),
+        danhSachChiTiet,
     };
     console.log("🎯 Kiểm tra JOIN:");
     invoice.InvoiceDetails.forEach((item, i) => {
