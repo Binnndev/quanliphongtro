@@ -1,6 +1,23 @@
-import React from "react";
+import html2pdf from "html2pdf.js";
+import InvoicePrintView from "./InvoicePrintView"; // đường dẫn đúng
+import React, { useRef } from "react";
 
 const Invoice = ({ isOpen, onClose, invoiceData, onSend, isSending }) => {
+  const printRef = useRef();
+
+const handleDownloadPDF = () => {
+  const fileName = `${invoiceData.nha}_${invoiceData.phong}.pdf`;
+
+  html2pdf()
+    .set({
+      margin: 10,
+      filename: fileName,
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+    })
+    .from(printRef.current)
+    .save();
+};
   if (!isOpen || !invoiceData) return null;
 
     // Hàm xử lý khi nhấn nút "Gửi hóa đơn"
@@ -73,11 +90,14 @@ const Invoice = ({ isOpen, onClose, invoiceData, onSend, isSending }) => {
         </div>
 
         <div className="popup-actions">
-          <button className="btn blue">Tải file</button>
+          <button className="btn blue" onClick={handleDownloadPDF}>Tải file</button>
                   <button onClick={handleSendClick} disabled={isSending} className="btn cyan">Gửi hóa đơn</button>
           <button onClick={onClose} className="btn red">Đóng</button>
         </div>
       </div>
+      <div style={{ display: "none" }}>
+  <InvoicePrintView ref={printRef} invoiceData={invoiceData} />
+</div>
     </div>
   );
 };

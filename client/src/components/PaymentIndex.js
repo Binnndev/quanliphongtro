@@ -58,10 +58,7 @@ const PaymentIndex = () => {
           month: "2-digit",
           year: "numeric",
         }),
-        danhSachChiTiet: [
-          { moTa: "Tiền nhà", soLuong: 1, donGia: invoice.TienPhong, gia: invoice.TienPhong },
-          ...chiTietDichVu,
-        ],
+        danhSachChiTiet: invoice.danhSachChiTiet,
         tongTien: invoice.TongTien,
         bangChu: "Đang cập nhật",
         nganHang: "Vietcombank",

@@ -19,7 +19,10 @@ export default function Login() {
       return;
     }
 
-    if(formData.email === 'admin@gmail.com' && formData.password === '123456') {
+    if (
+      formData.email === "admin@gmail.com" &&
+      formData.password === "123456"
+    ) {
       localStorage.setItem("token", "sample-token");
       navigate("/homepage");
       return;
@@ -29,6 +32,13 @@ export default function Login() {
       const response = await axios.post("/api/auth/login", formData);
       console.log("Đăng nhập thành công", response.data);
       localStorage.setItem("token", response.data.token);
+
+      // Giải mã token để lấy payload chứa thông tin vai trò
+      const payload = JSON.parse(atob(response.data.token.split(".")[1]));
+      // Lưu vai trò (loaiTaiKhoan) vào localStorage
+      localStorage.setItem("loaiTaiKhoan", payload.loaiTaiKhoan);
+
+      // Chuyển hướng đến trang chủ hoặc dashboard
       navigate("/");
     } catch (error) {
       setErrors({ submit: error.response.data.error || "Đăng nhập thất bại" });
