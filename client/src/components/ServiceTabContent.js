@@ -1,7 +1,7 @@
 // components/ServiceTabContent.js
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { FaEye } from "react-icons/fa";
+import { FaEye, FaTrash } from "react-icons/fa";
 import InvoiceDetailPopup from "./invoiceDetailPopup";
 import AddRoomServiceModal from "./AddRoomServiceModal";
 
@@ -42,6 +42,32 @@ const ServiceTabContent = ({ roomId, renterId }) => {
       console.error("Lỗi khi xem chi tiết hóa đơn:", error);
     }
   };
+  const handleDeleteService = async (service) => {
+    if (!roomId || !service?.MaDV) return;
+  
+    const confirmed = window.confirm(`Bạn có chắc muốn xóa dịch vụ "${service.TenDV}" khỏi phòng?`);
+    if (!confirmed) return;
+  
+    try {
+      const response = await axios.delete(`/api/room-services`, {
+        data: {
+          MaPhong: roomId,
+          MaDV: service.MaDV,
+          NgaySuDung: service.NgaySuDung, // cần xác định đúng khóa chính
+        },
+      });
+  
+      if (response.data?.message === 'success') {
+        alert('Đã xóa dịch vụ khỏi phòng.');
+        fetchServices(); // reload lại danh sách dịch vụ
+      } else {
+        alert('Không thể xóa dịch vụ. Vui lòng thử lại.');
+      }
+    } catch (err) {
+      console.error('Lỗi khi xóa dịch vụ:', err);
+      alert('Lỗi khi xóa dịch vụ.');
+    }
+  };
 
   return (
     <div className="service-tab">
@@ -76,6 +102,10 @@ const ServiceTabContent = ({ roomId, renterId }) => {
                   >
                     <FaEye />
                   </button>
+                  <button
+                    className="service-tab__action-btn delete-btn"
+                    onClick={() => handleDeleteService(svc)}
+><FaTrash /></button>
                 </td>
               </tr>
             ))

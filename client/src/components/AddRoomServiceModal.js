@@ -15,26 +15,18 @@ const toggleServiceSelection = (serviceId) => {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        // ✅ Kiểm tra có MaChuTro không
-        if (!roomData || !roomData.MaChuTro) {
-          console.warn("Không có MaChuTro từ roomData");
-          return;
-        }
-  
-        const response = await axios.get(`/api/services/chu-tro/${roomData.MaChuTro}`);
-        
-        if (Array.isArray(response.data)) {
-          setServices(response.data); // Dùng 1 state duy nhất
-        } else {
-          console.error("Dữ liệu dịch vụ không hợp lệ:", response.data);
-        }
+        const response = await axios.get('/api/services');
+        setServices(response.data);
       } catch (error) {
-        console.error("Lỗi khi lấy danh sách dịch vụ:", error);
+        console.error('Lỗi khi lấy danh sách dịch vụ:', error);
       }
     };
-  
-    fetchServices();
-  }, [roomData]);
+
+    if (isOpen) {
+      fetchServices();
+      setSelectedServices({});
+    }
+  }, [isOpen]);
 
   const handleCheckboxChange = (serviceId, checked) => {
     setSelectedServices(prev => ({

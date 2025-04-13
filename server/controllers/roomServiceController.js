@@ -55,4 +55,15 @@ exports.addRoomService = async (req, res) => {
       res.status(500).json({ message: "Lỗi server khi thêm dịch vụ." });
     }
   };
-  
+  exports.deleteRoomService = async (req, res) => {
+    const { MaPhong, MaDV, NgaySuDung } = req.body;
+    try {
+      await RoomService.destroy({
+        where: { MaPhong, MaDV, NgaySuDung }
+      });
+      res.json({ message: 'success' });
+    } catch (error) {
+      console.error("Lỗi xóa room service:", error);
+      res.status(500).json({ message: 'error', error });
+    }
+  };

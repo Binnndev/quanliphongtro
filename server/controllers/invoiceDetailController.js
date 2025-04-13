@@ -1,5 +1,5 @@
 // controllers/invoiceDetailController.js
-const { InvoiceDetail, Service } = require('../models');
+const { InvoiceDetail,Invoice, Service } = require('../models');
 
 exports.getByInvoiceId = async (req, res) => {
   try {
@@ -46,5 +46,33 @@ exports.getInvoiceDetail = async (req, res) => {
   } catch (error) {
     console.error('Lỗi lấy chi tiết hóa đơn:', error);
     res.status(500).json({ error: 'Lỗi server' });
+  }
+};
+exports.getInvoiceDetailsByRoomAndService = async (req, res) => {
+  const { invoiceId,maDV } = req.params;
+
+  try {
+    // JOIN ChiTietHoaDon + HoaDon để lọc theo MaPhong
+    const details = await InvoiceDetail.findAll({
+      where: { MaDV: maDV },
+      include: [
+        {
+          model: Invoice,
+          as: "HoaDon",
+          where: { MaPhong: invoiceId },
+          attributes: ["MaHoaDon", "NgayLap"],
+        },
+        {
+          model: Service,
+          as: "Service",
+          attributes: ["TenDV"],
+        },
+      ],
+    });
+
+    res.json(details);
+  } catch (error) {
+    console.error("Lỗi khi lấy chi tiết hóa đơn theo phòng và dịch vụ:", error);
+    res.status(500).json({ message: "Lỗi server", error });
   }
 };
