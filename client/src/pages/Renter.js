@@ -10,6 +10,8 @@ import axios from "axios"; // Nếu bạn sử dụng axios để gọi API
 import RenterForm from "../components/RenterForm";
 import MembersTabContent from "../components/MembersTabContent";
 import ContractTabContent from "../components/ContractTabContent";
+import InvoiceDetailPopup from "../components/invoiceDetailPopup";
+import ServiceTabContent from "../components/ServiceTabContent";
 import MemberForm from "../components/MemberForm"; // Import form thành viên
 
 const RenterPage = () => {
@@ -29,6 +31,8 @@ const RenterPage = () => {
     const [editingMember, setEditingMember] = useState(null); // null: Thêm mới, object: Sửa
 
     const [isChangingRepresentative, setIsChangingRepresentative] = useState(false); // State loading mới
+    const [selectedService, setSelectedService] = useState(null);
+    const [showInvoiceDetailPopup, setShowInvoiceDetailPopup] = useState(false);
 
     // --- Gọi API để lấy dữ liệu ---
     useEffect(() => {
@@ -114,6 +118,11 @@ const RenterPage = () => {
         setEditingMember(null);
         setShowMemberForm(true); // Mở form dành cho thành viên
     };
+
+    const handleViewInvoiceDetail = (service) => {
+        setSelectedService(service);
+        setShowInvoiceDetailPopup(true);
+      };
 
     const handleShowEditMemberForm = (memberToEdit) => {
         console.log("RenterPage: handleShowEditMemberForm được gọi với memberToEdit:", memberToEdit); // Kiểm tra 5: Dữ liệu có được truyền đúng không?
@@ -566,6 +575,10 @@ console.log("Data being sent:", Object.fromEntries(memberFormData)); // Xem dữ
                                     representativeTenantId={renterData?.MaKhachThue || renterData?.id}
                            />
                             )}
+                            <ServiceTabContent
+                            roomId={roomId}
+                            onViewInvoiceDetail={handleViewInvoiceDetail}
+                            />
                          </>
                      )}
                     {/* Thêm log để xem giá trị state ngay trước khi render */}
@@ -585,6 +598,12 @@ console.log("Data being sent:", Object.fromEntries(memberFormData)); // Xem dữ
                      )}
                 </div>
             </div>
+            {showInvoiceDetailPopup && (
+  <InvoiceDetailPopup
+    service={selectedService}
+    onClose={() => setShowInvoiceDetailPopup(false)}
+  />
+)}
         </div>
     );
 };

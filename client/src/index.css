@@ -806,3 +806,61 @@ box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 .thongke__table tr:nth-child(even) {
   background-color: #fcfcfc;
 }
+/* components/ServiceTabContent.css */
+
+.service-tab {
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+}
+
+.service-tab__title {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 16px;
+  color: #333;
+}
+
+.service-tab__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.service-tab__table thead {
+  background-color: #f5f5f5;
+}
+
+.service-tab__table th,
+.service-tab__table td {
+  border: 1px solid #e0e0e0;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.service-tab__table th {
+  font-weight: 600;
+  color: #555;
+}
+
+.service-tab__table td {
+  color: #333;
+}
+
+.service-tab__table td:last-child {
+  text-align: center;
+}
+
+.service-tab__button-view {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.service-tab__button-view:hover {
+  background-color: #0056b3;
+}
