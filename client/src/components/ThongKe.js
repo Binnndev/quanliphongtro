@@ -47,58 +47,60 @@ const ThongKe = () => {
   const pieColors = ["#00B894", "#FFA500"];
 
   return (
-    <div className="thongke">
+    <div className="thongke" style={{width: "100%", display:"flex" , flexDirection: "column"}}>
       <h2 className="thongke__title">
         <i className="fas fa-chart-pie" /> Thống kê
       </h2>
 
       {/* Trạng thái phòng */}
-      <div className="thongke__section">
-        <h4 className="thongke__section-title">Trạng thái phòng</h4>
-        <div className="thongke__chart">
-          <PieChart width={300} height={250}>
-            <Pie
-              data={pieData}
-              cx="50%" cy="50%"
-              labelLine={false}
-              outerRadius={90}
-              dataKey="value"
-              label={({ name, percent }) =>
-                `${name} ${(percent * 100).toFixed(2)}%`
-              }
-            >
-              {pieData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={pieColors[index]} />
-              ))}
-            </Pie>
-          </PieChart>
-        </div>
-      </div>
-
-      {/* Doanh thu */}
-      <div className="thongke__section">
-        <h4 className="thongke__section-title">Doanh thu (VND)</h4>
-        <div className="thongke__chart">
-          <BarChart width={600} height={300} data={revenueData}>
-            <XAxis dataKey="thang" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            {revenueData.length > 0 &&
-              Object.keys(revenueData[0])
-                .filter((key) => key !== "thang")
-                .map((key, idx) => (
-                  <Bar key={key} dataKey={key} fill={["#2980B9", "#E67E22", "#2ECC71"][idx % 3]} />
+      <div style={{display:"flex", justifyContent:"space-between"}}>
+        <div className="thongke__section">
+          <h4 className="thongke__section-title">Trạng thái phòng</h4>
+          <div className="thongke__chart">
+            <PieChart width={630} height={192}>
+              <Pie
+                data={pieData}
+                cx="50%" cy="50%"
+                labelLine={false}
+                outerRadius={90}
+                dataKey="value"
+                label={({ name, percent }) =>
+                  `${name} ${(percent * 100).toFixed(2)}%`
+                }
+              >
+                {pieData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={pieColors[index]} />
                 ))}
-          </BarChart>
+              </Pie>
+            </PieChart>
+          </div>
+        </div>
+
+        {/* Doanh thu */}
+        <div className="thongke__section">
+          <h4 className="thongke__section-title">Doanh thu (VND)</h4>
+          <div className="thongke__chart">
+            <BarChart width={670} height={192} data={revenueData}>
+              <XAxis dataKey="thang" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              {revenueData.length > 0 &&
+                Object.keys(revenueData[0])
+                  .filter((key) => key !== "thang")
+                  .map((key, idx) => (
+                    <Bar key={key} dataKey={key} fill={["#2980B9", "#E67E22", "#2ECC71"][idx % 3]} />
+                  ))}
+            </BarChart>
+          </div>
         </div>
       </div>
-
       {/* Tổng chi */}
+      <div style={{display: "flex", justifyContent:"space-between"}}>
       <div className="thongke__section">
         <h4 className="thongke__section-title">Tổng chi (VND)</h4>
         <div className="thongke__chart">
-          <BarChart width={600} height={300} data={expenseData}>
+          <BarChart width={670} height={192} data={expenseData}>
             <XAxis dataKey="thang" />
             <YAxis />
             <Tooltip />
@@ -114,7 +116,7 @@ const ThongKe = () => {
       </div>
 
       {/* Khách sắp hết hạn hợp đồng */}
-      <div className="thongke__section">
+      <div className="thongke__section" style={{width:"670px"}}>
         <h4 className="thongke__section-title">Khách sắp hết hạn hợp đồng</h4>
         <table className="thongke__table">
           <thead>
@@ -142,6 +144,7 @@ const ThongKe = () => {
             )}
           </tbody>
         </table>
+      </div>
       </div>
     </div>
   );

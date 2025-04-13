@@ -4,7 +4,7 @@ import SidebarItem from './SidebarItem';
 const Sidebar = ({ onSelectPage, currentPage }) => {
     return (
         <div style={{ width: 384, height: 912, left: 0, top: 168, background: '#1B2428' }}>
-            <SidebarItem title="Dashboard" inconName='fa-solid fa-chart-pie' />
+            <SidebarItem title="Dashboard" inconName='fa-solid fa-chart-pie' isActive={currentPage === "thongke"} onClick={() => onSelectPage("thongke")} />
             <SidebarItem title="Home" inconName='fa-solid fa-house' isActive={currentPage === "home"} onClick={() => onSelectPage("home")} />
             <SidebarItem title="Dịch vụ" inconName='fa-solid fa-hands-holding-circle' isActive={currentPage === "dichVu"} onClick={() => onSelectPage("dichVu")} />
             <SidebarItem title="Chỉ số điện" inconName='fa-solid fa-bolt' isActive={currentPage === "dien"} onClick={() => onSelectPage("dien")} />
