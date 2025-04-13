@@ -32,6 +32,8 @@ const Homepage = () => {
     
     // State for rental houses
     const [rentalHouses, setRentalHouses] = useState([]);
+    const [houses, setHouses] = useState([]);
+    const [selectedHouse, setSelectedHouse] = useState(null);
     const [loadingHouses, setLoadingHouses] = useState(false);
     const [selectedHouseId, setSelectedHouseId] = useState(null); // ID of the selected house (MaNhaTro)
 
@@ -97,6 +99,22 @@ const Homepage = () => {
     fetchRentalHouses();
 
   }, [navigate, loaiTaiKhoan, MaTK]); // Dependencies for fetching houses
+
+  useEffect(() => {
+    const fetchHouses = async () => {
+      try {
+        const res = await axios.get("/api/houses"); // hoặc /api/rental-house nếu đúng API
+        if (Array.isArray(res.data)) {
+          setHouses(res.data);
+          setSelectedHouse(res.data[0]); // chọn nhà đầu tiên mặc định
+        }
+      } catch (err) {
+        console.error("Lỗi khi lấy danh sách nhà:", err);
+      }
+    };
+
+    fetchHouses();
+  }, []);
     
     const handleHouseSelect = (houseId) => {
         setSelectedHouseId(houseId);
@@ -301,9 +319,9 @@ const Homepage = () => {
               {page == "dien" && <DienNuoc type="Điện" data={dataDien} />}
               {page == "nuoc" && <DienNuoc type="Nước" data={dataNuoc} />}
               {page == "tinhTien" && <PaymentIndex />}
-              {page === "dichVu" && (
-            <DichVuIndex />
-            )}
+              {page === "dichVu" && selectedHouse?.MaChuTro && (
+            <DichVuIndex maChuTro={selectedHouse.MaChuTro} />
+          )}
               {page === "thongke" && <ThongKe />}
             </div>
           </div>

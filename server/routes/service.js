@@ -7,5 +7,5 @@ router.get("/:id", serviceController.getServiceById);
 router.post("/", serviceController.createService);
 router.put("/:id", serviceController.updateService);
 router.delete("/:id", serviceController.deleteService);
-router.get("/by-chutro", serviceController.getServicesByChuTro);
+router.get("/by-chutro/:maChuTro", serviceController.getServicesByChuTro);
 module.exports = router;
