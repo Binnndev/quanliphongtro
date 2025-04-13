@@ -10,6 +10,7 @@ import { isAuthenticated } from "../services/authService";
 import Home from "./home";
 import DienNuoc from "../components/DienNuocIndex";
 import PaymentIndex from "../components/PaymentIndex";
+import ThongKe from "../components/ThongKe";
 import {
     getDsPhong,
     getNhaTroByChuTro,
@@ -321,6 +322,7 @@ const Homepage = () => {
               {page == "nuoc" && <DienNuoc type="Nước" data={dataNuoc} />}
               {page == "tinhTien" && <PaymentIndex />}
               {page === "dichVu" && <DichVuIndex />}
+              {page === "thongke" && <ThongKe />}
             </div>
           </div>
         </div>
