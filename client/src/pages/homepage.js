@@ -65,6 +65,8 @@ const Homepage = () => {
                 const houses = await getNhaTroByChuTro(MaTK);
                 console.log("Fetched Rental Houses RAW:", JSON.stringify(houses, null, 2)); // <-- ADD THIS LOG
                 setRentalHouses(houses);
+                console.log("Fetched Rental Houses:", houses); // Log the fetched houses
+                localStorage.setItem("MaChuTro", houses[0]?.MaChuTro); // Store the first house's ID in localStorage if available
                 // Automatically select the first house if available
                 if (houses.length > 0) {
                     // Use optional chaining AND check if the ID property exists and is not undefined

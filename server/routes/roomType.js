@@ -8,8 +8,8 @@ router.get("/",
     (req, res, next) => {
         // **** CHANGE THIS LINE ****
         // Check req.user.role instead of req.role
-        console.log('User data from getUserRole:', req.user); // Add this log
-        if (!req.user || req.user.role !== "Chủ trọ") { // Also check if req.user exists
+        console.log('User data from getUserRole:', req.role); // Add this log
+        if (req.role !== "Chủ trọ") { // Also check if req.user exists
             return res.status(403).json({ error: "Không có quyền truy cập." }); // More specific error
         }
         // Role is correct, proceed to the controller

@@ -1,13 +1,12 @@
 // routes/roomServices.js
 const express = require("express");
 const router = express.Router();
-const { Roomservice, Service } = require("../models");
-const { getRoomServices, addRoomService,deleteRoomService } = require("../controllers/roomServiceController");
+const roomServiceController = require("../controllers/roomServiceController");
 
 // GET: Lấy danh sách dịch vụ theo mã phòng
-router.get("/room/:roomId", getRoomServices)
+router.get("/room/:roomId", roomServiceController.getRoomServices)
 
-router.post("/", addRoomService);
-router.delete('/', deleteRoomService);
+router.post("/add", roomServiceController.addRoomService);
+router.delete('/delete/roomId/:roomId/serviceId/:serviceId', roomServiceController.removeServiceFromRoom);
 
 module.exports = router;

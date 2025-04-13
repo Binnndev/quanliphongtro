@@ -80,9 +80,10 @@ const Home = ({ selectedHouseId }) => {
         TenPhong: '',
         DienTich: '',
         GiaPhong: '',
+        SoNguoiToiDa: '',
         TrangThai: 'Còn phòng', // Default status
-        MoTa: '',
         MaNhaTro: '', // Will be set when opening modal
+        MaLoaiPhong: '',
     });
     const [isSubmitting, setIsSubmitting] = useState(false); // Loading state for form submission
     // --- End Modal State ---
@@ -119,10 +120,12 @@ const Home = ({ selectedHouseId }) => {
 
         // Fetch all room types (if needed)
         const fetchAllRoomTypes = async () => {
+            setLoading(true); // Có thể set loading ở đây nếu muốn
+            setError(null);
             try {
                 const dsLoaiPhong = await getDsLoaiPhong();
                 if (Array.isArray(dsLoaiPhong)) {
-                    setAllRoomTypes(dsLoaiPhong);
+                    setAllRoomTypes(dsLoaiPhong); // <<<<<<< Lưu danh sách loại phòng
                 } else {
                     console.warn("API response for room types was not an array.");
                     setAllRoomTypes([]);
@@ -132,6 +135,8 @@ const Home = ({ selectedHouseId }) => {
                 console.error("Lỗi khi lấy danh sách loại phòng:", fetchError);
                 setError(`Không thể tải danh sách loại phòng: ${fetchError.message}`);
                 setAllRoomTypes([]);
+            } finally {
+                 // setLoading(false); // Chỉ tắt loading sau khi cả 2 fetch xong (nếu cần)
             }
         };
 
@@ -167,17 +172,19 @@ const Home = ({ selectedHouseId }) => {
 
     // --- Modal and Form Handlers ---
 
-    const openModal = (mode = 'add', roomData = null) => {
+    const openModal = (mode = 'add', roomData = null, roomType = null) => {
         setModalMode(mode);
         setIsSubmitting(false); // Reset submission state
+        setError(null); // Clear previous form errors
         if (mode === 'edit' && roomData) {
             setCurrentRoom(roomData);
             setFormData({
                 TenPhong: roomData.TenPhong || '',
                 DienTich: roomData.RoomType.DienTich || '',
                 GiaPhong: roomData.RoomType.GiaPhong || '',
+                SoNguoiToiDa: roomData.SoNguoiToiDa || '',
+                MaLoaiPhong: roomData.MaLoaiPhong || '',
                 TrangThai: roomData.TrangThai || 'Còn phòng',
-                MoTa: roomData.MoTa || '',
                 MaNhaTro: roomData.MaNhaTro, // Keep existing MaNhaTro
             });
         } else { // Add mode or fallback
@@ -186,9 +193,10 @@ const Home = ({ selectedHouseId }) => {
                 TenPhong: '',
                 DienTich: '',
                 GiaPhong: '',
+                SoNguoiToiDa: '',
                 TrangThai: 'Còn phòng',
-                MoTa: '',
                 MaNhaTro: selectedHouseId, // Set the current house ID
+                MaLoaiPhong: '',
             });
         }
         setIsModalOpen(true);
@@ -198,7 +206,7 @@ const Home = ({ selectedHouseId }) => {
         setIsModalOpen(false);
         setCurrentRoom(null);
         setFormData({ // Reset form
-            TenPhong: '', DienTich: '', GiaPhong: '', TrangThai: 'Còn phòng', MoTa: '', MaNhaTro: ''
+            TenPhong: '', DienTich: '', GiaPhong: '', TrangThai: 'Còn phòng', MaNhaTro: '', MaLoaiPhong: ''
         });
         setError(null); // Clear any form errors
     };
@@ -208,44 +216,75 @@ const Home = ({ selectedHouseId }) => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleFormSubmit = async (event) => {
-        event.preventDefault(); // Prevent default form submission if using <form>
-        setIsSubmitting(true);
-        setError(null); // Reset error
+    const handleRoomTypeChange = (event) => {
+        const selectedMaLoaiPhong = event.target.value;
+        const selectedType = allRoomTypes.find(type => String(type.MaLoaiPhong) === String(selectedMaLoaiPhong));
 
-        // Basic Validation (Add more as needed)
-        if (!formData.TenPhong || !formData.GiaPhong || !formData.DienTich) {
-            setError("Vui lòng điền đầy đủ Tên phòng, Diện tích và Giá phòng.");
+        if (selectedType) {
+            setFormData(prev => ({
+                ...prev,
+                MaLoaiPhong: selectedMaLoaiPhong,
+                DienTich: selectedType.DienTich,
+                GiaPhong: selectedType.GiaPhong,
+            }));
+        } else {
+            // Nếu chọn lại option mặc định "-- Chọn loại phòng --"
+            setFormData(prev => ({
+                ...prev,
+                MaLoaiPhong: '',
+                DienTich: '', // Xóa giá trị cũ
+                GiaPhong: '',  // Xóa giá trị cũ
+            }));
+        }
+    };
+
+    const handleFormSubmit = async (event) => {
+        event.preventDefault();
+        setIsSubmitting(true);
+        setError(null);
+
+        // Update Validation: Ensure a room type is selected
+        if (!formData.TenPhong || !formData.MaLoaiPhong) { // Kiểm tra MaLoaiPhong thay vì DienTich/GiaPhong
+            setError("Vui lòng điền Tên phòng và chọn Loại phòng.");
             setIsSubmitting(false);
             return;
         }
 
+        // Chuẩn bị dữ liệu gửi đi (chỉ gửi MaLoaiPhong, không gửi DienTich, GiaPhong)
+        const payload = {
+            TenPhong: formData.TenPhong,
+            TrangThai: formData.TrangThai,
+            MoTa: formData.MoTa,
+            MaNhaTro: formData.MaNhaTro,
+            MaLoaiPhong: formData.MaLoaiPhong, // <<<<<<<<<< GỬI MaLoaiPhong
+        };
+        // Không cần gửi DienTich, GiaPhong nếu backend lấy từ MaLoaiPhong
+
+
         try {
             if (modalMode === 'add') {
-                // Add logic
-                console.log("Submitting ADD form data:", formData);
-                const addedRoom = await themPhong(formData); // Call API service
-                setAllRooms(prev => [...prev, addedRoom]); // Add to the main list
+                console.log("Submitting ADD form data:", payload);
+                const addedRoom = await themPhong(payload); // Gửi payload đã chuẩn bị
+                // Cần đảm bảo addedRoom trả về có cấu trúc đầy đủ (bao gồm RoomType) để hiển thị đúng
+                setAllRooms(prev => [...prev, addedRoom]);
                 alert('Thêm phòng thành công!');
             } else if (modalMode === 'edit' && currentRoom) {
-                // Edit logic
-                console.log("Submitting EDIT form data:", formData, "for room ID:", currentRoom.MaPhong);
-                const updatedRoom = await suaPhong(currentRoom.MaPhong, formData); // Call API service
+                console.log("Submitting EDIT form data:", payload, "for room ID:", currentRoom.MaPhong);
+                const updatedRoom = await suaPhong(currentRoom.MaPhong, payload); // Gửi payload đã chuẩn bị
+                // Cần đảm bảo updatedRoom trả về có cấu trúc đầy đủ
                 setAllRooms(prev => prev.map(room =>
                     room.MaPhong === currentRoom.MaPhong ? updatedRoom : room
-                )); // Update the room in the main list
-                 alert('Cập nhật phòng thành công!');
+                ));
+                alert('Cập nhật phòng thành công!');
             }
-            closeModal(); // Close modal on success
+            closeModal();
         } catch (apiError) {
             console.error(`Lỗi khi ${modalMode === 'add' ? 'thêm' : 'cập nhật'} phòng:`, apiError);
-            setError(`Thao tác thất bại: ${apiError.message || 'Vui lòng thử lại.'}`);
-            // Keep modal open on error so user can retry or cancel
+            setError(`Thao tác thất bại: ${apiError.response?.data?.error || apiError.message || 'Vui lòng thử lại.'}`);
         } finally {
             setIsSubmitting(false);
         }
     };
-
 
 
     // --- Room Action Handlers ---
@@ -264,8 +303,9 @@ const Home = ({ selectedHouseId }) => {
 
     const handleSuaPhong = (roomId) => {
         const roomToEdit = allRooms.find(room => room.MaPhong === roomId);
+        const roomType = allRoomTypes.find(type => type.MaLoaiPhong === roomToEdit?.MaLoaiPhong);
         if (roomToEdit) {
-            openModal('edit', roomToEdit); // Open modal in 'edit' mode with data
+            openModal('edit', roomToEdit, roomType); // Open modal in 'edit' mode with data
         } else {
             alert("Không tìm thấy thông tin phòng để chỉnh sửa.");
         }
@@ -386,6 +426,24 @@ const Home = ({ selectedHouseId }) => {
                                 />
                             </div>
                             <div style={formGroupStyle}>
+                                <label htmlFor="MaLoaiPhong" style={labelStyle}>Loại phòng:</label>
+                                <select
+                                    id="MaLoaiPhong"
+                                    name="MaLoaiPhong"
+                                    value={formData.MaLoaiPhong}
+                                    onChange={handleRoomTypeChange} // <<<< Gắn handler
+                                    style={inputStyle}
+                                    required
+                                >
+                                    <option value="">-- Chọn loại phòng --</option>
+                                    {allRoomTypes.map(type => (
+                                        <option key={type.MaLoaiPhong} value={type.MaLoaiPhong}>
+                                            {type.TenLoai}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div style={formGroupStyle}>
                                 <label htmlFor="DienTich" style={labelStyle}>Diện tích (m²):</label>
                                 <input
                                     type="number" // Use number type
@@ -396,6 +454,7 @@ const Home = ({ selectedHouseId }) => {
                                     style={inputStyle}
                                     min="1"
                                     required
+                                    readOnly
                                 />
                             </div>
                             <div style={formGroupStyle}>
@@ -409,6 +468,21 @@ const Home = ({ selectedHouseId }) => {
                                     style={inputStyle}
                                     min="0"
                                     required
+                                    readOnly
+                                />
+                            </div>
+                            <div style={formGroupStyle}>
+                                <label htmlFor="SoNguoiToiDa" style={labelStyle}>Số người tối đa:</label>
+                                <input
+                                    type="number" // Use number type
+                                    id="SoNguoiToiDa"
+                                    name="SoNguoiToiDa"
+                                    value={formData.SoNguoiToiDa}
+                                    onChange={handleInputChange}
+                                    style={inputStyle}
+                                    min="0"
+                                    required
+                                    readOnly
                                 />
                             </div>
                              <div style={formGroupStyle}>
@@ -424,17 +498,6 @@ const Home = ({ selectedHouseId }) => {
                                     <option value="Hết phòng">Hết phòng</option>
                                     <option value="Đang bảo trì">Đang bảo trì</option>
                                 </select>
-                            </div>
-                            <div style={formGroupStyle}>
-                                <label htmlFor="MoTa" style={labelStyle}>Mô tả (tùy chọn):</label>
-                                <textarea
-                                    id="MoTa"
-                                    name="MoTa"
-                                    rows="3"
-                                    value={formData.MoTa}
-                                    onChange={handleInputChange}
-                                    style={inputStyle}
-                                />
                             </div>
                              {/* MaNhaTro is needed but usually not edited by the user directly */}
                             {/* <input type="hidden" name="MaNhaTro" value={formData.MaNhaTro} /> */}

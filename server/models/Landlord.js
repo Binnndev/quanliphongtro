@@ -24,6 +24,7 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: "MaChuTro",
       as: "Houses",
     });
+    Landlord.hasMany(models.RoomType, { foreignKey: "MaChuTro" });
   };
 
   return Landlord;

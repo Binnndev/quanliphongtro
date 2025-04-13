@@ -27,6 +27,8 @@ export default function Login() {
         console.log("Đăng nhập thành công:", response.data);
       
         localStorage.setItem("token", response.data.token);
+        console.log("Token mới:", response.data.token);
+
       
         // --- DEBUGGING PAYLOAD ---
         try {

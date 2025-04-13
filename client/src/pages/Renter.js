@@ -3,7 +3,7 @@ import AnimatedSignature from "../components/AnimatedSignature";
 import MainContainer from "../components/MainContainer";
 import Button from "../components/Button";
 import UserIcon from "../components/UserIcon";
-import { useNavigate, useParams } from "react-router-dom"; // Thêm useParams nếu cần lấy ID từ URL
+import { useNavigate, useParams, useLocation } from "react-router-dom"; // Thêm useParams nếu cần lấy ID từ URL
 import axios from "axios"; // Nếu bạn sử dụng axios để gọi API
 
 // Import các component nội dung tab và form mới
@@ -16,6 +16,8 @@ import MemberForm from "../components/MemberForm"; // Import form thành viên
 
 const RenterPage = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const { maChuTro } = location.state || {}; // Lấy MaChuTro từ state nếu có
     const { roomId } = useParams(); // Lấy ID phòng từ URL
     console.log(roomId);  // Kiểm tra giá trị của roomId
 
@@ -577,7 +579,7 @@ console.log("Data being sent:", Object.fromEntries(memberFormData)); // Xem dữ
                             )}
                             <ServiceTabContent
                             roomId={roomId}
-                            onViewInvoiceDetail={handleViewInvoiceDetail}
+                                onViewInvoiceDetail={handleViewInvoiceDetail}
                             />
                          </>
                      )}

@@ -1,5 +1,6 @@
 const { TaiKhoan, Landlord, Tenant } = require("../models");
 const bcrypt = require("bcryptjs");
+const { v4: uuidv4 } = require('uuid'); // Nhập uuid
 const jwt = require("jsonwebtoken");
 
 const JWT_SECRET = process.env.JWT_SECRET || "mat_khau_jwt_cua_ban";
@@ -98,11 +99,26 @@ exports.login = async (req, res) => {
         .json({ error: "Thông tin đăng nhập không hợp lệ" });
     }
 
+    console.log("Đăng nhập lúc:", Date.now());
+      
+    const loginTime = Date.now();
+    const jti = uuidv4(); // Tạo một ID duy nhất cho token này (JWT ID)
+
     const token = jwt.sign(
-      { id: user.MaTK, role: user.LoaiTaiKhoan },
+      {
+        id: user.MaTK,
+        role: user.LoaiTaiKhoan,
+        // loginAt: loginTime, // Vẫn giữ nếu bạn cần thông tin này
+        jti: jti,          // Thêm JWT ID duy nhất
+      },
       JWT_SECRET,
       { expiresIn: JWT_THOI_HAN }
     );
+      
+      
+    //   474c9484-d15d-453e-ba7b-8128323a88ac
+    console.log("Generated JTI:", jti);
+      console.log("Token:", token);
 
     return res.status(200).json({ message: "Đăng nhập thành công", token });
   } catch (error) {

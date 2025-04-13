@@ -38,7 +38,7 @@ exports.getUserRole = (req, res, next) => {
     try {
         console.log('Verifying token with secret:', process.env.JWT_SECRET);
     const decoded = jwt.verify(token, JWT_SECRET);
-    req.role = decoded.loaiTaiKhoan; // Chủ Trọ | Khách Thuê
+    req.role = decoded.role; // Chủ trọ | Khách thuê
     req.userId = decoded.id;
     next();
   } catch (err) {

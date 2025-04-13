@@ -21,6 +21,10 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.INTEGER,
             allowNull: false,
         },
+        MaChuTro: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+        },
     }, {
         tableName: 'LoaiPhong',
         timestamps: false,
@@ -28,6 +32,7 @@ module.exports = (sequelize, DataTypes) => {
 
     RoomType.associate = function (models) {
         RoomType.hasMany(models.Room, { foreignKey: 'MaLoaiPhong' });
+        RoomType.belongsTo(models.Landlord, { foreignKey: 'MaChuTro' });
     }
 
     return RoomType;
