@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
-import AnimatedSignature from "../components/AnimatedSignature"; // Điều chỉnh đường dẫn nếu cần
+import AnimatedSignature from "../components/AnimatedSignature";
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
-  const token = searchParams.get("token");
+  // Lấy resetToken từ query parameter "token"
+  const resetToken = searchParams.get("token");
   const navigate = useNavigate();
 
   const [password, setPassword] = useState("");
@@ -14,16 +15,16 @@ const ResetPassword = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (password !== confirmPassword) {
       setMessage("Mật khẩu không khớp");
       return;
     }
-
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/reset-password`,
-        { token, password }
+        `${
+          process.env.REACT_APP_API_URL || "http://localhost:5000"
+        }/api/auth/reset-password`,
+        { resetToken, newPassword: password }
       );
       setMessage(response.data.message);
       setTimeout(() => {
@@ -31,7 +32,7 @@ const ResetPassword = () => {
       }, 2000);
     } catch (error) {
       setMessage(
-        error.response?.data?.message || "Có lỗi xảy ra khi đặt lại mật khẩu"
+        error.response?.data?.error || "Có lỗi xảy ra khi đặt lại mật khẩu"
       );
     }
   };
