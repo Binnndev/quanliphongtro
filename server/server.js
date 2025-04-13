@@ -28,6 +28,7 @@ app.use("/api/tenants", require("./routes/tenants"));
 app.use("/api/contracts", require("./routes/contracts"));
 app.use("/api/notifications", require("./routes/notifications"));
 app.use("/api/service", require("./routes/service"));
+app.use("/api/room-services", require("./routes/roomServices"));
 app.use("/api/diennuoc", require("./routes/diennuoc"));
 app.use("/api/payment", require("./routes/payment"));
 app.use("/api/payment-method", require("./routes/paymentMethod"));
