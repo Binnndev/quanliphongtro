@@ -3,11 +3,13 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { FaEye } from "react-icons/fa";
 import InvoiceDetailPopup from "./invoiceDetailPopup";
+import AddRoomServiceModal from "./AddRoomServiceModal";
 
 const ServiceTabContent = ({ roomId, renterId }) => {
   const [services, setServices] = useState([]);
   const [invoiceDetail, setInvoiceDetail] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   useEffect(() => {
     if (roomId) {
@@ -43,7 +45,12 @@ const ServiceTabContent = ({ roomId, renterId }) => {
 
   return (
     <div className="service-tab">
-        <h3 className="service-tab__title">Dịch vụ sử dụng</h3>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+  <h3 className="service-tab__title">Dịch vụ sử dụng</h3>
+  <button className="service-tab__btn-add" onClick={() => setShowAddModal(true)}>
+    + Thêm dịch vụ
+  </button>
+</div>
       <table className="service-tab__table">
         <thead>
           <tr>
@@ -84,6 +91,14 @@ const ServiceTabContent = ({ roomId, renterId }) => {
         <InvoiceDetailPopup
           data={invoiceDetail}
           onClose={() => setShowPopup(false)}
+        />
+      )}
+      {showAddModal && (
+        <AddRoomServiceModal
+        isOpen={showAddModal}
+          roomId={roomId}
+          onClose={() => setShowAddModal(false)}
+          onServiceAdded={fetchServices}
         />
       )}
     </div>

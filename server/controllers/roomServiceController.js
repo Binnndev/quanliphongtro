@@ -32,4 +32,27 @@ exports.getRoomServices = async (req, res) => {
         res.status(500).json({ message: "Lỗi server" });
     }
 }
-    
+exports.addRoomService = async (req, res) => {
+    try {
+      const { MaPhong, MaDV, SoLuong, NgaySuDung } = req.body;
+  
+      // Check if service already exists for this room + date
+      const existing = await RoomService.findOne({ where: { MaPhong, MaDV, NgaySuDung } });
+      if (existing) {
+        return res.status(400).json({ message: "Dịch vụ này đã tồn tại cho ngày đó." });
+      }
+  
+      const newService = await RoomService.create({
+        MaPhong,
+        MaDV,
+        SoLuong,
+        NgaySuDung,
+      });
+  
+      res.status(201).json(newService);
+    } catch (error) {
+      console.error("Lỗi khi thêm dịch vụ:", error);
+      res.status(500).json({ message: "Lỗi server khi thêm dịch vụ." });
+    }
+  };
+  
