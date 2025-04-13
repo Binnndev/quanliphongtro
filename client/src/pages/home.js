@@ -15,7 +15,9 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
 
   // Lấy vai trò từ localStorage (đã được lưu sau đăng nhập)
-  const loaiTaiKhoan = localStorage.getItem("loaiTaiKhoan");
+    const loaiTaiKhoan = localStorage.getItem("loaiTaiKhoan");
+    const MaTK = localStorage.getItem("MaTK");
+    console.log("MaTK:", MaTK);
 
   useEffect(() => {
     const fetchRooms = async () => {
@@ -83,7 +85,7 @@ const Home = () => {
           <PushNumb text="Chưa thu phí" numb={notYetFee} />
         </div>
         <div style={{ display: "flex", alignItems: "center" }}>
-          {loaiTaiKhoan === "Chủ Trọ" ? (
+          {loaiTaiKhoan === "Chủ trọ" ? (
             <>
               <Button
                 label="Thêm phòng"

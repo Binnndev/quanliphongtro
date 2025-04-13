@@ -6,8 +6,9 @@ const api = axios.create({
 
 // 1. Lấy danh sách room
 export const getDsPhong = async () => {
-  const response = await api.get("/api/rooms");
-  return response.data; // giả sử backend trả về mảng room
+    const MaTK = localStorage.getItem("MaTK");
+    const response = await api.get(`/api/rooms/landlord/${MaTK}`);
+    return response.data;
 };
 
 // 2. Thêm room
