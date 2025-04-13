@@ -98,7 +98,7 @@ const ServiceTabContent = ({ roomId, renterId }) => {
         isOpen={showAddModal}
           roomId={roomId}
           onClose={() => setShowAddModal(false)}
-          onServiceAdded={fetchServices}
+                  onServiceAdded={fetchServices}
         />
       )}
     </div>
