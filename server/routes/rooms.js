@@ -60,49 +60,49 @@ router.delete(
 
 module.exports = router;
 
-module.exports = (sequelize, DataTypes) => {
-  const Room = sequelize.define(
-    "Room",
-    {
-      id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-      },
-      roomName: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      description: {
-        type: DataTypes.TEXT,
-        allowNull: true,
-      },
-      price: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      rented: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
-      },
-      imageUrl: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      amenities: {
-        type: DataTypes.STRING, // Nếu muốn lưu dữ liệu dạng mảng thì có thể dùng JSON
-        allowNull: true,
-      },
-      MaChuTro: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-    },
-    {
-      tableName: "Phong", // Tên bảng trong DB giữ nguyên là "Phong"
-      timestamps: false,
-    }
-  );
+// module.exports = (sequelize, DataTypes) => {
+//   const Room = sequelize.define(
+//     "Room",
+//     {
+//       id: {
+//         type: DataTypes.INTEGER,
+//         primaryKey: true,
+//         autoIncrement: true,
+//       },
+//       roomName: {
+//         type: DataTypes.STRING,
+//         allowNull: false,
+//       },
+//       description: {
+//         type: DataTypes.TEXT,
+//         allowNull: true,
+//       },
+//       price: {
+//         type: DataTypes.INTEGER,
+//         allowNull: false,
+//       },
+//       rented: {
+//         type: DataTypes.BOOLEAN,
+//         defaultValue: false,
+//       },
+//       imageUrl: {
+//         type: DataTypes.STRING,
+//         allowNull: true,
+//       },
+//       amenities: {
+//         type: DataTypes.STRING, // Nếu muốn lưu dữ liệu dạng mảng thì có thể dùng JSON
+//         allowNull: true,
+//       },
+//       MaChuTro: {
+//         type: DataTypes.INTEGER,
+//         allowNull: false,
+//       },
+//     },
+//     {
+//       tableName: "Phong", // Tên bảng trong DB giữ nguyên là "Phong"
+//       timestamps: false,
+//     }
+//   );
 
-  return Room;
-};
+//   return Room;
+// };

@@ -28,6 +28,8 @@ const RenterPage = () => {
     const [showMemberForm, setShowMemberForm] = useState(false);
     const [editingMember, setEditingMember] = useState(null); // null: Thêm mới, object: Sửa
 
+    const [isChangingRepresentative, setIsChangingRepresentative] = useState(false); // State loading mới
+
     // --- Gọi API để lấy dữ liệu ---
     useEffect(() => {
         const fetchData = async () => {
@@ -53,7 +55,16 @@ const RenterPage = () => {
                 }
             }
         };
-        fetchData();
+        if (roomId) { // Chỉ fetch nếu có roomId
+            fetchData();
+       } else {
+            console.warn("RenterPage: Không có roomId, không fetch data.");
+            // Reset state nếu cần khi không có roomId
+            setRenterData(null);
+            setMembersData([]);
+            setContractData(null);
+            setIsLoading(false);
+       }
     }, [roomId]);
 
     const [isLoading, setIsLoading] = useState(true);
@@ -380,6 +391,58 @@ console.log("Data being sent:", Object.fromEntries(memberFormData)); // Xem dữ
     };
     // --- KẾT THÚC HÀM HỦY HỢP ĐỒNG ---
 
+    // --- HÀM MỚI: XỬ LÝ THAY ĐỔI NGƯỜI ĐẠI DIỆN ---
+    const handleChangeRepresentative = async (newRepresentativeId) => {
+        if (!roomId || !newRepresentativeId) {
+            console.error("Thiếu thông tin phòng hoặc ID người đại diện mới.");
+            alert("Lỗi: Không thể thực hiện thay đổi người đại diện.");
+            return;
+        }
+
+        // Lấy tên người được chọn để hiển thị xác nhận (tùy chọn)
+        const memberToPromote = membersData.find(m => String(m.MaKhachThue || m.id) === String(newRepresentativeId));
+        const memberName = memberToPromote?.HoTen || `ID ${newRepresentativeId}`;
+
+        if (!window.confirm(`Bạn có chắc muốn đặt "${memberName}" làm người đại diện mới cho phòng này?`)) {
+            return; // Hủy nếu người dùng không xác nhận
+        }
+
+        console.log(`RenterPage: Requesting representative change. Room: ${roomId}, New Rep ID: ${newRepresentativeId}`);
+        setIsChangingRepresentative(true); // Bắt đầu loading
+
+        try {
+            // Gọi API backend
+            const response = await axios.patch(`/api/tenants/change-representative/${roomId}/${newRepresentativeId}`);
+
+            console.log("RenterPage: Change representative API success:", response.data);
+            alert(response.data.message || `Đã đặt "${memberName}" làm người đại diện mới thành công!`);
+
+            // --- Cập nhật lại dữ liệu sau khi thay đổi thành công ---
+            // Cách đơn giản và an toàn nhất: Fetch lại cả renter và members
+            setIsLoading(true); // Hiển thị loading tổng thể
+            try {
+                await Promise.allSettled([
+                    getRenterData(roomId), // Fetch lại người đại diện mới
+                    getMembersData(roomId)  // Fetch lại danh sách thành viên (đã loại bỏ người mới)
+                ]);
+                 setActiveTab('renter'); // Chuyển sang tab người thuê để xem kết quả
+            } catch (fetchError) {
+                console.error("Lỗi fetch lại dữ liệu sau khi đổi đại diện:", fetchError);
+                // Dù fetch lại lỗi, vẫn cố gắng hiển thị thông báo thành công ban đầu
+            } finally {
+                 setIsLoading(false); // Kết thúc loading tổng thể
+            }
+             // ---------------------------------------------------------
+
+        } catch (error) {
+            console.error(`RenterPage: Error changing representative to ID ${newRepresentativeId}:`, error);
+            alert(`Lỗi: ${error.response?.data?.message || error.message || 'Không thể thay đổi người đại diện.'}`);
+        } finally {
+            setIsChangingRepresentative(false); // Kết thúc loading của việc đổi đại diện
+        }
+    };
+    // --- KẾT THÚC HÀM THAY ĐỔI NGƯỜI ĐẠI DIỆN ---
+
 
     const handleTabClick = (tabName) => {
         if (showMemberForm) return; // Không cho chuyển tab khi form đang mở (tùy chọn)
@@ -413,6 +476,8 @@ console.log("Data being sent:", Object.fromEntries(memberFormData)); // Xem dữ
                     {/* === KHU VỰC TAB VÀ NÚT QUAY LẠI === */}
                 {/* Chỉ hiển thị khi không mở form thành viên (hoặc logic tương tự nếu RenterForm giờ phức tạp hơn) */}
                 {/* Hiện tại, giả sử chỉ form thành viên mới ẩn khu vực này */}
+                {isLoading && <div className="loading-overlay">Đang tải dữ liệu...</div>} {/* Thêm overlay loading */}
+                {isChangingRepresentative && <div className="loading-overlay">Đang đổi người đại diện...</div>} {/* Thêm overlay loading */}
                 {!showMemberForm && (
                     <div style={{
                         height: 50,
@@ -448,11 +513,18 @@ console.log("Data being sent:", Object.fromEntries(memberFormData)); // Xem dữ
                             >
                                 Hợp đồng
                             </div>
+                            <div
+                                style={activeTab === 'service' ? activeTabStyle : tabStyle}
+                                onClick={() => handleTabClick('service')}
+                            >
+                                Dịch vụ
+                            </div>
                         </div>
                         {/* --- Kết thúc phần Tab --- */}
 
                         {/* Nút Quay lại */}
-                        <Button label='Quay lại' class_name='delete-btn btn' onClick={() => navigate(-1)} />
+                        <button className="delete-btn btn" onClick={() => navigate(-1)}>Quay lại</button>
+                        
                     </div>
                 )}
                  {/* === KẾT THÚC KHU VỰC TAB === */}
@@ -473,14 +545,18 @@ console.log("Data being sent:", Object.fromEntries(memberFormData)); // Xem dữ
                                     onDeleteRenter={handleSoftDeleteTenant} // Hàm xử lý xóa/rời đi
                                 />
                             )}
-                            {activeTab === 'member' && (
-                                <MembersTabContent
-                                    members={membersData}
-                                    onAddMemberClick={handleShowAddMemberForm} // Mở MemberForm để thêm member
-                                    onEditMemberClick={handleShowEditMemberForm} // Mở MemberForm để sửa member
-                                    onDeleteMember={handleSoftDeleteTenant} // Hàm xóa member
-                                />
-                            )}
+                            {activeTab === 'member' && !showMemberForm && ( // Đảm bảo không hiển thị khi form member đang mở
+                             <MembersTabContent
+                                 members={membersData}
+                                 onAddMemberClick={handleShowAddMemberForm}
+                                 onEditMemberClick={handleShowEditMemberForm}
+                                 onDeleteMember={handleSoftDeleteTenant}
+                                 // Truyền hàm xử lý thay đổi đại diện xuống
+                                 onChangeRepresentative={handleChangeRepresentative}
+                                 // Truyền thêm ID người đại diện hiện tại để disable nút cho chính họ (nếu cần)
+                                 currentRepresentativeId={renterData?.MaKhachThue || renterData?.id}
+                             />
+                         )}
                             {activeTab === 'contract' && (
                                 <ContractTabContent
                                 contractData={contractData}

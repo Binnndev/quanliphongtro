@@ -14,7 +14,9 @@ const TenantDashboardPage = () => {
 
     // === Lấy ID Khách Thuê và Chủ Trọ ===
     // const { currentUser } = useAuth();
+    const landlordId = localStorage.MaTK; // <<<< THAY BẰNG MaTK CHỦ TRỌ THỰC TẾ >>>>
     const tenantId = 3; // <<<< THAY BẰNG MaTK KHÁCH THUÊ THỰC TẾ >>>>
+    
 
     const [landlordInfo, setLandlordInfo] = useState({ MaTK: null, TenDangNhap: null });
     const [landlordFetchError, setLandlordFetchError] = useState('');

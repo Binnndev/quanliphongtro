@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 import Button from './Button';
 import axios from 'axios'; // Thêm axios nếu cần gọi API
 // import { FaEdit, FaTrashAlt } from 'react-icons/fa'; // Bỏ comment nếu dùng react-icons
+import { FaEdit, FaTrashAlt, FaUserCheck } from 'react-icons/fa'; // Thêm icon mới
 
 // --- Component hiển thị nội dung cho Tab Thành viên ---
-const MembersTabContent = ({ members, onAddMemberClick, onEditMemberClick, onDeleteMember  }) => {
+const MembersTabContent = ({ members, onAddMemberClick, onEditMemberClick, onDeleteMember, onChangeRepresentative, currentRepresentativeId }) => {
     const navigate = useNavigate(); // Vẫn giữ nếu cần cho việc khác
 
     // Gọi prop function thay vì xử lý trực tiếp
@@ -48,6 +49,24 @@ const MembersTabContent = ({ members, onAddMemberClick, onEditMemberClick, onDel
         }
     };
 
+    // --- Hàm xử lý khi nhấn nút đổi người đại diện ---
+    const handleChangeRepresentativeClick = (member) => {
+        const memberId = member.MaKhachThue || member.id;
+         if (!memberId) {
+             console.error("Lỗi: Không xác định được ID thành viên để đặt làm đại diện.");
+             return;
+         }
+         // Không cần confirm ở đây nữa vì RenterPage sẽ confirm
+         if (onChangeRepresentative) {
+             console.log(`MembersTabContent: Yêu cầu đổi đại diện sang ID: ${memberId}`);
+             onChangeRepresentative(memberId); // Gọi hàm prop từ RenterPage
+         } else {
+             console.error("MembersTabContent: Prop onChangeRepresentative không tồn tại!");
+         }
+    };
+    // ----------------------------------------------
+
+
     const displayMembers = members && members.length > 0 ? members : [];
     // --- Kết thúc dữ liệu mẫu ---
 
@@ -76,11 +95,10 @@ const MembersTabContent = ({ members, onAddMemberClick, onEditMemberClick, onDel
 
     return (
         <div style={{ padding: '20px' }}>
-            {/* Nút Thêm */}
-            <div style={{ textAlign: 'right', marginBottom: '15px' }}>
-                 {/* Sử dụng Button component hoặc button thường */}
-                 {/* <Button label='Thêm' class_name='green-btn btn' onClick={handleAddMember} /> */}
-                 <button className='green-btn btn' onClick={handleAddMember} >Thêm</button>
+            {/* Tiêu đề và Nút Thêm */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                 <h3 style={{ margin: 0, fontWeight: 'bold', fontSize: '1.2rem' }}>Danh sách thành viên</h3>
+                 <button className='green-btn btn' onClick={handleAddMember}>+ Thêm thành viên</button>
             </div>
 
             {/* Bảng dữ liệu */}
@@ -100,27 +118,53 @@ const MembersTabContent = ({ members, onAddMemberClick, onEditMemberClick, onDel
                         </tr>
                     </thead>
                     <tbody>
-                        {displayMembers.length > 0 ? (
-                            displayMembers.map((member, index) => (
-                                <tr key={member.id || index} >
-                                    <td style={tdCenterStyle}>{member.HoTen}</td>
-                                    <td style={tdCenterStyle}>{member.CCCD}</td>
-                                    <td style={tdCenterStyle}>{member.SoDienThoai}</td>
-                                    <td style={tdCenterStyle}>{member.Email}</td>
-                                    <td style={tdCenterStyle}>{formatDateForInput(member.NgaySinh)}</td>
-                                    <td style={tdCenterStyle}>{member.GioiTinh}</td>
-                                    <td style={{...tdCenterStyle, maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}} title={member.GhiChu}>{member.GhiChu}</td>
-                                    {/* <td style={tdCenterStyle}>{member.AnhGiayTo}</td> */}
-                                    <td style={{...tdCenterStyle, whiteSpace: 'nowrap'}}>
-                                        <button onClick={() => handleEditMember(member)} style={actionButtonStyle} title="Sửa">✏️</button>
-                                        <button onClick={() => handleDeleteMember(member)} style={{ ...actionButtonStyle, color: 'red' }} title="Xóa">🗑️</button>
-                                    </td>
-                                </tr>
-                            ))
+                    {displayMembers.length > 0 ? (
+                            displayMembers.map((member, index) => {
+                                const memberId = member.MaKhachThue || member.id;
+                                // Kiểm tra xem thành viên này có phải là người đại diện hiện tại không
+                                const isCurrentRep = String(memberId) === String(currentRepresentativeId);
+
+                                return (
+                                    <tr key={memberId || index} style={{ borderBottom: '1px solid #eee' }}>
+                                        <td style={tdLeftStyle}>{member.HoTen || 'N/A'}</td>
+                                        <td style={tdCenterStyle}>{member.CCCD || 'N/A'}</td>
+                                        <td style={tdCenterStyle}>{member.SoDienThoai || 'N/A'}</td>
+                                        <td style={tdLeftStyle}>{member.Email || 'N/A'}</td>
+                                        <td style={tdCenterStyle}>{formatDateForInput(member.NgaySinh)}</td>
+                                        <td style={tdCenterStyle}>{member.GioiTinh || 'N/A'}</td>
+                                        <td style={{ ...tdLeftStyle, maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={member.GhiChu || ''}>
+                                            {member.GhiChu || 'N/A'}
+                                        </td>
+                                        <td style={{ ...tdCenterStyle, whiteSpace: 'nowrap' }}>
+                                            {/* Nút Sửa */}
+                                            <button onClick={() => handleEditMember(member)} style={{ ...actionButtonStyle, color: '#007bff' }} title="Sửa">
+                                                <FaEdit />
+                                            </button>
+                                            {/* Nút Xóa (Đánh dấu rời đi) */}
+                                            <button onClick={() => handleDeleteMember(member)} style={{ ...actionButtonStyle, color: '#dc3545' }} title="Đánh dấu rời đi">
+                                                <FaTrashAlt />
+                                            </button>
+
+                                            {/* === NÚT MỚI: ĐẶT LÀM NGƯỜI ĐẠI DIỆN === */}
+                                            {/* Chỉ hiển thị nếu có hàm xử lý và thành viên này KHÔNG phải là đại diện hiện tại */}
+                                            {onChangeRepresentative && !isCurrentRep && (
+                                                <button
+                                                    onClick={() => handleChangeRepresentativeClick(member)}
+                                                    style={{ ...actionButtonStyle, color: '#28a745' }} // Màu xanh lá cây
+                                                    title="Đặt làm người đại diện"
+                                                >
+                                                    <FaUserCheck />
+                                                </button>
+                                            )}
+                                            {/* ====================================== */}
+                                        </td>
+                                    </tr>
+                                );
+                            })
                         ) : (
                             <tr>
-                                <td colSpan="9" style={{ padding: '20px', textAlign: 'center', fontStyle: 'italic', color: '#666' }}>
-                                    Chưa có thành viên nào.
+                                <td colSpan="8" style={{ padding: '20px', textAlign: 'center', fontStyle: 'italic', color: '#666' }}>
+                                    Chưa có thành viên nào trong phòng này.
                                 </td>
                             </tr>
                         )}

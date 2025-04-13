@@ -55,7 +55,8 @@ module.exports = (sequelize, DataTypes) => {
     
         Contract.associate = function(models) {
             // Định nghĩa association ở đây nếu cần
-            Contract.belongsTo(models.Tenant, { foreignKey: 'MaKhachThue' }); // Đặt alias nếu muốn
+            Contract.belongsTo(models.Tenant, { foreignKey: 'MaKhachThue' });
+            Contract.belongsTo(models.Room, { foreignKey: 'MaPhong' });
           };
         
     return Contract;
