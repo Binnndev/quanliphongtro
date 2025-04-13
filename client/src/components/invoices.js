@@ -2,7 +2,7 @@ import html2pdf from "html2pdf.js";
 import InvoicePrintView from "./InvoicePrintView"; // đường dẫn đúng
 import React, { useRef } from "react";
 
-const Invoice = ({ isOpen, onClose, invoiceData }) => {
+const Invoice = ({ isOpen, onClose, invoiceData, onSend, isSending }) => {
   const printRef = useRef();
 
 const handleDownloadPDF = () => {
@@ -19,6 +19,13 @@ const handleDownloadPDF = () => {
     .save();
 };
   if (!isOpen || !invoiceData) return null;
+
+    // Hàm xử lý khi nhấn nút "Gửi hóa đơn"
+    const handleSendClick = () => {
+        if (typeof onSend === 'function') {
+            onSend(invoiceData); // Gọi hàm từ component cha và truyền invoiceData lên
+        }
+    };
 
   return (
     <div className="popup-overlay">
@@ -84,7 +91,7 @@ const handleDownloadPDF = () => {
 
         <div className="popup-actions">
           <button className="btn blue" onClick={handleDownloadPDF}>Tải file</button>
-          <button className="btn cyan">Gửi hóa đơn</button>
+                  <button onClick={handleSendClick} disabled={isSending} className="btn cyan">Gửi hóa đơn</button>
           <button onClick={onClose} className="btn red">Đóng</button>
         </div>
       </div>

@@ -8,7 +8,13 @@ const PaymentIndex = () => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [confirmPayId, setConfirmPayId] = useState(null);
   const [methodList, setMethodList] = useState([]);
-  const [payMethod, setPayMethod] = useState("");
+    const [payMethod, setPayMethod] = useState("");
+    const [isSendingReminder, setIsSendingReminder] = useState(false); // State loading gửi nhắc nhở
+
+    // --- Lấy ID Chủ trọ ---
+    // const { currentUser } = useAuth();
+    const landlordId = 1; // <<<< THAY BẰNG MaTK CHỦ TRỌ THỰC TẾ >>>>
+    // ----------------------
 
   useEffect(() => {
     fetchInvoices();
@@ -33,6 +39,7 @@ const PaymentIndex = () => {
 
         const invoice = invoiceRes.data;
         console.log("detailRes", detailRes.data);
+        console.log("invoice", invoice);
       const chiTietDichVu = detailRes.data.map((ct) => ({
           moTa: ct.Service?.TenDV || `Dịch vụ #${ct.MaDV}`,
           soLuong: ct.SoLuong,
@@ -43,7 +50,8 @@ const PaymentIndex = () => {
       const invoiceData = {
         nha: invoice.TenNhaTro,
         diaChi: invoice.DiaChiNha,
-        hoTen: invoice.TenKhachThue,
+          hoTen: invoice.TenKhachThue,
+        maTKKhachThue: invoice.Tenant.MaTK,
         phong: invoice.TenPhong,
         ngayVao: "2024-01-01", // demo
         thang: new Date(invoice.NgayLap).toLocaleDateString("vi-VN", {
@@ -57,7 +65,10 @@ const PaymentIndex = () => {
         soTaiKhoan: "0123456789",
         tenChuTK: invoice.TenChuTro,
         soDienThoai: invoice.SdtChuTro,
+        
       };
+        
+        console.log("invoiceData", invoiceData);
 
       setSelectedInvoice(invoiceData);
       setIsPopupOpen(true);
@@ -83,6 +94,43 @@ const PaymentIndex = () => {
       console.error("Lỗi khi thanh toán:", err);
     }
   };
+    
+    // --- Hàm xử lý gửi thông báo nhắc nhở ---
+    const handleSendReminder = async (invoiceToSend) => {
+        if (!landlordId) {
+            alert("Lỗi: Không xác định được người gửi (chủ trọ).");
+            return;
+        }
+        if (!invoiceToSend?.maTKKhachThue) {
+             alert("Lỗi: Không tìm thấy thông tin tài khoản của khách thuê để gửi thông báo.");
+             console.error("Dữ liệu hóa đơn thiếu MaTK khách thuê:", invoiceToSend);
+             return;
+        }
+
+        setIsSendingReminder(true); // Bắt đầu loading
+        const title = `Thông báo hóa đơn tháng ${invoiceToSend.thang} - Phòng ${invoiceToSend.phong}`;
+        const content = `Xin chào ${invoiceToSend.hoTen},\n\nĐã có hóa đơn tiền nhà tháng ${invoiceToSend.thang} cho phòng ${invoiceToSend.phong}.\nTổng số tiền cần thanh toán là: ${invoiceToSend.tongTien.toLocaleString('vi-VN')} đ.\nHạn thanh toán: ${invoiceToSend.hanThanhToan}.\n\nVui lòng thanh toán đúng hạn.\nXin cảm ơn!`;
+
+        const payload = {
+            MaNguoiGui: landlordId, // MaTK của chủ trọ
+            MaNguoiNhan: invoiceToSend.maTKKhachThue, // MaTK của khách thuê
+            TieuDe: title,
+            NoiDung: content,
+        };
+
+        try {
+            await axios.post('/api/notifications', payload); // Gọi API tạo thông báo
+            alert("Đã gửi thông báo nhắc nhở thanh toán cho khách thuê thành công!");
+            // Có thể đóng popup sau khi gửi thành công nếu muốn
+            // setIsPopupOpen(false);
+        } catch (err) {
+            console.error("Lỗi khi gửi thông báo nhắc nhở:", err);
+            alert(`Lỗi khi gửi thông báo: ${err.response?.data?.message || err.message}`);
+        } finally {
+             setIsSendingReminder(false); // Kết thúc loading
+        }
+    };
+    // --------------------------------------
 
   return (
     <div className="invoice__wrapper">
@@ -143,7 +191,9 @@ const PaymentIndex = () => {
       <Invoice
         isOpen={isPopupOpen}
         onClose={() => setIsPopupOpen(false)}
-        invoiceData={selectedInvoice}
+              invoiceData={selectedInvoice}
+              onSend={handleSendReminder} // Prop mới
+                isSending={isSendingReminder} // Prop trạng thái loading
       />
 
       {/* Modal chọn phương thức thanh toán */}

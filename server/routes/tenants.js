@@ -41,6 +41,12 @@ router.get("/gender/:sex", tenantController.getTenantByGender);
 router.get("/room/:roomId", tenantController.getTenantByRoom);
 router.get("/room/:roomId/representative", tenantController.getRepresentativeByRoom);
 router.get("/room/:roomId/members", tenantController.getMembersByRoom);
+router.get(
+    '/:tenantUserId/landlord-account', // tenantUserId ở đây là MaTK của khách thuê
+    // authenticateToken, // Đảm bảo chỉ khách thuê đó mới gọi được hoặc admin
+    // isTenant, // Hoặc middleware kiểm tra vai trò
+    tenantController.getLandlordAccountForTenant
+);
 
 // 2. Áp dụng middleware upload.single('documentPhoto') cho route update
 // 'documentPhoto' là tên field trong FormData gửi từ frontend
@@ -58,6 +64,7 @@ router.patch(
     "/change-representative", // Không cần ID trong URL, dùng body
     tenantController.changeRoomRepresentative
 );
+
 
 // Route tìm kiếm (nếu có)
 router.get("/search", tenantController.searchTenantByName); // Giả sử có controller này
