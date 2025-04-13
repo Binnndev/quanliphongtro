@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
         autoIncrement: true,
       },
       HoTen: DataTypes.STRING,
-      Email: DataTypes.STRING,
+      Email: { type: DataTypes.STRING, validate: { isEmail: true } },
       SoDienThoai: DataTypes.STRING,
       MaTK: DataTypes.INTEGER,
     },
@@ -19,9 +19,11 @@ module.exports = (sequelize, DataTypes) => {
   );
 
   Landlord.associate = (models) => {
-    // Thay models.User thành models.TaiKhoan vì model tài khoản của bạn được định nghĩa là TaiKhoan
-    Landlord.hasOne(models.TaiKhoan, { foreignKey: "MaTK" });
-    Landlord.hasMany(models.RentalHouse, { foreignKey: "MaChuTro" });
+    Landlord.belongsTo(models.TaiKhoan, { foreignKey: "MaTK", as: "Account" }); // 1‑1
+    Landlord.hasMany(models.RentalHouse, {
+      foreignKey: "MaChuTro",
+      as: "Houses",
+    });
   };
 
   return Landlord;

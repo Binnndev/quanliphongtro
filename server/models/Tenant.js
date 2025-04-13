@@ -1,5 +1,3 @@
-const { Sequelize, DataTypes } = require("sequelize");
-
 module.exports = (sequelize, DataTypes) => {
   const Tenant = sequelize.define(
     "Tenant",
@@ -9,75 +7,35 @@ module.exports = (sequelize, DataTypes) => {
         primaryKey: true,
         autoIncrement: true,
       },
-      MaPhong: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-      },
-      HoTen: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      MaTK: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-      },
-      CCCD: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,
-      },
-      SoDienThoai: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,
-      },
+      MaPhong: DataTypes.INTEGER,
+      HoTen: { type: DataTypes.STRING, allowNull: false },
+      MaTK: DataTypes.INTEGER,
+      CCCD: { type: DataTypes.STRING, allowNull: false, unique: true },
+      SoDienThoai: { type: DataTypes.STRING, allowNull: false, unique: true },
       Email: {
         type: DataTypes.STRING,
-        allowNull: true,
         unique: true,
         validate: { isEmail: true },
       },
-      NgaySinh: {
-        type: DataTypes.DATE,
-        allowNull: false,
-      },
-      GioiTinh: {
-        type: DataTypes.ENUM("Nam", "Nữ", "Khác"),
-        allowNull: false,
-      },
-      GhiChu: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      AnhGiayTo: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
+      NgaySinh: DataTypes.DATEONLY,
+      GioiTinh: { type: DataTypes.ENUM("Nam", "Nữ", "Khác"), allowNull: false },
+      GhiChu: DataTypes.STRING,
+      AnhGiayTo: DataTypes.STRING,
       TrangThai: {
         type: DataTypes.ENUM("Đang thuê", "Đã rời đi"),
         defaultValue: "Đang thuê",
       },
-      LaNguoiDaiDien: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
-      },
-      NgayThue: {
-        type: DataTypes.DATE,
-        allowNull: true,
-      },
-      NgayRoiDi: {
-        type: DataTypes.DATE,
-        allowNull: true,
-      },
+      LaNguoiDaiDien: { type: DataTypes.BOOLEAN, defaultValue: false },
+      NgayThue: DataTypes.DATEONLY,
+      NgayRoiDi: DataTypes.DATEONLY,
     },
     {
-      sequelize,
-      tableName: "KhachThue", // Tên bảng trong database
+      tableName: "KhachThue",
       timestamps: false,
     }
   );
 
-  Tenant.associate = function (models) {
+  Tenant.associate = (models) => {
     Tenant.belongsTo(models.Room, { foreignKey: "MaPhong", as: "Room" });
     Tenant.belongsTo(models.TaiKhoan, { foreignKey: "MaTK", as: "User" });
     Tenant.hasMany(models.Invoice, {

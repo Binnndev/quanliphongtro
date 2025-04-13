@@ -1,4 +1,4 @@
-const { TaiKhoan } = require("../models");
+const { TaiKhoan, Landlord, Tenant } = require("../models");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -8,7 +8,19 @@ const JWT_THOI_HAN = process.env.JWT_THOI_HAN || "1h";
 // Đăng ký tài khoản
 exports.register = async (req, res) => {
   try {
-    const { TenDangNhap, MatKhau, LoaiTaiKhoan } = req.body;
+    const {
+      TenDangNhap,
+      MatKhau,
+      LoaiTaiKhoan,
+      // Thông tin bổ sung
+      HoTen,
+      SoDienThoai,
+      Email,
+      DiaChi,
+      CCCD,
+      NgaySinh,
+      GioiTinh,
+    } = req.body;
     if (!TenDangNhap || !MatKhau || !LoaiTaiKhoan) {
       return res.status(400).json({ error: "Thiếu thông tin bắt buộc" });
     }
@@ -26,6 +38,26 @@ exports.register = async (req, res) => {
       LoaiTaiKhoan,
       TrangThai: "Kích hoạt",
     });
+
+    if (LoaiTaiKhoan === "Chủ Trọ") {
+      await Landlord.create({
+        HoTen,
+        SoDienThoai,
+        Email,
+        MaTK: newUser.MaTK,
+      });
+    } else if (LoaiTaiKhoan === "Khách Thuê") {
+      await Tenant.create({
+        HoTen,
+        SoDienThoai,
+        Email,
+        CCCD,
+        NgaySinh,
+        GioiTinh,
+        DiaChi,
+        MaTK: newUser.MaTK,
+      });
+    }
 
     return res
       .status(201)
