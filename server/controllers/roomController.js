@@ -11,7 +11,7 @@ exports.getRooms = async (req, res) => {
     }
     if (search) {
       // Dùng đúng tên trường "roomName"
-      filter.roomName = { [Op.like]: `%${search}%` };
+      filter.TenPhong = { [Op.like]: `%${search}%` };
     }
     const rooms = await Room.findAll({ where: filter });
     res.status(200).json(rooms);
@@ -58,7 +58,18 @@ exports.getRoomsByLandlord = async (req, res) => {
       // return res.status(404).send({ message: `Không tìm thấy chủ trọ với ID ${landlordUserId}.` });
     }
 
-    const landlordMaChuTro = landlord.MaChuTro;
+      const landlordMaChuTro = landlord.MaChuTro;
+      
+      const { status, search } = req.query;
+    let filter = {};
+    if (status) {
+      // Nếu status là "rented" thì room đã được cho thuê, ngược lại chưa cho thuê (rented = false)
+      filter.rented = status === "rented" ? true : false;
+    }
+    if (search) {
+      // Dùng đúng tên trường "roomName"
+      filter.TenPhong = { [Op.like]: `%${search}%` };
+    }
 
     // 2. Tìm tất cả các phòng thuộc các nhà trọ của chủ trọ đó
     const rooms = await Room.findAll({
@@ -77,8 +88,11 @@ exports.getRoomsByLandlord = async (req, res) => {
       order: [
         // Optional: Sắp xếp kết quả, ví dụ theo MaNhaTro rồi đến TenPhong
         [{ model: RentalHouse }, "MaNhaTro", "ASC"],
-        ["roomName", "ASC"],
-      ],
+        ["TenPhong", "ASC"],
+        ],
+      where: {
+        ...filter, // Thêm các điều kiện lọc từ query params
+      },
     });
 
     res.status(200).json(rooms);

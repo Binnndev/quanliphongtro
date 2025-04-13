@@ -1,4 +1,4 @@
-const { Landlord, RentalHouse, Room, Tenant, User, sequelize, Sequelize } = require('../models'); // Đường dẫn có thể khác tùy cấu trúc dự án của bạn
+const { Landlord, RentalHouse, Room, Tenant, TaiKhoan, sequelize, Sequelize } = require('../models'); // Đường dẫn có thể khác tùy cấu trúc dự án của bạn
 const { Op } = Sequelize; // Import Op nếu bạn dùng nó để query (như trong ví dụ getLandlordTenantsWithAccount)
 
 
@@ -53,7 +53,7 @@ exports.getLandlordTenantsWithAccount = async (req, res) => {
                     }]
                 },
                 {
-                    model: User, // Lấy thông tin User nếu cần
+                    model: TaiKhoan, // Lấy thông tin User nếu cần
                     as: 'User',
                     attributes: ['MaTK', 'TenDangNhap']
                 }

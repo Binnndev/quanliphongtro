@@ -2,7 +2,7 @@
 
 // --- Imports ---
 // Import User model instead of Tenant for associations
-const { Notification, User, Tenant, Landlord, Sequelize } = require("../models");
+const { Notification, TaiKhoan, Tenant, Landlord, Sequelize } = require("../models");
 const { Op } = Sequelize;
 
 // --- Controller Functions ---
@@ -19,8 +19,8 @@ exports.createNotification = async (req, res) => {
         }
 
         // Check if sender/receiver User accounts exist using MaTK
-        const senderExists = await User.findByPk(MaNguoiGui);
-        const receiverExists = await User.findByPk(MaNguoiNhan);
+        const senderExists = await TaiKhoan.findByPk(MaNguoiGui);
+        const receiverExists = await TaiKhoan.findByPk(MaNguoiNhan);
         if (!senderExists || !receiverExists) {
             return res.status(400).json({ message: "Tài khoản Người gửi hoặc Người nhận không hợp lệ." });
         }
@@ -46,7 +46,7 @@ exports.createNotification = async (req, res) => {
         // Fetch the notification again with sender info to return
         const createdNotification = await Notification.findByPk(notification.MaThongBao, {
             include: [{
-                model: User,
+                model: TaiKhoan,
                 as: 'SenderAccount', // Use the correct alias
                 attributes: ['MaTK'] // Include desired User attributes (adjust as needed)
             }]
@@ -119,7 +119,7 @@ exports.getNotificationsForUser = async (req, res) => {
             offset: offset,
             order: [['ThoiGian', 'DESC']],
             include: [{ // Include để lấy tên người gửi (nếu cần)
-                 model: User,
+                 model: TaiKhoan,
                  as: 'SenderAccount', // Alias của người gửi
                  attributes: ['MaTK', 'TenDangNhap', 'LoaiTaiKhoan'],
                  required: false, // LEFT JOIN
@@ -196,7 +196,7 @@ exports.getSentNotifications = async (req, res) => {
             where: whereCondition, // Áp dụng điều kiện tìm kiếm
             include: [ // Include vẫn giữ nguyên để lấy tên người nhận
                 {
-                    model: User,
+                    model: TaiKhoan,
                     as: 'ReceiverAccount',
                     attributes: ['MaTK', 'TenDangNhap', 'LoaiTaiKhoan'],
                     include: [
@@ -249,8 +249,8 @@ exports.getNotificationById = async (req, res) => {
     try {
         const notification = await Notification.findByPk(notificationId, {
              include: [
-                 { model: User, as: 'SenderAccount', attributes: ['MaTK'] }, // Use User model and correct alias
-                 { model: User, as: 'ReceiverAccount', attributes: ['MaTK'] } // Use User model and correct alias
+                 { model: TaiKhoan, as: 'SenderAccount', attributes: ['MaTK'] }, // Use User model and correct alias
+                 { model: TaiKhoan, as: 'ReceiverAccount', attributes: ['MaTK'] } // Use User model and correct alias
              ]
         });
         if (!notification) {
@@ -291,7 +291,7 @@ exports.markAsRead = async (req, res) => {
 
         console.log(`✅ Đánh dấu đã đọc cho thông báo ID: ${notificationId}`);
         const updatedNotification = await Notification.findByPk(notificationId, {
-             include: [{ model: User, as: 'SenderAccount', attributes: ['MaTK'] }] // Include sender info in response
+             include: [{ model: TaiKhoan, as: 'SenderAccount', attributes: ['MaTK'] }] // Include sender info in response
         });
         res.json({ message: "Đánh dấu đã đọc thành công", notification: updatedNotification });
 

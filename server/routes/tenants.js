@@ -60,8 +60,9 @@ router.post("/add", upload.single('documentPhoto'), tenantController.addTenant);
 router.delete("/delete/:id", tenantController.deleteTenant);
 
 // ⭐⭐⭐ ROUTE MỚI: Đổi người đại diện ⭐⭐⭐
+// Dùng PATCH vì đây là hành động cập nhật trạng thái của nhiều bản ghi liên quan
 router.patch(
-    "/change-representative", // Không cần ID trong URL, dùng body
+    "/change-representative", // Sử dụng body để gửi roomId và newRepresentativeId
     tenantController.changeRoomRepresentative
 );
 

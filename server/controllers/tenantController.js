@@ -1,4 +1,4 @@
-const { Tenant, Room, RentalHouse, Landlord, User, sequelize } = require('../models'); // Import đủ models
+const { Tenant, Room, RentalHouse, Landlord, TaiKhoan, sequelize } = require('../models'); // Import đủ models
 const fs = require('fs');
 const path = require('path'); // Giữ lại path nếu cần dùng ở chỗ khác
 
@@ -104,8 +104,8 @@ exports.getLandlordAccountForTenant = async (req, res) => {
                         required: true,
                         attributes: ['MaChuTro', 'MaTK'], // Lấy các khóa cần thiết
                         include: [{ // Level 4: Landlord -> User
-                            model: User,
-                            as: 'User',
+                            model: TaiKhoan,
+                            // as: 'User',
                             required: true,
                             attributes: ['MaTK', 'TenDangNhap'] // Lấy thông tin User chủ trọ
                         }]
@@ -131,7 +131,7 @@ exports.getLandlordAccountForTenant = async (req, res) => {
         }
 
         // Kiểm tra chuỗi liên kết dữ liệu
-        const landlordUser = tenant.Room?.RentalHouse?.Landlord?.User;
+        const landlordUser = tenant.Room?.RentalHouse?.Landlord?.TaiKhoan;
 
         if (!landlordUser) {
             // Log 4b: Tìm thấy Tenant nhưng chuỗi liên kết bị đứt hoặc dữ liệu lồng nhau bị thiếu
@@ -366,37 +366,49 @@ exports.deleteTenant = async (req, res) => {
 
 // ⭐⭐⭐ HÀM MỚI: Thay đổi người đại diện phòng ⭐⭐⭐
 exports.changeRoomRepresentative = async (req, res) => {
-    const { roomId, newRepresentativeTenantId } = req.body; // Lấy roomId và ID người mới từ body
+    // Lấy roomId và ID người mới từ body như frontend gửi lên
+    const { roomId, newRepresentativeId } = req.body; // Đổi tên key cho khớp frontend
     let transaction;
+
+    console.log(`[API Change Rep] Request received: Room ID=${roomId}, New Rep ID=${newRepresentativeId}`);
 
     try {
         // Validate input
-        if (!roomId || !newRepresentativeTenantId) {
+        if (!roomId || !newRepresentativeId) {
+            console.log("[API Change Rep] Validation failed: Missing roomId or newRepresentativeId");
             return res.status(400).json({ message: "Thiếu thông tin Phòng hoặc Người đại diện mới." });
         }
 
         transaction = await sequelize.transaction();
+        console.log("[API Change Rep] Transaction started.");
 
         // 1. Tìm người đại diện mới được chọn (phải đang ở trong phòng và đang thuê)
+        console.log(`[API Change Rep] Finding new representative: ID=${newRepresentativeId}, Room=${roomId}`);
         const newRep = await Tenant.findOne({
             where: {
-                MaKhachThue: newRepresentativeTenantId,
+                MaKhachThue: newRepresentativeId,
                 MaPhong: roomId,
                 NgayRoiDi: null // Phải đang thuê
             },
             transaction
         });
+
         if (!newRep) {
+            console.log("[API Change Rep] New representative not found or already left.");
             await transaction.rollback();
             return res.status(404).json({ message: "Không tìm thấy người thuê được chọn làm đại diện mới trong phòng này hoặc họ đã rời đi." });
         }
+        console.log(`[API Change Rep] Found new representative: ${newRep.HoTen}`);
+
         if (newRep.LaNguoiDaiDien) {
+             console.log("[API Change Rep] Selected tenant is already the representative.");
              await transaction.rollback();
              return res.status(400).json({ message: "Người này hiện đã là người đại diện rồi." });
         }
 
 
         // 2. Tìm và bỏ trạng thái đại diện của người cũ (nếu có) trong cùng phòng
+         console.log(`[API Change Rep] Demoting old representative(s) in Room=${roomId}`);
         const [updateCount] = await Tenant.update(
             { LaNguoiDaiDien: false },
             {
@@ -404,27 +416,36 @@ exports.changeRoomRepresentative = async (req, res) => {
                     MaPhong: roomId,
                     LaNguoiDaiDien: true,
                     NgayRoiDi: null // Chỉ tìm người đang thuê
-                    // Không cần loại trừ newRep vì nó đang là false
                 },
                 transaction
             }
         );
-        console.log(`Đã bỏ đại diện ${updateCount} người cũ trong phòng ${roomId}.`);
+        console.log(`[API Change Rep] Demoted ${updateCount} old representative(s).`);
+
 
         // 3. Cập nhật người mới thành đại diện
+         console.log(`[API Change Rep] Promoting new representative: ID=${newRepresentativeId}`);
         await newRep.update({ LaNguoiDaiDien: true }, { transaction });
-        console.log(`Đã đặt tenant ${newRepresentativeTenantId} làm đại diện mới cho phòng ${roomId}.`);
+        console.log(`[API Change Rep] Successfully promoted ${newRep.HoTen}.`);
+
 
         // 4. Commit transaction
         await transaction.commit();
-        console.log("✅ Transaction đổi đại diện committed.");
+        console.log("[API Change Rep] Transaction committed successfully.");
 
-        res.json({ message: `Đã đổi người đại diện phòng ${roomId} thành công.` });
+
+        // *** Trả về thông tin người đại diện mới để frontend cập nhật state ***
+        res.json({
+             message: `Đã đổi người đại diện phòng ${roomId} thành công.`,
+             newRepresentative: newRep // Gửi kèm dữ liệu người đại diện mới
+         });
 
     } catch (error) {
-        console.error(`❌ Lỗi khi đổi người đại diện phòng ${roomId}:`, error);
-        if (transaction) await transaction.rollback();
-        console.log("⏪ Transaction đổi đại diện rolled back.");
+        console.error(`[API Change Rep] ❌ Error changing representative for room ${roomId}:`, error);
+        if (transaction) {
+             await transaction.rollback();
+             console.log("[API Change Rep] Transaction rolled back due to error.");
+        }
         res.status(500).json({ message: error.message || "Lỗi máy chủ khi đổi người đại diện." });
     }
 };
