@@ -6,24 +6,24 @@ const api = axios.create({
 
 // 1. Lấy danh sách room
 export const getDsPhong = async () => {
-  const response = await api.get("/api/phong");
+  const response = await api.get("/api/rooms");
   return response.data; // giả sử backend trả về mảng room
 };
 
 // 2. Thêm room
 export const themPhong = async (roomData) => {
-  const response = await api.post("/api/phong", roomData);
+  const response = await api.post("/api/rooms", roomData);
   return response.data;
 };
 
 // 3. Sửa room
 export const suaPhong = async (id, data) => {
-  const response = await api.put(`/api/phong/${id}`, data);
+  const response = await api.put(`/api/rooms/${id}`, data);
   return response.data;
 };
 
 // 4. Xóa room
 export const xoaPhong = async (id) => {
-  const response = await api.delete(`/api/phong/${id}`);
+  const response = await api.delete(`/api/rooms/${id}`);
   return response.data;
 };

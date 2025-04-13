@@ -17,10 +17,8 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       LoaiTaiKhoan: {
-        // Nếu muốn bắt buộc người dùng chọn 1 loại, thì allowNull: false
         type: DataTypes.ENUM("Chủ Trọ", "Khách Thuê"),
         allowNull: true,
-        //defaultValue: "Khách Thuê" (nếu cần mặc định)
       },
       TrangThai: {
         type: DataTypes.ENUM("Kích hoạt", "Vô hiệu hóa"),
@@ -30,15 +28,21 @@ module.exports = (sequelize, DataTypes) => {
       NgayTao: {
         type: DataTypes.DATEONLY,
         allowNull: true,
-        //auto set ngày hiện tại khi tạo
         defaultValue: DataTypes.NOW,
+      },
+      resetToken: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      resetTokenExpiry: {
+        type: DataTypes.DATE,
+        allowNull: true,
       },
     },
     {
       tableName: "TaiKhoan",
       timestamps: false,
       hooks: {
-        // mã hoá mật khẩu trước khi lưu
         beforeCreate: async (taiKhoan) => {
           const bcrypt = require("bcryptjs");
           taiKhoan.MatKhau = await bcrypt.hash(taiKhoan.MatKhau, 10);
@@ -47,7 +51,9 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
-  TaiKhoan.associate = function (models) {};
+  TaiKhoan.associate = function (models) {
+    // Các quan hệ nếu có
+  };
 
   return TaiKhoan;
 };
