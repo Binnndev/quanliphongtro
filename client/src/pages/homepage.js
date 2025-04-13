@@ -301,8 +301,8 @@ const Homepage = () => {
               {page == "dien" && <DienNuoc type="Điện" data={dataDien} />}
               {page == "nuoc" && <DienNuoc type="Nước" data={dataNuoc} />}
               {page == "tinhTien" && <PaymentIndex />}
-              {page === "dichVu" && selectedHouse && (
-            <DichVuIndex maChuTro={selectedHouse.MaChuTro} />
+              {page === "dichVu" && (
+            <DichVuIndex />
             )}
               {page === "thongke" && <ThongKe />}
             </div>

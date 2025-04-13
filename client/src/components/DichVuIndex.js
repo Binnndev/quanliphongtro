@@ -3,7 +3,7 @@ import axios from "axios";
 import ModalDichVu from "./ModalDichVu";
 import ModalConfirm from "./ModalConfirm";
 
-const DichVuIndex = ({ maChuTro }) => {
+const DichVuIndex = () => {
   const [dichVuList, setDichVuList] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDichVu, setSelectedDichVu] = useState(null);
@@ -11,24 +11,19 @@ const DichVuIndex = ({ maChuTro }) => {
   const [confirmAction, setConfirmAction] = useState(() => () => {});
   const [confirmContent, setConfirmContent] = useState({ title: "", message: "" });
 
-  // ✅ Load danh sách dịch vụ theo MaChuTro
+  // Load danh sách dịch vụ từ API
+  const fetchData = async () => {
+    try {
+      const res = await axios.get("/api/service");
+      setDichVuList(res.data);
+    } catch (error) {
+      console.error("Lỗi tải danh sách dịch vụ:", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      console.log(maChuTro);
-      
-      try {
-        if (maChuTro) {
-          const res = await axios.get(`/api/service/by-chutro?maChuTro=${maChuTro}`);
-          setDichVuList(res.data);
-        }
-      } catch (err) {
-        console.error("Lỗi khi tải dịch vụ:", err);
-      }
-    };
-
     fetchData();
-  }, [maChuTro]);
-
+  }, []);
 
   const handleOpenAdd = () => {
     setSelectedDichVu(null);
@@ -78,8 +73,8 @@ const DichVuIndex = ({ maChuTro }) => {
           )
         );
       } else {
-        // Thêm mới (gửi kèm MaChuTro)
-        const res = await axios.post("/api/service", { ...formData, MaChuTro: maChuTro });
+        // Thêm mới
+        const res = await axios.post("/api/service", formData);
         setDichVuList((prev) => [...prev, res.data]);
       }
       setIsModalOpen(false);
