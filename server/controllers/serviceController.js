@@ -18,6 +18,27 @@ exports.getServices = async (req, res) => {
   }
 };
 
+
+// Lấy dịch vụ theo mã chủ trọ
+exports.getServicesByChuTro = async (req, res) => {
+  try {
+    const { maChuTro } = req.query;
+    if (!maChuTro) {
+      return res.status(400).json({ error: "Thiếu maChuTro" });
+    }
+
+    const services = await Service.findAll({
+      where: { MaChuTro: maChuTro },
+    });
+
+    res.status(200).json(services);
+  } catch (error) {
+    console.error("Lỗi lấy dịch vụ theo chủ trọ:", error);
+    res.status(500).json({ error: "Lỗi server" });
+  }
+};
+
+
 // Lấy chi tiết 1 dịch vụ
 exports.getServiceById = async (req, res) => {
   try {

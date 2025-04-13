@@ -14,6 +14,7 @@ import Home from "./home";
 import DienNuoc from "../components/DienNuocIndex";
 import PaymentIndex from "../components/PaymentIndex";
 import ThongKe from "../components/ThongKe";
+import axios from "axios";
 import {
   getDsPhong,
   themPhong,
@@ -28,30 +29,13 @@ const Homepage = () => {
 
   const [isOpen, setIsOpen] = useState(false);
 
+  const [houses, setHouses] = useState([]);
+    
+  const [selectedHouse, setSelectedHouse] = useState(null);       
+
   const [page, setPage] = useState("thongke");
 
-  const invoiceData = {
-    nha: "Nhà Q7",
-    diaChi: "Huỳnh Tấn Phát, Phường Tân Phú, Quận 7, Tp HCM",
-    hoTen: "Vũ Văn Thiết",
-    phong: "100A",
-    ngayVao: "12/03/2024",
-    thang: "02/2024",
-    danhSachChiTiet: [
-      { moTa: "Tiền nhà (01/02 - 28/02)", gia: 5310345 },
-      { moTa: "Xe máy (1 chiếc)", gia: 50000 },
-      { moTa: "Wifi (1)", gia: 250000 },
-      { moTa: "Vệ sinh (2)", gia: 40000 },
-      { moTa: "Nước (821 - 845)", gia: 480000 },
-      { moTa: "Điện (980 - 1239)", gia: 777000 },
-    ],
-    tongTien: 6907345,
-    bangChu: "sáu triệu chín trăm lẻ bảy nghìn ba trăm bốn mươi lăm",
-    nganHang: "Sacombank",
-    soTaiKhoan: "07861235123124",
-    tenChuTK: "Huỳnh Công Khanh",
-    soDienThoai: "0777905219",
-  };
+  
 
   const dataDien = [
     { thoiGian: "3/2024", nha: "Nhà Q7", phong: "100A", cu: 1239, moi: 1290 },
@@ -73,6 +57,25 @@ const Homepage = () => {
       fetchRooms();
     }
   }, [navigate]);
+  useEffect(() => {
+    const fetchHouses = async () => {
+      try {
+        const res = await axios.get("/api/houses");
+        if (Array.isArray(res.data)) {
+          setHouses(res.data);
+          setSelectedHouse(res.data[0]);
+        } else {
+          console.error("Dữ liệu không hợp lệ:", res.data);
+          setHouses([]);
+        }
+      } catch (err) {
+        console.error("Lỗi khi lấy danh sách nhà:", err);
+        setHouses([]);
+      }
+    };
+  
+    fetchHouses();
+  }, []);
 
   const fetchRooms = async () => {
     try {
@@ -217,18 +220,14 @@ const Homepage = () => {
                 borderBottom: "1px #D2D2D2 solid",
               }}
             >
-              <Button
-                class_name="address-btn btn-2 active-btn"
-                label="1 - 198 ÂU CƠ"
-              />
-              <Button
-                class_name="address-btn btn-2"
-                label="2 - 123 THANH NIÊN"
-              />
-              <Button
-                class_name="address-btn btn-2"
-                label="3 - 12 NGUYỄN THÁI HỌC"
-              />
+              {Array.isArray(houses) && houses.map((nha, idx) => (
+  <Button
+    key={nha.MaNhaTro}
+    class_name={`address-btn btn-2 ${selectedHouse?.MaNhaTro === nha.MaNhaTro ? "active-btn" : ""}`}
+    label={`${idx + 1} - ${nha.TenNhaTro}`}
+    onClick={() => setSelectedHouse(nha)}
+  />
+))}
             </div>
             <div
               style={{
@@ -250,7 +249,9 @@ const Homepage = () => {
               {page == "dien" && <DienNuoc type="Điện" data={dataDien} />}
               {page == "nuoc" && <DienNuoc type="Nước" data={dataNuoc} />}
               {page == "tinhTien" && <PaymentIndex />}
-              {page === "dichVu" && <DichVuIndex />}
+              {page === "dichVu" && selectedHouse && (
+            <DichVuIndex maChuTro={selectedHouse.MaChuTro} />
+            )}
               {page === "thongke" && <ThongKe />}
             </div>
           </div>

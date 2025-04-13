@@ -22,6 +22,10 @@ module.exports = (sequelize, DataTypes) => {
                 type: DataTypes.DECIMAL,
                 allowNull: false,
             },
+            MaChuTro: {
+                type: DataTypes.INTEGER,
+                allowNull: false,
+              },    
         },
         {
             sequelize,
@@ -31,6 +35,10 @@ module.exports = (sequelize, DataTypes) => {
     );
 
     Service.associate = (models) => {
+        Service.belongsTo(models.Landlord, {
+            foreignKey: "MaChuTro",
+            // as: "ChuTro"
+          });
         Service.hasMany(models.InvoiceDetail, { foreignKey: "MaDV" });
     };
     return Service;
