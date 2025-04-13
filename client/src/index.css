@@ -505,6 +505,8 @@ box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 
 .service__table {
   width: 100%;
+  text-align: center;
+  vertical-align: middle;
   border-collapse: collapse;
   font-size: 16px;
 }
@@ -744,4 +746,63 @@ box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 .dien-nuoc__button--close {
   background: #aaa;
   color: white;
+}
+
+.thongke {
+  padding: 24px;
+  font-family: "Segoe UI", sans-serif;
+  background-color: #f9f9f9;
+}
+
+.thongke__title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #2c3e50;
+}
+
+.thongke__section {
+  background-color: #fff;
+  border-radius: 6px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.thongke__section-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #34495e;
+}
+
+.thongke__chart {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.thongke__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.thongke__table th,
+.thongke__table td {
+  padding: 10px 12px;
+  text-align: left;
+  border: 1px solid #e1e1e1;
+  font-size: 14px;
+}
+
+.thongke__table th {
+  background-color: #f2f2f2;
+  font-weight: 600;
+}
+
+.thongke__table tr:nth-child(even) {
+  background-color: #fcfcfc;
 }
