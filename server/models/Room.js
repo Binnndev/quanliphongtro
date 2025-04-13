@@ -19,7 +19,8 @@ module.exports = (sequelize, DataTypes) => {
   Room.associate = function (models) {
     Room.belongsTo(models.RentalHouse, { foreignKey: "MaNhaTro" });
     Room.hasMany(models.Tenant, { foreignKey: "MaPhong" });
-    Room.hasMany(models.Invoice, { foreignKey: "MaPhong" });
+      Room.hasMany(models.Invoice, { foreignKey: "MaPhong" });
+      Room.belongsTo(models.RoomType, { foreignKey: "MaLoaiPhong" });
   };
 
   return Room;
