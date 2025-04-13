@@ -77,11 +77,11 @@ const Homepage = () => {
                 <SubHeader />
                 <div className='control-content' style={{ width: '80%', height: 835, right: 0, top: 166, position: 'fixed', display: "flex", justifyContent: 'center', alignItems: "center", background: '#E0E0E0', borderBottom: '1px #D2D2D2 solid' }}>
                     <div style={{width: 'calc(100% - 23px)', height: 815, backgroundColor: 'white', flexDirection: "column", borderRadius: '10px', display: "flex", justifyContent: "space-around", alignItems: "center"}}>
-                        <div style={{ width: 'calc(100% - 23px)', height: 83, right: 0, top: 83, display: "flex", justifyContent: 'flex-start', alignItems: "center", background: 'white', borderBottom: '1px #D2D2D2 solid' }}>
+                        {/* <div style={{ width: 'calc(100% - 23px)', height: 83, right: 0, top: 83, display: "flex", justifyContent: 'flex-start', alignItems: "center", background: 'white', borderBottom: '1px #D2D2D2 solid' }}>
                             <Button class_name="address-btn btn-2 active-btn" label='1 - 198 ÂU CƠ' />
                             <Button class_name="address-btn btn-2" label='2 - 123 THANH NIÊN' />
                             <Button class_name="address-btn btn-2" label='3 - 12 NGUYỄN THÁI HỌC' />
-                        </div>
+                        </div> */}
                         <div style={{ width: 'calc(100% - 23px)', height: "100%", right: 0, top: 83, display: "flex", justifyContent: 'flex-start', borderRadius: '10px', margin: '10px 0', flexDirection: "column", alignItems: "center", background: '#ccc', borderBottom: '1px #D2D2D2 solid' }}>
                             {page == "home" && (
                                 <Home />

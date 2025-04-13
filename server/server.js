@@ -60,6 +60,9 @@ app.use("/api/payment-method", require("./routes/paymentMethod"));
 app.use("/api/invoice", require("./routes/invoice"));
 app.use("/api/invoice-detail", require("./routes/invoiceDetail"));
 
+const dashboardRoutes = require("./routes/dashBoard");
+app.use("/api/dashboard", dashboardRoutes);
+
 // Phục vụ file tĩnh từ thư mục build của client
 app.use(express.static(path.join(__dirname, "../client/build")));
 
