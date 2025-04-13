@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios'; // Import axios
 // import { useAuth } from './AuthContext'; // Ví dụ
 
@@ -18,6 +18,12 @@ const TenantNotificationList = () => {
     const [limit] = useState(10); // Số item mỗi trang (có thể làm state nếu muốn đổi)
     // ============================
 
+    // === State cho Tìm kiếm ===
+    const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+    const debounceTimeoutRef = useRef(null);
+     // =========================
+
     // --- Helper Functions (Optional: move to utils) ---
     const formatDateTime = (isoString) => {
         if (!isoString) return '';
@@ -33,7 +39,7 @@ const TenantNotificationList = () => {
 
     // --- Fetch Notifications với Pagination ---
     // Dùng useCallback để tránh tạo lại hàm fetch trừ khi dependency thay đổi (hiếm)
-    const fetchTenantNotifications = useCallback(async (userId, page, pageSize) => {
+    const fetchTenantNotifications = useCallback(async (userId, page, pageSize, search) => {
         if (!userId) { setError("Lỗi: Không xác định được người dùng."); setIsLoading(false); return; }
         console.log(`Workspaceing notifications for User ID (MaTK): ${userId}, Page: ${page}, Limit: ${pageSize}`);
         setIsLoading(true); setError('');
@@ -41,7 +47,8 @@ const TenantNotificationList = () => {
             const response = await axios.get(`/api/notifications/user/${userId}`, {
                 params: { // Gửi params cho backend
                     page: page,
-                    limit: pageSize
+                    limit: pageSize,
+                    search: search || undefined // Gửi search param
                     // read: filterRead // Thêm filter nếu có
                 }
             });
@@ -66,13 +73,30 @@ const TenantNotificationList = () => {
     }, []); // useCallback không có dependency nội bộ thay đổi thường xuyên
 
 
-     // --- Effect để Fetch Data khi trang hoặc limit thay đổi ---
-     useEffect(() => {
+    // --- Effect cho Debouncing Search Term (Giống hệt landlord) ---
+    useEffect(() => {
+        if (debounceTimeoutRef.current) { clearTimeout(debounceTimeoutRef.current); }
+        debounceTimeoutRef.current = setTimeout(() => {
+            if (searchTerm !== debouncedSearchTerm) {
+                console.log(`Debounced Search Term Updated: "${searchTerm}"`);
+                setDebouncedSearchTerm(searchTerm);
+                setCurrentPage(1); // Reset về trang 1 khi tìm kiếm mới
+            }
+        }, 500);
+        return () => { if (debounceTimeoutRef.current) { clearTimeout(debounceTimeoutRef.current); } };
+    }, [searchTerm, debouncedSearchTerm]);
+
+    // --- Effect chính để Fetch Data (Thêm debouncedSearchTerm) ---
+    useEffect(() => {
         if (tenantId) {
-            fetchTenantNotifications(tenantId, currentPage, limit); // Gọi fetch với trang hiện tại
+            // Gọi fetch với debouncedSearchTerm
+            fetchTenantNotifications(tenantId, currentPage, limit, debouncedSearchTerm);
         }
-        setExpandedNotificationId(null); // Đóng các mục đang mở rộng khi chuyển trang
-    }, [tenantId, currentPage, limit, fetchTenantNotifications]); // Thêm currentPage, limit, fetchTenantNotifications
+        // Đóng các mục đang mở rộng khi chuyển trang hoặc tìm kiếm
+        setExpandedNotificationId(null);
+    // Thêm debouncedSearchTerm vào dependencies
+    }, [tenantId, currentPage, limit, debouncedSearchTerm, fetchTenantNotifications]);
+
 
     // --- Mark single notification as read ---
     const markNotificationAsReadAPI = async (notificationId) => {
@@ -159,6 +183,12 @@ const TenantNotificationList = () => {
     };
     // ============================
 
+    // --- Handler cho ô tìm kiếm ---
+    const handleSearchChange = (event) => {
+        setSearchTerm(event.target.value);
+    };
+    // ============================
+
     // --- Styles ---
     const notificationListStyle = { padding: '20px' };
     const notificationItemStyle = {
@@ -203,62 +233,85 @@ const TenantNotificationList = () => {
 
     return (
         <div style={notificationListStyle}>
-            <div style={headerStyle}>
-                 <h3 style={{ margin: 0, fontWeight: 'bold' }}>Danh sách thông báo {unreadCount > 0 ? `(${unreadCount} mới)` : ''}</h3>
-                 {/* Mark All Read Button */}
+            {/* Header và nút Mark All Read */}
+             <div style={headerStyle}>
+                 <h3 style={{ margin: 0, fontWeight: 'bold' }}>
+                    Danh sách thông báo {unreadCount > 0 ? `(${unreadCount} mới)` : ''}
+                 </h3>
                  {notifications.length > 0 && unreadCount > 0 && (
-                    <button className="grey-btn btn btn-sm" onClick={handleMarkAllRead} disabled={isMarkingAll}>
-                        Đánh dấu tất cả là đã đọc
-                    </button>
-                     
+                     <button className="grey-btn btn btn-sm" onClick={handleMarkAllRead} disabled={isMarkingAll || isLoading}>
+                         Đánh dấu tất cả là đã đọc
+                     </button>
                  )}
             </div>
 
-            {notifications.length === 0 ? (
-                <p style={{ textAlign: 'center', fontStyle: 'italic', color: '#666' }}>Bạn chưa có thông báo nào.</p>
+             {/* === Ô Tìm Kiếm === */}
+             <div style={{ marginBottom: '20px', maxWidth: '400px' }}>
+                 <input
+                     type="search"
+                     placeholder="Tìm kiếm theo tiêu đề, nội dung..."
+                     value={searchTerm}
+                     onChange={handleSearchChange}
+                     disabled={isLoading} // Disable khi đang loading
+                     style={{
+                         width: '100%',
+                         padding: '10px 12px',
+                         border: '1px solid #ccc',
+                         borderRadius: '4px',
+                         fontSize: '1rem'
+                     }}
+                 />
+             </div>
+             {/* ================= */}
+
+              {/* Hiển thị loading nhỏ khi đang fetch trang mới/search */}
+             {isLoading && notifications.length > 0 && <p style={{ textAlign: 'center', fontStyle: 'italic', color: '#666' }}>Đang cập nhật...</p>}
+
+            {/* Hiển thị danh sách hoặc thông báo không có kết quả */}
+            {!isLoading && notifications.length === 0 ? (
+                <p style={{ textAlign: 'center', fontStyle: 'italic', color: '#666', marginTop: '20px' }}>
+                     {debouncedSearchTerm ? `Không tìm thấy thông báo nào khớp với "${debouncedSearchTerm}".` : 'Bạn chưa có thông báo nào.'}
+                </p>
             ) : (
-                <div>
-                    {notifications.map(noti => {
-                        const isExpanded = expandedNotificationId === noti.MaThongBao;
-                        return (
-                            <div
-                                key={noti.MaThongBao}
-                                style={{ ...notificationItemStyle, ...(noti.DaDoc ? {} : unreadStyle) }}
-                                onClick={() => handleNotificationClick(noti.MaThongBao)}
-                                title={noti.DaDoc ? 'Nhấn để xem lại' : 'Nhấn để xem và đánh dấu đã đọc'}
-                            >
-                                <h5 style={{ margin: '0 0 5px 0', fontSize:'1.1rem', ...(noti.DaDoc ? {fontWeight: 'normal'} : {}) }}>
-                                    {noti.TieuDe}
-                                </h5>
-
-                                {/* Display snippet or full content based on expansion */}
-                                <p style={isExpanded ? fullContentStyle : snippetContentStyle}>
-                                    {noti.NoiDung}
-                                </p>
-
-                                <span style={timeStyle}>
-                                    {/* Access Sender Name via SenderAccount alias */}
-                                    {formatDateTime(noti.ThoiGian)}
-                                </span>
-                            </div>
-                        );
-                    })}
-                    {/* Pagination Controls if implemented */}
-                </div>
+                 !isLoading && notifications.length > 0 && ( // Chỉ render list khi không loading và có data
+                     <div>
+                         {notifications.map(noti => {
+                             const isExpanded = expandedNotificationId === noti.MaThongBao;
+                             return (
+                                 <div
+                                     key={noti.MaThongBao}
+                                     style={{ ...notificationItemStyle, ...(noti.DaDoc ? {} : unreadStyle) }}
+                                     onClick={() => handleNotificationClick(noti.MaThongBao)}
+                                     title={noti.DaDoc ? 'Nhấn để xem lại' : 'Nhấn để xem và đánh dấu đã đọc'}
+                                 >
+                                     <h5 style={{ margin: '0 0 5px 0', fontSize:'1.1rem', ...(noti.DaDoc ? {fontWeight: 'normal'} : {}) }}>
+                                         {noti.TieuDe}
+                                     </h5>
+                                     <p style={isExpanded ? fullContentStyle : snippetContentStyle}>
+                                         {noti.NoiDung}
+                                     </p>
+                                     <span style={timeStyle}>
+                                         {/* Hiển thị tên người gửi nếu có */}
+                                         {/* Từ: {noti.SenderName || 'Không rõ'} - */}
+                                         {formatDateTime(noti.ThoiGian)}
+                                     </span>
+                                 </div>
+                             );
+                         })}
+                     </div>
+                 )
             )}
 
-            {/* === KHỐI PHÂN TRANG === */}
-            {!isLoading && totalPages > 1 && ( // Chỉ hiện khi có nhiều hơn 1 trang và không loading
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '25px', paddingBottom: '10px', gap: '10px' /* Thêm gap */}}>
-                    
-                    <button className='grey-btn btn btn-sm' onClick={goToPreviousPage} isabled={currentPage === 1 || isLoading}>&laquo; Trước</button>
-                    <span style={{ margin: '0 10px', fontSize: '0.9rem', fontWeight:'500' }}>
-                        Trang {currentPage} / {totalPages}
-                    </span>
-                    <button className='grey-btn btn btn-sm' onClick={goToNextPage} isabled={currentPage === totalPages || isLoading}>Sau &raquo;</button>
-                    {/* (Tùy chọn) Hiển thị các nút số trang nếu cần */}
-                </div>
-            )}
+            {/* === KHỐI PHÂN TRANG (Hiển thị cả khi không có kết quả search nếu totalPages > 1) === */}
+             {!isLoading && totalPages > 1 && (
+                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '25px', paddingBottom: '10px', gap: '10px' }}>
+                     <button className='grey-btn btn btn-sm' onClick={goToPreviousPage} disabled={currentPage === 1 || isLoading}>&laquo; Trước</button>
+                     <span style={{ margin: '0 10px', fontSize: '0.9rem', fontWeight:'500' }}>
+                         Trang {currentPage} / {totalPages}
+                     </span>
+                     <button className='grey-btn btn btn-sm' onClick={goToNextPage} disabled={currentPage === totalPages || isLoading}>Sau &raquo;</button>
+                 </div>
+             )}
             {/* ======================= */}
         </div>
     );

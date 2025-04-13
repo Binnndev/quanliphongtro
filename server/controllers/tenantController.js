@@ -1,4 +1,4 @@
-const { Tenant } = require("../models");
+const { Tenant, Room, RentalHouse, Landlord, User, sequelize } = require('../models'); // Import đủ models
 const fs = require('fs');
 const path = require('path'); // Giữ lại path nếu cần dùng ở chỗ khác
 
@@ -68,6 +68,101 @@ exports.getRepresentativeByRoom = async (req, res) => {
     } catch (error) {
         console.error("❌ Lỗi khi lấy thông tin đại diện:", error);
         res.status(500).json({ message: error.message });
+    }
+};
+
+// Controller: Lấy MaTK chủ trọ cho khách thuê - CÓ DEBUG LOGS
+exports.getLandlordAccountForTenant = async (req, res) => {
+    const tenantUserId = req.params.tenantUserId; // MaTK của khách thuê
+
+    // Log 1: Bắt đầu xử lý request
+    console.log(`[DEBUG] === Bắt đầu getLandlordAccountForTenant cho Khách Thuê MaTK: ${tenantUserId} ===`);
+
+    if (!tenantUserId) {
+        // Log 2: Thiếu ID đầu vào
+        console.log("[DEBUG] Lỗi: Thiếu tenantUserId trong params.");
+        return res.status(400).json({ message: "Thiếu ID khách thuê." });
+    }
+
+    try {
+        console.log(`[DEBUG] Đang thực hiện Tenant.findOne với MaTK: ${tenantUserId}`);
+        const tenant = await Tenant.findOne({
+            where: { MaTK: tenantUserId },
+            include: [{ // Level 1: Tenant -> Room
+                model: Room,
+                as: 'Room',
+                required: true, // Giữ required: true để dễ debug lỗi thiếu liên kết
+                attributes: ['MaPhong', 'MaNhaTro'], // Lấy các khóa cần thiết
+                include: [{ // Level 2: Room -> House
+                    model: RentalHouse,
+                    // as: 'House',
+                    required: true,
+                    attributes: ['MaNhaTro', 'MaChuTro'], // Lấy các khóa cần thiết
+                    include: [{ // Level 3: House -> Landlord
+                        model: Landlord,
+                        as: 'Landlord',
+                        required: true,
+                        attributes: ['MaChuTro', 'MaTK'], // Lấy các khóa cần thiết
+                        include: [{ // Level 4: Landlord -> User
+                            model: User,
+                            as: 'User',
+                            required: true,
+                            attributes: ['MaTK', 'TenDangNhap'] // Lấy thông tin User chủ trọ
+                        }]
+                    }]
+                }]
+            }],
+            attributes: ['MaKhachThue', 'MaTK', 'MaPhong'], // Lấy các trường cần của Tenant để kiểm tra
+            // logging: console.log // Bỏ comment dòng này nếu muốn xem câu lệnh SQL được Sequelize tạo ra
+        });
+
+        // Log 3: Kết quả trả về từ Sequelize
+        // Dùng JSON.stringify để xem cấu trúc rõ ràng, null, 2 để format đẹp
+        // Chú ý: Nếu object quá phức tạp hoặc có liên kết vòng, stringify có thể lỗi, khi đó dùng console.log(tenant)
+        console.log(`[DEBUG] Kết quả Tenant.findOne:`, JSON.stringify(tenant, null, 2));
+        // console.log("[DEBUG] Raw tenant object:", tenant); // Log object gốc nếu stringify lỗi
+
+        // --- Bắt đầu kiểm tra kết quả ---
+        if (!tenant) {
+            // Log 4a: Không tìm thấy bản ghi Tenant nào với MaTK này
+            console.warn(`[DEBUG] *** KHÔNG TÌM THẤY Tenant với MaTK: ${tenantUserId} trong database.`);
+            // Trả về 404 nhưng với message rõ hơn cho debug
+            return res.status(404).json({ message: `Không tìm thấy khách thuê với MaTK ${tenantUserId}.` });
+        }
+
+        // Kiểm tra chuỗi liên kết dữ liệu
+        const landlordUser = tenant.Room?.RentalHouse?.Landlord?.User;
+
+        if (!landlordUser) {
+            // Log 4b: Tìm thấy Tenant nhưng chuỗi liên kết bị đứt hoặc dữ liệu lồng nhau bị thiếu
+            console.warn(`[DEBUG] *** TÌM THẤY Tenant, nhưng KHÔNG tìm thấy thông tin User chủ trọ lồng nhau.`);
+            console.warn(`[DEBUG] Kiểm tra chuỗi dữ liệu trả về:`);
+            console.warn(`  - tenant.Room tồn tại: ${!!tenant.Room}`);
+            console.warn(`  - tenant.Room?.House tồn tại: ${!!tenant.Room?.House}`);
+            console.warn(`  - tenant.Room?.House?.Landlord tồn tại: ${!!tenant.Room?.House?.Landlord}`);
+            console.warn(`  - tenant.Room?.House?.Landlord?.User tồn tại: ${!!tenant.Room?.House?.Landlord?.User}`);
+            // Thông báo lỗi cho client vẫn giữ nguyên như cũ
+            return res.status(404).json({ message: "Không tìm thấy thông tin chủ trọ liên kết đầy đủ." });
+        }
+        // --- Kết thúc kiểm tra kết quả ---
+
+        // Log 5: Đã trích xuất thành công thông tin User chủ trọ
+        console.log(`[DEBUG] Trích xuất thành công thông tin User chủ trọ:`, JSON.stringify(landlordUser, null, 2));
+        console.log(`✅ Tìm thấy MaTK chủ trọ (${landlordUser.MaTK}) cho khách thuê ${tenantUserId}`);
+
+        // Trả về kết quả thành công
+        res.status(200).json({
+            MaTK: landlordUser.MaTK,
+            TenDangNhap: landlordUser.TenDangNhap
+        });
+
+    } catch (error) {
+        // Log 6: Bắt lỗi trong quá trình thực thi
+        console.error(`[DEBUG] ❌ Lỗi nghiêm trọng trong getLandlordAccountForTenant cho khách thuê ${tenantUserId}:`, error);
+        res.status(500).json({ message: "Lỗi máy chủ khi lấy thông tin chủ trọ." });
+    } finally {
+         // Log 7: Kết thúc xử lý request
+        console.log(`[DEBUG] === Kết thúc getLandlordAccountForTenant cho Khách Thuê MaTK: ${tenantUserId} ===\n`);
     }
 };
 

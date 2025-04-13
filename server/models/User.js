@@ -44,7 +44,12 @@ module.exports = (sequelize, DataTypes) => {
   // Định nghĩa các associations nếu cần
   User.associate = function (models) {
     User.hasMany(models.Notification, { foreignKey: 'MaNguoiGui', as: 'SentNotifications' });
-     User.hasMany(models.Notification, { foreignKey: 'MaNguoiNhan', as: 'ReceivedNotifications' });
+      User.hasMany(models.Notification, { foreignKey: 'MaNguoiNhan', as: 'ReceivedNotifications' });
+      User.hasOne(models.Tenant, {
+        foreignKey: 'MaTK',    // Khóa ngoại trong bảng Tenant liên kết với User
+        sourceKey: 'MaTK',     // Khóa chính trong bảng User (thường tự động nhận diện)
+        as: 'TenantInfo'       // Alias phải TRÙNG KHỚP với alias trong include controller
+    });
   };
 
   return User;

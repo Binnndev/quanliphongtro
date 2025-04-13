@@ -1,7 +1,14 @@
 import React from "react";
 
-const Invoice = ({ isOpen, onClose, invoiceData }) => {
+const Invoice = ({ isOpen, onClose, invoiceData, onSend, isSending }) => {
   if (!isOpen || !invoiceData) return null;
+
+    // Hàm xử lý khi nhấn nút "Gửi hóa đơn"
+    const handleSendClick = () => {
+        if (typeof onSend === 'function') {
+            onSend(invoiceData); // Gọi hàm từ component cha và truyền invoiceData lên
+        }
+    };
 
   return (
     <div className="popup-overlay">
@@ -67,7 +74,7 @@ const Invoice = ({ isOpen, onClose, invoiceData }) => {
 
         <div className="popup-actions">
           <button className="btn blue">Tải file</button>
-          <button className="btn cyan">Gửi hóa đơn</button>
+                  <button onClick={handleSendClick} disabled={isSending} className="btn cyan">Gửi hóa đơn</button>
           <button onClick={onClose} className="btn red">Đóng</button>
         </div>
       </div>
