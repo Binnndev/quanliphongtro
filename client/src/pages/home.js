@@ -64,11 +64,12 @@ const Home = () => {
   if (loading) return <div>Loading...</div>;
 
   return (
-    <div>
+    <div style={{
+      width: "100%",
+    }}>
       {/* Header hiển thị số liệu thống kê và nút thao tác */}
       <div
         style={{
-          width: "calc(100% - 20px)",
           height: 83,
           margin: "10px",
           display: "flex",
@@ -112,8 +113,10 @@ const Home = () => {
       <div
         style={{
           display: "flex",
-          justifyContent: "space-around",
+          justifyContent: "flex-start",
           flexWrap: "wrap",
+          columnGap: "10px",
+          margin: "0 10px",
         }}
       >
         {rooms.map((room) => (
