@@ -48,7 +48,12 @@ export const getNhaTroByChuTro = async (maTK) => {
       console.error(`Lỗi khi gọi API lấy danh sách nhà trọ cho chủ trọ ${maTK}:`, error);
       return []; // Return empty array on error
     }
-  };
+};
+  
+export const getDsLoaiPhong = async () => {
+    const response = await api.get("/api/room-type");
+    return response.data;
+}
 
 // 2. Thêm room
 export const themPhong = async (roomData) => {

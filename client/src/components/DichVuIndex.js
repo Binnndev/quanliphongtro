@@ -18,7 +18,7 @@ const DichVuIndex = ({ maChuTro }) => {
       
       try {
         if (maChuTro) {
-          const res = await axios.get(`/api/service/by-chutro?maChuTro=${maChuTro}`);
+          const res = await axios.get(`/api/service/by-chutro/${maChuTro}`);
           setDichVuList(res.data);
         }
       } catch (err) {

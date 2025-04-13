@@ -21,6 +21,7 @@ app.use(bodyParser.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/tai-khoan", taiKhoanRoutes);
 app.use("/api/rooms", require("./routes/rooms"));
+app.use("/api/room-type", require("./routes/roomType"));
 app.use("/api/houses", require("./routes/rentalHouses"));
 app.use("/api/landlords", require("./routes/landlords"));
 app.use("/api/tenants", require("./routes/tenants"));
