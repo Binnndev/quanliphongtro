@@ -4,8 +4,8 @@ import {
   PieChart,
   Pie,
   Cell,
-  BarChart,
-  Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   Tooltip,
@@ -47,13 +47,13 @@ const ThongKe = () => {
   const pieColors = ["#00B894", "#FFA500"];
 
   return (
-    <div className="thongke" style={{width: "100%", display:"flex" , flexDirection: "column"}}>
+    <div className="thongke" style={{ width: "100%", display: "flex", flexDirection: "column" }}>
       <h2 className="thongke__title">
         <i className="fas fa-chart-pie" /> Thống kê
       </h2>
 
-      {/* Trạng thái phòng */}
-      <div style={{display:"flex", justifyContent:"space-between"}}>
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
+        {/* Trạng thái phòng */}
         <div className="thongke__section">
           <h4 className="thongke__section-title">Trạng thái phòng</h4>
           <div className="thongke__chart">
@@ -80,7 +80,7 @@ const ThongKe = () => {
         <div className="thongke__section">
           <h4 className="thongke__section-title">Doanh thu (VND)</h4>
           <div className="thongke__chart">
-            <BarChart width={670} height={192} data={revenueData}>
+            <LineChart width={670} height={192} data={revenueData}>
               <XAxis dataKey="thang" />
               <YAxis />
               <Tooltip />
@@ -89,62 +89,77 @@ const ThongKe = () => {
                 Object.keys(revenueData[0])
                   .filter((key) => key !== "thang")
                   .map((key, idx) => (
-                    <Bar key={key} dataKey={key} fill={["#2980B9", "#E67E22", "#2ECC71"][idx % 3]} />
+                    <Line
+                      key={key}
+                      type="monotone"
+                      dataKey={key}
+                      stroke={["#2980B9", "#E67E22", "#2ECC71"][idx % 3]}
+                      strokeWidth={2}
+                      dot={{ r: 3 }}
+                    />
                   ))}
-            </BarChart>
+            </LineChart>
           </div>
         </div>
       </div>
-      {/* Tổng chi */}
-      <div style={{display: "flex", justifyContent:"space-between"}}>
-      <div className="thongke__section">
-        <h4 className="thongke__section-title">Tổng chi (VND)</h4>
-        <div className="thongke__chart">
-          <BarChart width={670} height={192} data={expenseData}>
-            <XAxis dataKey="thang" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            {expenseData.length > 0 &&
-              Object.keys(expenseData[0])
-                .filter((key) => key !== "thang")
-                .map((key, idx) => (
-                  <Bar key={key} dataKey={key} fill={["#8E44AD", "#16A085", "#C0392B"][idx % 3]} />
-                ))}
-          </BarChart>
-        </div>
-      </div>
 
-      {/* Khách sắp hết hạn hợp đồng */}
-      <div className="thongke__section" style={{width:"670px"}}>
-        <h4 className="thongke__section-title">Khách sắp hết hạn hợp đồng</h4>
-        <table className="thongke__table">
-          <thead>
-            <tr>
-              <th>STT</th>
-              <th>Nhà</th>
-              <th>Phòng</th>
-              <th>Khách thuê</th>
-              <th>Ngày hết hạn</th>
-            </tr>
-          </thead>
-          <tbody>
-            {expiringContracts.length === 0 ? (
-              <tr><td colSpan="5">Không có hợp đồng sắp hết hạn</td></tr>
-            ) : (
-              expiringContracts.map((item, idx) => (
-                <tr key={idx}>
-                  <td>{idx + 1}</td>
-                  <td>{item.tenNhaTro}</td>
-                  <td>{item.tenPhong}</td>
-                  <td>{item.hoTen}</td>
-                  <td>{item.ngayKetThuc}</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      {/* Tổng chi & Hợp đồng sắp hết hạn */}
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <div className="thongke__section">
+          <h4 className="thongke__section-title">Tổng chi (VND)</h4>
+          <div className="thongke__chart">
+            <LineChart width={670} height={192} data={expenseData}>
+              <XAxis dataKey="thang" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              {expenseData.length > 0 &&
+                Object.keys(expenseData[0])
+                  .filter((key) => key !== "thang")
+                  .map((key, idx) => (
+                    <Line
+                      key={key}
+                      type="monotone"
+                      dataKey={key}
+                      stroke={["#8E44AD", "#16A085", "#C0392B"][idx % 3]}
+                      strokeWidth={2}
+                      dot={{ r: 3 }}
+                    />
+                  ))}
+            </LineChart>
+          </div>
+        </div>
+
+        {/* Hợp đồng sắp hết hạn */}
+        <div className="thongke__section" style={{ width: "670px" }}>
+          <h4 className="thongke__section-title">Khách sắp hết hạn hợp đồng</h4>
+          <table className="thongke__table">
+            <thead>
+              <tr>
+                <th>STT</th>
+                <th>Nhà</th>
+                <th>Phòng</th>
+                <th>Khách thuê</th>
+                <th>Ngày hết hạn</th>
+              </tr>
+            </thead>
+            <tbody>
+              {expiringContracts.length === 0 ? (
+                <tr><td colSpan="5">Không có hợp đồng sắp hết hạn</td></tr>
+              ) : (
+                expiringContracts.map((item, idx) => (
+                  <tr key={idx}>
+                    <td>{idx + 1}</td>
+                    <td>{item.tenNhaTro}</td>
+                    <td>{item.tenPhong}</td>
+                    <td>{item.hoTen}</td>
+                    <td>{item.ngayKetThuc}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
