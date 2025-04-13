@@ -1,43 +1,129 @@
+// src/home.js
 import React, { useState, useEffect } from "react";
-import AnimatedSignature from "../components/AnimatedSignature";
-import MainContainer from "../components/MainContainer";
-import Header from "../components/Header";
-import SubHeader from "../components/SubHeader";
 import Button from "../components/Button";
 import PushNumb from "../components/PushNumb";
 import RoomItem from "../components/RoomItem";
-import { useNavigate } from "react-router-dom";
-import { isAuthenticated } from "../services/authService";
-import Invoice from "../components/invoices";
+import {
+  getDsPhong,
+  themPhong,
+  suaPhong,
+  xoaPhong,
+} from "../services/phongService";
 
 const Home = () => {
-    const data = {
-        all: 10,
-        used: 6,
-        notYet: 0
-    }
+  const [rooms, setRooms] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    return (
-        <div>
-            <div style={{ width: 'calc(100% - 20px)', height: 83, right: 0, top: 83, display: "flex", justifyContent: "space-between", alignItems: "center", margin: '10px 10px', borderRadius: '10px', background: 'white', borderBottom: '1px #D2D2D2 solid' }}>
-                <div style={{display: "flex", alignItems: "center"}}>
-                    <PushNumb text='Còn trống' numb={data.all - data.used} />
-                    <PushNumb text='Đã cho thuê' numb={data.used} />
-                    <PushNumb text='Chưa thu phí' numb={data.notYet} />
-                </div>
-                <div style={{display: "flex", alignItems: "center"}}>
-                    <Button label='Thêm phòng' class_name='green-btn btn' />
-                    <Button label='Sửa nhà' class_name='blue-btn btn' />
-                    <Button label='Xóa nhà' class_name='delete-btn btn' />
-                </div>
-            </div>
-            <div style={{display: "flex", justifyContent: "space-around", flexWrap: "wrap"}}>
-                {Array.from({ length: data.all }, (_, index) => (
-                    <RoomItem key={index} className={index < data.used ? "active" : ""} />
-                ))}
-            </div>
+  // Lấy vai trò từ localStorage (đã được lưu sau đăng nhập)
+  const loaiTaiKhoan = localStorage.getItem("loaiTaiKhoan");
+
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        const ds = await getDsPhong();
+        setRooms(ds);
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách room:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRooms();
+  }, []);
+
+  // Tính toán số lượng phòng
+  const totalRooms = rooms.length;
+  const rentedRooms = rooms.filter((room) => room.rented).length;
+  const notYetFee = totalRooms - rentedRooms; // Ví dụ: phòng chưa thu phí (bạn có thể thay đổi logic này nếu cần)
+
+  // Các hàm thao tác (đây chỉ là demo; bạn có thể tích hợp modal hoặc form sửa phòng)
+  const handleThemPhong = async () => {
+    // Ví dụ: mở modal thêm room hoặc gọi API thêm mới
+    console.log("Thêm phòng");
+    // Sau khi thêm xong, bạn có thể gọi fetchRooms() để làm mới danh sách.
+  };
+
+  const handleSuaNha = async (id) => {
+    console.log("Sửa nhà", id);
+    // Tích hợp logic sửa phòng
+  };
+
+  const handleXoaPhong = async (id) => {
+    console.log("Xóa nhà", id);
+    // Sau khi xóa, cập nhật lại danh sách
+    try {
+      await xoaPhong(id);
+      setRooms(rooms.filter((room) => room.id !== id));
+    } catch (error) {
+      console.error("Lỗi khi xóa phòng:", error);
+    }
+  };
+
+  if (loading) return <div>Loading...</div>;
+
+  return (
+    <div>
+      {/* Header hiển thị số liệu thống kê và nút thao tác */}
+      <div
+        style={{
+          width: "calc(100% - 20px)",
+          height: 83,
+          margin: "10px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          borderRadius: "10px",
+          background: "white",
+          borderBottom: "1px solid #D2D2D2",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <PushNumb text="Còn trống" numb={totalRooms - rentedRooms} />
+          <PushNumb text="Đã cho thuê" numb={rentedRooms} />
+          <PushNumb text="Chưa thu phí" numb={notYetFee} />
         </div>
-    )
-}
+        <div style={{ display: "flex", alignItems: "center" }}>
+          {loaiTaiKhoan === "Chủ Trọ" ? (
+            <>
+              <Button
+                label="Thêm phòng"
+                class_name="green-btn btn"
+                onClick={handleThemPhong}
+              />
+              <Button
+                label="Sửa nhà"
+                class_name="blue-btn btn"
+                onClick={() => handleSuaNha(1)}
+              />
+              <Button
+                label="Xóa nhà"
+                class_name="delete-btn btn"
+                onClick={() => handleXoaPhong(1)}
+              />
+            </>
+          ) : (
+            <p className="text-blue-500">Bạn chỉ có quyền xem phòng</p>
+          )}
+        </div>
+      </div>
+      {/* Danh sách phòng */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-around",
+          flexWrap: "wrap",
+        }}
+      >
+        {rooms.map((room) => (
+          <RoomItem
+            key={room.id}
+            room={room}
+            showAction={loaiTaiKhoan === "Chủ Trọ"}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
 
 export default Home;

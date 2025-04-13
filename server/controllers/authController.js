@@ -1,248 +1,153 @@
-const { User } = require("../models");
+const { TaiKhoan } = require("../models");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const crypto = require("crypto");
-const nodemailer = require("nodemailer");
 
 const JWT_SECRET = process.env.JWT_SECRET || "mat_khau_jwt_cua_ban";
 const JWT_THOI_HAN = process.env.JWT_THOI_HAN || "1h";
 
+// Đăng ký tài khoản
 exports.register = async (req, res) => {
   try {
-    const { username, email, password, role } = req.body;
-    if (!username || !email || !password || !role) {
+    const { TenDangNhap, MatKhau, LoaiTaiKhoan } = req.body;
+    if (!TenDangNhap || !MatKhau || !LoaiTaiKhoan) {
       return res.status(400).json({ error: "Thiếu thông tin bắt buộc" });
     }
-    const existingUser = await User.findOne({ where: { email } });
-    if (existingUser) {
-      return res.status(400).json({ error: "Email đã được đăng ký" });
+
+    // Kiểm tra tài khoản đã tồn tại hay chưa (dựa trên TenDangNhap)
+    const existingAccount = await TaiKhoan.findOne({ where: { TenDangNhap } });
+    if (existingAccount) {
+      return res.status(400).json({ error: "Tài khoản đã tồn tại" });
     }
-    // Mã hóa mật khẩu
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-    // Tạo token xác minh email bằng crypto
-    const emailToken = crypto.randomBytes(20).toString("hex");
-    // Tạo tài khoản mới
-    const newUser = await User.create({
-      username,
-      email,
-      password: hashedPassword,
-      role, // 'owner' hoặc 'tenant'
-      emailToken,
-      emailVerified: false,
+
+    // Tạo tài khoản mới (hook trong model sẽ tự động mã hóa mật khẩu)
+    const newUser = await TaiKhoan.create({
+      TenDangNhap,
+      MatKhau,
+      LoaiTaiKhoan,
+      TrangThai: "Kích hoạt",
     });
-    // Cấu hình nodemailer
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-    // Link xác minh (sử dụng CLIENT_URL từ .env, ví dụ http://localhost:3000)
-    const verificationUrl = `${process.env.CLIENT_URL}/verify-email?token=${emailToken}`;
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Xác thực Email - Quản Lý Nhà Trọ",
-      text: `Chào ${username},\n\nVui lòng xác thực email của bạn bằng cách truy cập vào link sau:\n${verificationUrl}\n\nTrân trọng,\nQuản Lý Nhà Trọ`,
-    };
-    transporter.sendMail(mailOptions, (err, info) => {
-      if (err) {
-        console.error("Lỗi gửi email:", err);
-        return res.status(500).json({ error: "Gửi email xác thực thất bại" });
-      }
-      return res.status(201).json({
-        message:
-          "Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản.",
-      });
-    });
+
+    return res
+      .status(201)
+      .json({ message: "Đăng ký thành công", data: newUser });
   } catch (error) {
     console.error("Lỗi đăng ký:", error);
     return res.status(500).json({ error: "Lỗi máy chủ" });
   }
 };
-// xác thực email
+
+// Xác thực email (chưa triển khai)
 exports.verifyEmail = async (req, res) => {
-  try {
-    const { token } = req.query;
-    if (!token) return res.status(400).json({ error: "Token không hợp lệ" });
-    const user = await User.findOne({ where: { emailToken: token } });
-    if (!user) return res.status(400).json({ error: "Token không hợp lệ" });
-    user.emailVerified = true;
-    user.emailToken = null;
-    await user.save();
-    return res
-      .status(200)
-      .json({ message: "Email đã được xác thực thành công" });
-  } catch (error) {
-    console.error("Lỗi xác thực email:", error);
-    return res.status(500).json({ error: "Lỗi máy chủ" });
-  }
+  return res
+    .status(501)
+    .json({ error: "Chức năng xác thực email chưa được triển khai" });
 };
 
-// đăng nhập
-exports.dangNhap = async (req, res) => {
-  try {
-    const { email, matKhau } = req.body;
-    if (!email || !matKhau) {
-      return res.status(400).json({ loi: "Thiếu email hoặc mật khẩu" });
-    }
-    const nguoiDung = await NguoiDung.findOne({ where: { email } });
-    if (!nguoiDung) {
-      return res.status(400).json({ loi: "Thông tin đăng nhập không hợp lệ" });
-    }
-    const hopLe = await bcrypt.compare(matKhau, nguoiDung.matKhau);
-    if (!hopLe) {
-      return res.status(400).json({ loi: "Thông tin đăng nhập không hợp lệ" });
-    }
-    const duLieuToken = { id: nguoiDung.id, vaiTro: nguoiDung.vaiTro };
-    const token = jwt.sign(duLieuToken, JWT_SECRET, {
-      expiresIn: JWT_THOI_HAN,
-    });
-    return res.status(200).json({ thongBao: "Đăng nhập thành công", token });
-  } catch (error) {
-    console.error("Lỗi đăng nhập:", error);
-    return res.status(500).json({ loi: "Lỗi máy chủ" });
-  }
-};
-
-// quên mật khẩu
-exports.quenMatKhau = async (req, res) => {
-  try {
-    const { email } = req.body;
-    if (!email) {
-      return res.status(400).json({ loi: "Cần cung cấp email" });
-    }
-    const nguoiDung = await NguoiDung.findOne({ where: { email } });
-    if (!nguoiDung) {
-      return res
-        .status(400)
-        .json({ loi: "Không tồn tại người dùng với email này" });
-    }
-    // Tạo token đặt lại mật khẩu (sử dụng JWT)
-    const tokenDatLai = jwt.sign({ id: nguoiDung.id }, JWT_SECRET, {
-      expiresIn: "1h",
-    });
-    nguoiDung.tokenDatLaiMatKhau = tokenDatLai;
-    nguoiDung.hanTokenDatLai = Date.now() + HAN_TOKEN_DAT_LAI;
-    await nguoiDung.save();
-
-    // Cấu hình nodemailer (sử dụng Gmail)
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const duongDanDatLai = `${req.protocol}://${req.get(
-      "host"
-    )}/dat-lai-mat-khau?token=${tokenDatLai}`;
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: nguoiDung.email,
-      subject: "Đặt lại mật khẩu",
-      text:
-        "Bạn nhận được email này vì đã yêu cầu đặt lại mật khẩu.\n\n" +
-        "Vui lòng nhấn vào đường dẫn sau hoặc dán nó vào trình duyệt của bạn để hoàn tất quá trình:\n\n" +
-        duongDanDatLai +
-        "\n\nNếu không phải bạn yêu cầu, hãy bỏ qua email này.\n",
-    };
-
-    transporter.sendMail(mailOptions, (err, info) => {
-      if (err) {
-        console.error("Lỗi gửi email:", err);
-        return res.status(500).json({ loi: "Gửi email thất bại" });
-      } else {
-        return res
-          .status(200)
-          .json({ thongBao: "Email đặt lại mật khẩu đã được gửi" });
-      }
-    });
-  } catch (error) {
-    console.error("Lỗi quên mật khẩu:", error);
-    return res.status(500).json({ loi: "Lỗi máy chủ" });
-  }
-};
-
-// đặt lại mật khẩu
-exports.datLaiMatKhau = async (req, res) => {
-  try {
-    const { token, matKhauMoi } = req.body;
-    if (!token || !matKhauMoi) {
-      return res
-        .status(400)
-        .json({ loi: "Cần cung cấp token và mật khẩu mới" });
-    }
-    let duLieu;
-    try {
-      duLieu = jwt.verify(token, JWT_SECRET);
-    } catch (err) {
-      return res
-        .status(400)
-        .json({ loi: "Token không hợp lệ hoặc đã hết hạn" });
-    }
-    const nguoiDung = await NguoiDung.findOne({
-      where: {
-        id: duLieu.id,
-        tokenDatLaiMatKhau: token,
-        hanTokenDatLai: { [Op.gt]: Date.now() },
-      },
-    });
-    if (!nguoiDung) {
-      return res
-        .status(400)
-        .json({ loi: "Token không hợp lệ hoặc đã hết hạn" });
-    }
-    const muoi = await bcrypt.genSalt(10);
-    const matKhauMaHoa = await bcrypt.hash(matKhauMoi, muoi);
-    nguoiDung.matKhau = matKhauMaHoa;
-    nguoiDung.tokenDatLaiMatKhau = null;
-    nguoiDung.hanTokenDatLai = null;
-    await nguoiDung.save();
-    return res
-      .status(200)
-      .json({ thongBao: "Mật khẩu đã được đặt lại thành công" });
-  } catch (error) {
-    console.error("Lỗi đặt lại mật khẩu:", error);
-    return res.status(500).json({ loi: "Lỗi máy chủ" });
-  }
-};
-
-//Endpoint đăng nhập (POST /api/auth/login)
-
+// Đăng nhập tài khoản
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ error: "Thiếu email hoặc mật khẩu" });
+    const { TenDangNhap, MatKhau } = req.body;
+    if (!TenDangNhap || !MatKhau) {
+      return res
+        .status(400)
+        .json({ error: "Thiếu tên đăng nhập hoặc mật khẩu" });
     }
-    const user = await User.findOne({ where: { email } });
+
+    const user = await TaiKhoan.findOne({ where: { TenDangNhap } });
     if (!user) {
       return res
         .status(400)
         .json({ error: "Thông tin đăng nhập không hợp lệ" });
     }
-    // So sánh mật khẩu
-    const isValid = await bcrypt.compare(password, user.password);
+
+    const isValid = await bcrypt.compare(MatKhau, user.MatKhau);
     if (!isValid) {
       return res
         .status(400)
         .json({ error: "Thông tin đăng nhập không hợp lệ" });
     }
-    // Kiểm tra nếu email chưa được xác thực
-    if (!user.emailVerified) {
-      return res.status(403).json({ error: "Email chưa được xác thực" });
-    }
-    // Tạo JWT chứa thông tin user (id, role)
-    const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, {
-      expiresIn: JWT_THOI_HAN,
-    });
+
+    const token = jwt.sign(
+      { id: user.MaTK, role: user.LoaiTaiKhoan },
+      JWT_SECRET,
+      { expiresIn: JWT_THOI_HAN }
+    );
+
     return res.status(200).json({ message: "Đăng nhập thành công", token });
   } catch (error) {
     console.error("Lỗi đăng nhập:", error);
+    return res.status(500).json({ error: "Lỗi máy chủ" });
+  }
+};
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { TenDangNhap } = req.body;
+    if (!TenDangNhap) {
+      return res.status(400).json({ error: "Vui lòng cung cấp tên đăng nhập" });
+    }
+    const user = await TaiKhoan.findOne({ where: { TenDangNhap } });
+    if (!user) {
+      // Nếu không tìm thấy tài khoản, trả về message an toàn (không tiết lộ thông tin)
+      return res
+        .status(200)
+        .json({ message: "Nếu tài khoản tồn tại, reset token sẽ được tạo" });
+    }
+    // Tạo reset token (sử dụng crypto)
+    const resetToken = crypto.randomBytes(20).toString("hex");
+    // Đặt thời gian hết hạn (1 giờ)
+    const resetTokenExpiry = Date.now() + 3600000;
+
+    // Lưu token vào DB cho tài khoản
+    user.resetToken = resetToken;
+    user.resetTokenExpiry = resetTokenExpiry;
+    await user.save();
+
+    return res.status(200).json({
+      message: "Reset token đã được tạo",
+      resetToken,
+    });
+  } catch (error) {
+    console.error("Lỗi quên mật khẩu:", error);
+    return res.status(500).json({ error: "Lỗi máy chủ" });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { resetToken, newPassword } = req.body;
+    if (!resetToken || !newPassword) {
+      return res
+        .status(400)
+        .json({ error: "Thiếu reset token hoặc mật khẩu mới" });
+    }
+
+    // Tìm tài khoản có resetToken phù hợp và chưa hết hạn
+    const user = await TaiKhoan.findOne({
+      where: {
+        resetToken: resetToken,
+        resetTokenExpiry: { [require("sequelize").Op.gt]: Date.now() },
+      },
+    });
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ error: "Reset token không hợp lệ hoặc đã hết hạn" });
+    }
+
+    // Hash mật khẩu mới và cập nhật
+    user.MatKhau = await bcrypt.hash(newPassword, 10);
+    // Xóa các trường reset token sau khi đặt lại mật khẩu
+    user.resetToken = null;
+    user.resetTokenExpiry = null;
+    await user.save();
+
+    return res
+      .status(200)
+      .json({ message: "Mật khẩu đã được cập nhật thành công" });
+  } catch (error) {
+    console.error("Lỗi đặt lại mật khẩu:", error);
     return res.status(500).json({ error: "Lỗi máy chủ" });
   }
 };

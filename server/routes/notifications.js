@@ -23,6 +23,11 @@ router.get(
     notificationController.getNotificationById
 );
 
+router.get("/sent/:senderId",
+    // authenticateToken, // Bảo vệ route nếu cần
+    notificationController.getSentNotifications
+);
+
 // POST: Tạo một thông báo mới
 router.post(
     "/",

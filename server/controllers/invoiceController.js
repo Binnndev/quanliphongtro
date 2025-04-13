@@ -77,7 +77,7 @@ exports.getById = async (req, res) => {
       include: [
         {
           model: Tenant,
-          attributes: ["HoTen", "Email", "SoDienThoai"],
+          attributes: ["HoTen", "Email", "SoDienThoai", "MaTK"],
         },
         {
           model: Room,

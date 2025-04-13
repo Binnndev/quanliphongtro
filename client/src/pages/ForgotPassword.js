@@ -4,19 +4,22 @@ import axios from "axios";
 import AnimatedSignature from "../components/AnimatedSignature";
 
 export default function ForgotPassword() {
-  const [email, setEmail] = useState("");
+  // Thay đổi biến từ email thành username
+  const [username, setUsername] = useState("");
   const [thongBao, setThongBao] = useState("");
   const [loi, setLoi] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email) {
-      setLoi("Vui lòng nhập email.");
+    if (!username) {
+      setLoi("Vui lòng nhập tên đăng nhập.");
       return;
     }
     try {
-      // Gọi API quên mật khẩu sử dụng đường dẫn tương đối
-      const response = await axios.post("/api/auth/forgot-password", { email });
+      // Gọi API quên mật khẩu với key là TenDangNhap thay vì email
+      const response = await axios.post("/api/auth/forgot-password", {
+        TenDangNhap: username,
+      });
       setThongBao(response.data.message);
       setLoi("");
     } catch (err) {
@@ -33,11 +36,11 @@ export default function ForgotPassword() {
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <input
-              type="email"
-              name="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Nhập email của bạn"
+              type="text"
+              name="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Nhập tên đăng nhập của bạn"
               className="w-full px-4 py-3 rounded-full bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-purple-400"
             />
           </div>
@@ -49,7 +52,7 @@ export default function ForgotPassword() {
             type="submit"
             className="w-full py-3 bg-white text-purple-700 rounded-full font-semibold hover:bg-white hover:shadow-lg transition-all"
           >
-            Gửi Email đặt lại mật khẩu
+            Gửi reset token
           </button>
         </form>
         <p className="text-center text-white mt-4">

@@ -5,33 +5,40 @@ import AnimatedSignature from "../components/AnimatedSignature";
 
 export default function Login() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [formData, setFormData] = useState({ TenDangNhap: "", MatKhau: "" });
   const [errors, setErrors] = useState({});
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.email || !formData.password) {
-      setErrors({ submit: "Vui lòng nhập đầy đủ email và mật khẩu." });
-      return;
-    }
-
-    if(formData.email === 'admin@gmail.com' && formData.password === '123456') {
-      localStorage.setItem("token", "sample-token");
-      navigate("/homepage");
+    // Kiểm tra input
+    if (!formData.TenDangNhap || !formData.MatKhau) {
+      setErrors({ submit: "Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu." });
       return;
     }
 
     try {
-      const response = await axios.post("/api/auth/login", formData);
-      console.log("Đăng nhập thành công", response.data);
+      // Gửi request đến API login, body gồm TenDangNhap, MatKhau
+      const response = await axios.post("/api/auth/login", {
+        TenDangNhap: formData.TenDangNhap,
+        MatKhau: formData.MatKhau,
+      });
+      console.log("Đăng nhập thành công:", response.data);
+
+      // Lưu token vào localStorage
       localStorage.setItem("token", response.data.token);
-      navigate("/");
+      // Giải mã token để lấy vai trò (role)
+      const payload = JSON.parse(atob(response.data.token.split(".")[1]));
+      localStorage.setItem("loaiTaiKhoan", payload.role);
+
+      // Chuyển hướng sau đăng nhập
+      navigate("/homepage");
     } catch (error) {
-      setErrors({ submit: error.response.data.error || "Đăng nhập thất bại" });
+      setErrors({
+        submit: error.response?.data?.error || "Đăng nhập thất bại",
+      });
     }
   };
 
@@ -42,19 +49,19 @@ export default function Login() {
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <input
-              type="email"
-              name="email"
-              value={formData.email}
+              type="text"
+              name="TenDangNhap"
+              value={formData.TenDangNhap}
               onChange={handleChange}
-              placeholder="Email"
+              placeholder="Tên đăng nhập"
               className="w-full px-4 py-3 rounded-full bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-purple-400"
             />
           </div>
           <div className="mb-6">
             <input
               type="password"
-              name="password"
-              value={formData.password}
+              name="MatKhau"
+              value={formData.MatKhau}
               onChange={handleChange}
               placeholder="Mật khẩu"
               className="w-full px-4 py-3 rounded-full bg-white bg-opacity-20 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-purple-400"

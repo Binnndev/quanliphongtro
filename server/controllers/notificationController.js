@@ -2,7 +2,7 @@
 
 // --- Imports ---
 // Import User model instead of Tenant for associations
-const { Notification, User, Sequelize } = require("../models");
+const { Notification, User, Tenant, Landlord, Sequelize } = require("../models");
 const { Op } = Sequelize;
 
 // --- Controller Functions ---
@@ -63,56 +63,185 @@ exports.createNotification = async (req, res) => {
     }
 };
 
-// 🟢 Lấy danh sách thông báo cho người nhận (User ID = MaTK)
+// 🟢 Lấy danh sách thông báo cho người nhận (User ID = MaTK) - CÓ TÌM KIẾM
 exports.getNotificationsForUser = async (req, res) => {
-    const userId = req.params.userId; // This should be the MaTK of the logged-in user
-    const limit = parseInt(req.query.limit) || 15; // Default limit
+    const userId = req.params.userId; // MaTK người nhận
+    const limit = parseInt(req.query.limit) || 10; // Lấy limit từ query, mặc định 10
     const page = parseInt(req.query.page) || 1;
     const offset = (page - 1) * limit;
-    const readStatus = req.query.read; // 'true', 'false', or undefined
+    const readStatus = req.query.read; // Filter đã đọc/chưa đọc
+    const searchTerm = req.query.search; // Lấy từ khóa tìm kiếm
 
     try {
-        const whereCondition = { MaNguoiNhan: userId }; // Filter by Receiver's MaTK
+        // --- Xây dựng điều kiện Where động ---
+        const whereCondition = { MaNguoiNhan: userId }; // Luôn lọc theo người nhận
+
+        // Thêm filter trạng thái Đã đọc/Chưa đọc
         if (readStatus === 'true') {
             whereCondition.DaDoc = true;
         } else if (readStatus === 'false') {
             whereCondition.DaDoc = false;
         }
 
-        const { count, rows } = await Notification.findAndCountAll({
-            where: whereCondition,
+        // Thêm điều kiện tìm kiếm nếu có searchTerm
+        if (searchTerm) {
+            const searchPattern = `%${searchTerm}%`;
+            const searchConditions = {
+                [Op.or]: [
+                    { TieuDe: { [Op.like]: searchPattern } },
+                    { NoiDung: { [Op.like]: searchPattern } }
+                    // Có thể thêm tìm kiếm theo tên người gửi nếu cần (join phức tạp hơn)
+                ]
+            };
+             // Kết hợp điều kiện người nhận VÀ điều kiện tìm kiếm
+            whereCondition[Op.and] = [
+                // Giữ lại các điều kiện cũ nếu có (ví dụ DaDoc)
+                ...(Object.keys(whereCondition).map(key => ({ [key]: whereCondition[key] }))),
+                 searchConditions // Thêm điều kiện OR cho search
+            ];
+             // Xóa các key gốc đã được đưa vào Op.and để tránh trùng lặp
+             if (readStatus !== undefined) delete whereCondition.DaDoc;
+              console.log("Search condition for received:", whereCondition);
+
+        } else {
+            // Nếu không tìm kiếm, đảm bảo cấu trúc where vẫn đúng
+             const existingConditions = { ...whereCondition }; // Copy điều kiện hiện có
+             whereCondition[Op.and] = [existingConditions]; // Đặt vào Op.and
+              if (readStatus !== undefined) delete whereCondition.DaDoc; // Xóa key gốc
+              delete whereCondition.MaNguoiNhan; // Xóa key gốc
+        }
+       // --- Kết thúc xây dựng Where ---
+
+
+        const { count, rows: notifications } = await Notification.findAndCountAll({
+            where: whereCondition, // Áp dụng điều kiện đã xây dựng
             limit: limit,
             offset: offset,
             order: [['ThoiGian', 'DESC']],
-            include: [{
-                model: User,
-                as: 'SenderAccount', // Correct alias
-                attributes: ['MaTK'] // Attributes from User model - ADJUST IF NEEDED
-                // If name is in Tenant/Landlord profile, use nested include:
-                // include: [{
-                //     model: User, as: 'SenderAccount', attributes: ['MaTK'],
-                //     include: [
-                //         { model: Tenant, attributes: ['HoTen'], required: false }, // Assuming Tenant model exists and is linked to User
-                //         { model: Landlord, attributes: ['HoTen'], required: false } // Assuming Landlord model exists and is linked
-                //     ]
-                // }]
-            }]
+            include: [{ // Include để lấy tên người gửi (nếu cần)
+                 model: User,
+                 as: 'SenderAccount', // Alias của người gửi
+                 attributes: ['MaTK', 'TenDangNhap', 'LoaiTaiKhoan'],
+                 required: false, // LEFT JOIN
+                //  include: [ // Lấy tên cụ thể nếu cần
+                //      { model: Tenant, as: 'TenantInfo', attributes: ['HoTen'], required: false },
+                //      { model: Landlord, as: 'LandlordInfo', attributes: ['HoTen'], required: false }
+                //  ]
+            }],
+            distinct: true
         });
 
         const totalPages = Math.ceil(count / limit);
 
-        console.log(`✅ Lấy ${rows.length}/${count} thông báo cho User (MaTK): ${userId}`);
+        // Xử lý lấy tên người gửi (TÙY CHỌN - nếu bạn muốn hiển thị tên người gửi)
+         const formattedNotifications = notifications.map(noti => {
+             const rawNoti = noti.get({ plain: true });
+             let senderName = rawNoti.SenderAccount?.TenDangNhap || `MaTK ${rawNoti.MaNguoiGui}`;
+            // Logic tương tự như lấy RecipientName ở getSentNotifications nếu bạn include Tenant/Landlord
+            // if (rawNoti.SenderAccount?.LoaiTaiKhoan === 'Chủ trọ' && rawNoti.SenderAccount?.LandlordInfo?.HoTen) {
+            //     senderName = rawNoti.SenderAccount.LandlordInfo.HoTen;
+            // } else if (rawNoti.SenderAccount?.LoaiTaiKhoan === 'Khách thuê' && rawNoti.SenderAccount?.TenantInfo?.HoTen) {
+            //     senderName = rawNoti.SenderAccount.TenantInfo.HoTen; // Trường hợp tenant gửi tenant?
+            // }
+             return { ...rawNoti, SenderName: senderName }; // Thêm SenderName
+         });
+
+        console.log(`✅ Fetched ${notifications.length}/${count} notifications for User ${userId} matching search "${searchTerm}". Page ${page}/${totalPages}.`);
         res.json({
             message: "Lấy danh sách thông báo thành công",
-            data: rows,
+            // data: rows, // Trả về dữ liệu gốc nếu không cần format tên người gửi
+            data: formattedNotifications, // Trả về dữ liệu đã format
             pagination: { totalItems: count, totalPages, currentPage: page, limit }
         });
 
     } catch (error) {
-        console.error(`❌ Lỗi khi lấy thông báo cho User (MaTK) ${userId}:`, error);
+        console.error(`❌ Error fetching notifications for User (MaTK) ${userId}:`, error);
         res.status(500).json({ message: "Lỗi máy chủ khi lấy danh sách thông báo." });
     }
 };
+
+// Controller mới để lấy lịch sử đã gửi
+exports.getSentNotifications = async (req, res) => {
+    const senderId = req.params.senderId;
+    const limit = parseInt(req.query.limit) || 10; // Sử dụng limit từ query hoặc mặc định
+    const page = parseInt(req.query.page) || 1;
+    const offset = (page - 1) * limit;
+    const searchTerm = req.query.search; // Lấy từ khóa tìm kiếm
+
+    if (!senderId) {
+        return res.status(400).send({ message: "Thiếu ID người gửi." });
+    }
+
+    try {
+        // --- Xây dựng điều kiện Where động ---
+        const whereCondition = { MaNguoiGui: senderId };
+
+        if (searchTerm) {
+            const searchPattern = `%${searchTerm}%`; // Pattern cho LIKE
+            // Tìm kiếm trong Tiêu đề HOẶC Nội dung
+            // Lưu ý: Op.iLike chỉ hoạt động trên PostgreSQL cho case-insensitive
+            // Dùng Op.like và LOWER() cho tương thích rộng hơn
+            whereCondition[Op.or] = [
+                { TieuDe: { [Op.like]: searchPattern } },
+                { NoiDung: { [Op.like]: searchPattern } }
+                // Tìm kiếm tên người nhận phức tạp hơn, tạm bỏ qua ở bước này
+                // Nếu muốn tìm cả tên người nhận, cần join phức tạp hơn hoặc dùng full-text search
+            ];
+             console.log("Search condition:", whereCondition[Op.or]);
+        }
+        // ------------------------------------
+
+        // Sử dụng findAndCountAll để hỗ trợ phân trang và tìm kiếm
+        const { count, rows: notifications } = await Notification.findAndCountAll({
+            where: whereCondition, // Áp dụng điều kiện tìm kiếm
+            include: [ // Include vẫn giữ nguyên để lấy tên người nhận
+                {
+                    model: User,
+                    as: 'ReceiverAccount',
+                    attributes: ['MaTK', 'TenDangNhap', 'LoaiTaiKhoan'],
+                    include: [
+                         {
+                            model: Tenant,
+                            as: 'TenantInfo',
+                            attributes: ['HoTen'],
+                            required: false
+                        },
+                        // { model: Landlord, as: 'LandlordInfo', attributes: ['HoTen'], required: false }
+                    ]
+                }
+            ],
+            order: [['ThoiGian', 'DESC']],
+            limit: limit,
+            offset: offset,
+            distinct: true, // Cần thiết khi include và limit/offset để count chính xác
+        });
+
+        const totalPages = Math.ceil(count / limit);
+
+        // Xử lý để lấy tên người nhận một cách nhất quán (giữ nguyên)
+        const formattedNotifications = notifications.map(noti => {
+           // ... (code map và lấy RecipientName giữ nguyên) ...
+           const rawNoti = noti.get({ plain: true });
+           let recipientName = rawNoti.ReceiverAccount?.TenDangNhap || `MaTK ${rawNoti.MaNguoiNhan}`;
+           if (rawNoti.ReceiverAccount?.LoaiTaiKhoan === 'Khách thuê' && rawNoti.ReceiverAccount?.TenantInfo?.HoTen) {
+               recipientName = rawNoti.ReceiverAccount.TenantInfo.HoTen;
+           }
+           return { ...rawNoti, RecipientName: recipientName };
+        });
+
+         console.log(`✅ Found ${count} sent notifications for sender ${senderId} matching search "${searchTerm}". Returning page ${page}/${totalPages}.`);
+        res.status(200).json({
+             message: "Lấy lịch sử thông báo thành công",
+             data: formattedNotifications,
+             pagination: { totalItems: count, totalPages, currentPage: page, limit } // Trả về thông tin phân trang
+         });
+
+    } catch (error) {
+        console.error(`Error fetching sent notifications for sender MaTK ${senderId}:`, error);
+        res.status(500).send({ message: "Lỗi lấy lịch sử thông báo." });
+    }
+};
+
 
 // 🟢 Lấy thông báo theo ID của nó
 exports.getNotificationById = async (req, res) => {
