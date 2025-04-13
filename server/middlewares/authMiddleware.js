@@ -35,7 +35,8 @@ exports.authorize = (roles = []) => {
 exports.getUserRole = (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) return res.status(401).json({ error: "Không có token" });
-  try {
+    try {
+        console.log('Verifying token with secret:', process.env.JWT_SECRET);
     const decoded = jwt.verify(token, JWT_SECRET);
     req.role = decoded.loaiTaiKhoan; // Chủ Trọ | Khách Thuê
     req.userId = decoded.id;

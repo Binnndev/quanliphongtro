@@ -40,6 +40,7 @@ module.exports = (sequelize, DataTypes) => {
             // as: "ChuTro"
           });
         Service.hasMany(models.InvoiceDetail, { foreignKey: "MaDV" });
+        Service.hasMany(models.RoomService, { foreignKey: "MaDV" });
     };
     return Service;
 };

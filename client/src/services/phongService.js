@@ -51,7 +51,11 @@ export const getNhaTroByChuTro = async (maTK) => {
 };
   
 export const getDsLoaiPhong = async () => {
-    const response = await api.get("/api/room-type");
+    const response = await axios.get("/api/room-type", {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+    });
     return response.data;
 }
 

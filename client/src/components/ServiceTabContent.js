@@ -17,7 +17,7 @@ const ServiceTabContent = ({ roomId, renterId }) => {
 
   const fetchServices = async () => {
     try {
-      const response = await axios.get(`/api/service/room/${roomId}`);
+      const response = await axios.get(`/api/room-services/room/${roomId}`);
       if (Array.isArray(response.data)) {
         setServices(response.data);
       } else {
