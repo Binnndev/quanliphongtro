@@ -7,6 +7,7 @@ const rentalHouseManager = require('../controllers/rentalHouseController'); // I
 router.get('/', rentalHouseManager.getAllHouses);
 router.get('/:id', rentalHouseManager.getHouseById);
 router.get('/:name', rentalHouseManager.getHouseByName);
+router.get('/landlord/:landlordId', rentalHouseManager.getHouseByLandlord);
 router.post('/', rentalHouseManager.createHouse);
 router.put('/:id', rentalHouseManager.updateHouse);
 router.delete('/:id', rentalHouseManager.deleteHouse);

@@ -4,30 +4,34 @@ import MainContainer from "../components/MainContainer";
 import Header from "../components/Header";
 import SubHeader from "../components/SubHeader";
 import Button from "../components/Button";
-import PushNumb from "../components/PushNumb";
-import RoomItem from "../components/RoomItem";
 import DichVuIndex from "../components/DichVuIndex";
 import { useNavigate } from "react-router-dom";
 import { isAuthenticated } from "../services/authService";
-import Invoice from "../components/invoices";
 import Home from "./home";
 import DienNuoc from "../components/DienNuocIndex";
 import PaymentIndex from "../components/PaymentIndex";
 import {
-  getDsPhong,
+    getDsPhong,
+    getNhaTroByChuTro,
   themPhong,
   suaPhong,
   xoaPhong,
 } from "../services/phongService";
 
 const Homepage = () => {
-  const loaiTaiKhoan = localStorage.getItem("loaiTaiKhoan");
+    const loaiTaiKhoan = localStorage.getItem("loaiTaiKhoan");
+    const MaTK = localStorage.getItem("MaTK");
 
   const [rooms, setRooms] = useState([]);
 
   const [isOpen, setIsOpen] = useState(false);
 
-  const [page, setPage] = useState("home");
+    const [page, setPage] = useState("home");
+    
+    // State for rental houses
+    const [rentalHouses, setRentalHouses] = useState([]);
+    const [loadingHouses, setLoadingHouses] = useState(false);
+    const [selectedHouseId, setSelectedHouseId] = useState(null); // ID of the selected house (MaNhaTro)
 
   const invoiceData = {
     nha: "Nhà Q7",
@@ -66,13 +70,59 @@ const Homepage = () => {
 
   useEffect(() => {
     if (!isAuthenticated()) {
-      navigate("/");
-    } else {
-      // Gọi API lấy danh sách room từ backend
-      fetchRooms();
+        navigate("/");
+        return; // Stop effect if not authenticated
     }
-  }, [navigate]);
 
+    // Fetch rental houses if the user is a landlord
+    const fetchRentalHouses = async () => {
+        if (loaiTaiKhoan === "Chủ trọ" && MaTK) {
+            setLoadingHouses(true);
+            try {
+                const houses = await getNhaTroByChuTro(MaTK);
+                console.log("Fetched Rental Houses RAW:", JSON.stringify(houses, null, 2)); // <-- ADD THIS LOG
+                setRentalHouses(houses);
+                // Automatically select the first house if available
+                if (houses.length > 0) {
+                    // Use optional chaining AND check if the ID property exists and is not undefined
+                    const firstHouseId = houses[0]?.MaNhaTro; // Adjust MaNhaTro if needed
+                    console.log("First house object:", houses[0]); // Log the first object
+                    console.log("ID property extracted from first house:", firstHouseId); // See what ID value you got
+                
+                    // Only set if the ID is not null or undefined
+                    if (firstHouseId !== null && firstHouseId !== undefined) {
+                         setSelectedHouseId(firstHouseId);
+                    } else {
+                         console.warn("First house found, but its MaNhaTro is missing or undefined.");
+                         setSelectedHouseId(null); // Fallback to null if ID is invalid
+                    }
+                } else {
+                     setSelectedHouseId(null);
+                }
+            } catch (error) {
+                console.error("Lỗi khi lấy danh sách nhà trọ:", error);
+                setRentalHouses([]); // Set empty on error
+                setSelectedHouseId(null);
+            } finally {
+                setLoadingHouses(false);
+            }
+        } else {
+             // Not a landlord, clear houses state
+             setRentalHouses([]);
+             setSelectedHouseId(null);
+        }
+    };
+
+    fetchRentalHouses();
+
+  }, [navigate, loaiTaiKhoan, MaTK]); // Dependencies for fetching houses
+    
+    const handleHouseSelect = (houseId) => {
+        setSelectedHouseId(houseId);
+        // Optional: Automatically switch to 'home' page when a house is selected
+        // setPage('home');
+        console.log("Selected House ID:", houseId);
+    };
   const fetchRooms = async () => {
     try {
       const dsPhong = await getDsPhong();
@@ -127,6 +177,8 @@ const Homepage = () => {
       console.error("Lỗi khi xóa room:", error);
     }
   };
+    
+  console.log("Homepage RENDER - current selectedHouseId STATE:", selectedHouseId); // <-- ADD THIS LOG
 
   return (
     <div style={{ display: "flex", width: "100vw", height: "100vh" }}>
@@ -216,18 +268,37 @@ const Homepage = () => {
                 borderBottom: "1px #D2D2D2 solid",
               }}
             >
-              <Button
-                class_name="address-btn btn-2 active-btn"
-                label="1 - 198 ÂU CƠ"
-              />
-              <Button
-                class_name="address-btn btn-2"
-                label="2 - 123 THANH NIÊN"
-              />
-              <Button
-                class_name="address-btn btn-2"
-                label="3 - 12 NGUYỄN THÁI HỌC"
-              />
+              {/* Rental House Selection Buttons (Only for Landlord) */}
+              {loaiTaiKhoan === "Chủ trọ" && (
+                             <div
+                                style={{
+                                    width: "100%", // Full width
+                                    minHeight: 60, // Min height for buttons
+                                    padding: "10px 15px", // Padding around buttons
+                                    display: "flex",
+                                    flexWrap: "wrap", // Allow buttons to wrap
+                                    gap: "10px", // Space between buttons
+                                    alignItems: "center",
+                                    background: "#fff", // White background
+                                    borderBottom: "1px solid #D2D2D2", // Separator line
+                                    boxSizing: 'border-box'
+                                }}
+                             >
+                                {loadingHouses && <p style={{color: 'grey'}}>Đang tải danh sách nhà...</p>}
+                                {!loadingHouses && rentalHouses.length === 0 && <p style={{color: 'grey'}}>Không tìm thấy nhà trọ nào.</p>}
+                                {!loadingHouses && rentalHouses.map((house) => (
+                                    // <Button
+                                    //     key={house.MaNhaTro}
+                                    //     // Use TenNhaTro or DiaChi or combine them
+                                    //     label={`${house.TenNhaTro || `Nhà ${house.MaNhaTro}`}`} // Use TenNhaTro or default
+                                    //     // Apply 'active-btn' if selected, ensure CSS exists for it
+                                    //     class_name={`address-btn btn-2 ${selectedHouseId === house.MaNhaTro ? 'active-btn' : ''}`}
+                                    //     onClick={() => handleHouseSelect(house.MaNhaTro)}
+                                    // />
+                                    <button key={house.MaNhaTro} className={`address-btn btn-2 ${selectedHouseId === house.MaNhaTro ? 'active-btn' : ''}`} onClick={() => handleHouseSelect(house.MaNhaTro)}>{`${house.TenNhaTro || `Nhà ${house.MaNhaTro}`}`}</button>
+                                ))}
+                             </div>
+                         )}
             </div>
             <div
               style={{
@@ -245,7 +316,7 @@ const Homepage = () => {
                 borderBottom: "1px #D2D2D2 solid",
               }}
             >
-              {page == "home" && <Home />}
+              {page === "home" && <Home selectedHouseId={selectedHouseId} />}
               {page == "dien" && <DienNuoc type="Điện" data={dataDien} />}
               {page == "nuoc" && <DienNuoc type="Nước" data={dataNuoc} />}
               {page == "tinhTien" && <PaymentIndex />}

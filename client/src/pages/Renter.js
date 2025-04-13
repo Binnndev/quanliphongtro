@@ -513,11 +513,18 @@ console.log("Data being sent:", Object.fromEntries(memberFormData)); // Xem dữ
                             >
                                 Hợp đồng
                             </div>
+                            <div
+                                style={activeTab === 'service' ? activeTabStyle : tabStyle}
+                                onClick={() => handleTabClick('service')}
+                            >
+                                Dịch vụ
+                            </div>
                         </div>
                         {/* --- Kết thúc phần Tab --- */}
 
                         {/* Nút Quay lại */}
-                        <Button label='Quay lại' class_name='delete-btn btn' onClick={() => navigate(-1)} />
+                        <button className="delete-btn btn" onClick={() => navigate(-1)}>Quay lại</button>
+                        
                     </div>
                 )}
                  {/* === KẾT THÚC KHU VỰC TAB === */}
