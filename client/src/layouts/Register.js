@@ -160,7 +160,6 @@ export default function Register() {
                 {["Khách Thuê", "Chủ Trọ"].map((opt) => {
                   const id = `role-${opt.replace(/\s+/g, "")}`;
                   return (
-                    /* label ôm cả radio + text, inline‑flex ⇒ click ở đâu cũng chọn */
                     <label
                       key={opt}
                       htmlFor={id}

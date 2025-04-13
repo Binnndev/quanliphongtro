@@ -5,7 +5,6 @@ const jwt = require("jsonwebtoken");
 const JWT_SECRET = process.env.JWT_SECRET || "mat_khau_jwt_cua_ban";
 const JWT_THOI_HAN = process.env.JWT_THOI_HAN || "1h";
 
-// Đăng ký tài khoản
 exports.register = async (req, res) => {
   try {
     const {
