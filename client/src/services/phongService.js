@@ -61,7 +61,14 @@ export const getDsLoaiPhong = async () => {
 
 // 2. Thêm room
 export const themPhong = async (roomData) => {
-  const response = await api.post("/api/rooms", roomData);
+    console.log(roomData);
+    const config = {
+        headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+    };
+  const response = await api.post("/api/rooms", roomData, config);
   return response.data;
 };
 
@@ -73,6 +80,12 @@ export const suaPhong = async (id, data) => {
 
 // 4. Xóa room
 export const xoaPhong = async (id) => {
-  const response = await api.delete(`/api/rooms/${id}`);
+    const config = {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+    };
+  // Xóa phòng
+  const response = await api.delete(`/api/rooms/${id}`, config);
   return response.data;
 };

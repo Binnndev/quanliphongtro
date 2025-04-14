@@ -84,6 +84,7 @@ const Home = ({ selectedHouseId }) => {
         TrangThai: 'Còn phòng', // Default status
         MaNhaTro: '', // Will be set when opening modal
         MaLoaiPhong: '',
+        GhiChu: ''
     });
     const [isSubmitting, setIsSubmitting] = useState(false); // Loading state for form submission
     // --- End Modal State ---
@@ -181,11 +182,12 @@ const Home = ({ selectedHouseId }) => {
             setFormData({
                 TenPhong: roomData.TenPhong || '',
                 DienTich: roomData.RoomType.DienTich || '',
-                GiaPhong: roomData.RoomType.GiaPhong || '',
-                SoNguoiToiDa: roomData.SoNguoiToiDa || '',
+                GiaPhong: roomData.RoomType.Gia || '',
+                SoNguoiToiDa: roomData.RoomType.SoNguoiToiDa || '',
                 MaLoaiPhong: roomData.MaLoaiPhong || '',
                 TrangThai: roomData.TrangThai || 'Còn phòng',
                 MaNhaTro: roomData.MaNhaTro, // Keep existing MaNhaTro
+                GhiChu: roomData.GhiChu || '',
             });
         } else { // Add mode or fallback
             setCurrentRoom(null);
@@ -197,6 +199,7 @@ const Home = ({ selectedHouseId }) => {
                 TrangThai: 'Còn phòng',
                 MaNhaTro: selectedHouseId, // Set the current house ID
                 MaLoaiPhong: '',
+                GhiChu: '',
             });
         }
         setIsModalOpen(true);
@@ -219,13 +222,14 @@ const Home = ({ selectedHouseId }) => {
     const handleRoomTypeChange = (event) => {
         const selectedMaLoaiPhong = event.target.value;
         const selectedType = allRoomTypes.find(type => String(type.MaLoaiPhong) === String(selectedMaLoaiPhong));
-
+        console.log("Selected room type:", selectedType);
         if (selectedType) {
             setFormData(prev => ({
                 ...prev,
                 MaLoaiPhong: selectedMaLoaiPhong,
                 DienTich: selectedType.DienTich,
-                GiaPhong: selectedType.GiaPhong,
+                GiaPhong: selectedType.Gia,
+                SoNguoiToiDa: selectedType.SoNguoiToiDa
             }));
         } else {
             // Nếu chọn lại option mặc định "-- Chọn loại phòng --"
@@ -234,6 +238,7 @@ const Home = ({ selectedHouseId }) => {
                 MaLoaiPhong: '',
                 DienTich: '', // Xóa giá trị cũ
                 GiaPhong: '',  // Xóa giá trị cũ
+                SoNguoiToiDa: ''
             }));
         }
     };
@@ -254,9 +259,10 @@ const Home = ({ selectedHouseId }) => {
         const payload = {
             TenPhong: formData.TenPhong,
             TrangThai: formData.TrangThai,
-            MoTa: formData.MoTa,
+            GhiChu: formData.GhiChu,
             MaNhaTro: formData.MaNhaTro,
             MaLoaiPhong: formData.MaLoaiPhong, // <<<<<<<<<< GỬI MaLoaiPhong
+            maChuTro: localStorage.MaChuTro
         };
         // Không cần gửi DienTich, GiaPhong nếu backend lấy từ MaLoaiPhong
 
@@ -339,6 +345,9 @@ const Home = ({ selectedHouseId }) => {
          return <div style={{ padding: "30px", textAlign: "center", color: '#777' }}>Vui lòng chọn một nhà trọ từ danh sách ở trên.</div>;
     }
 
+    const selectedRoomTypeObject = allRoomTypes.find(type => type.MaLoaiPhong === formData.MaLoaiPhong);
+    // Lấy tên loại phòng từ object tìm được. Cung cấp giá trị dự phòng nếu không tìm thấy.
+    const currentRoomTypeName = selectedRoomTypeObject ? selectedRoomTypeObject.TenLoai : "Không xác định"; // Hoặc chuỗi rỗng ''
 
     return (
         <div style={{ width: "100%" }}>
@@ -360,11 +369,7 @@ const Home = ({ selectedHouseId }) => {
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                     {loaiTaiKhoan === "Chủ trọ" && selectedHouseId && ( // Show button only if a house is selected
-                        <Button
-                            label="Thêm phòng"
-                            class_name="green-btn btn"
-                            onClick={handleThemPhong}
-                        />
+                        <button className="green-btn btn" onClick={handleThemPhong}>Thêm phòng</button>
                     )}
                 </div>
             </div>
@@ -427,7 +432,17 @@ const Home = ({ selectedHouseId }) => {
                             </div>
                             <div style={formGroupStyle}>
                                 <label htmlFor="MaLoaiPhong" style={labelStyle}>Loại phòng:</label>
-                                <select
+                                {formData.TrangThai === 'Hết phòng' ? (
+                                    <input
+                                    type="text"
+                                    id="TrangThai"
+                                    name="TrangThai" // Giữ name để form có thể submit đúng (nếu cần)
+                                    value={currentRoomTypeName} // Tên loại phòng
+                                    readOnly // Thuộc tính quan trọng để không cho sửa
+                                    style={inputStyle}
+                                    />
+                                ) : (
+                                    <select
                                     id="MaLoaiPhong"
                                     name="MaLoaiPhong"
                                     value={formData.MaLoaiPhong}
@@ -441,7 +456,7 @@ const Home = ({ selectedHouseId }) => {
                                             {type.TenLoai}
                                         </option>
                                     ))}
-                                </select>
+                                </select>)}
                             </div>
                             <div style={formGroupStyle}>
                                 <label htmlFor="DienTich" style={labelStyle}>Diện tích (m²):</label>
@@ -487,17 +502,31 @@ const Home = ({ selectedHouseId }) => {
                             </div>
                              <div style={formGroupStyle}>
                                 <label htmlFor="TrangThai" style={labelStyle}>Trạng thái:</label>
+                                {formData.TrangThai === 'Hết phòng' ? (
+                                // Trường hợp 1: Hết phòng -> Hiển thị input text read-only
+                                <input
+                                    type="text"
+                                    id="TrangThai"
+                                    name="TrangThai" // Giữ name để form có thể submit đúng (nếu cần)
+                                    value="Hết phòng"
+                                    readOnly // Thuộc tính quan trọng để không cho sửa
+                                    style={inputStyle}
+                                />
+                            ) : (
+                                // Trường hợp 2: Không phải Hết phòng -> Hiển thị dropdown với 2 option còn lại
                                 <select
                                     id="TrangThai"
                                     name="TrangThai"
-                                    value={formData.TrangThai}
-                                    onChange={handleInputChange}
+                                    value={formData.TrangThai} // Vẫn binding với state hiện tại
+                                    onChange={handleInputChange} // Vẫn dùng handler cũ
                                     style={inputStyle}
                                 >
+                                    {/* Chỉ hiển thị 2 options này */}
                                     <option value="Còn phòng">Còn phòng</option>
-                                    <option value="Hết phòng">Hết phòng</option>
                                     <option value="Đang bảo trì">Đang bảo trì</option>
+                                    {/* Không có option "Hết phòng" ở đây */}
                                 </select>
+                            )}
                             </div>
                              {/* MaNhaTro is needed but usually not edited by the user directly */}
                             {/* <input type="hidden" name="MaNhaTro" value={formData.MaNhaTro} /> */}

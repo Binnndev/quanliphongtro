@@ -37,9 +37,7 @@ const NotificationManagementPage = () => {
         <div style={{ display: "flex", height: '100vh', overflow: 'hidden' }}>
             {/* Sidebar */}
             <div style={{ background: '#1B2428', width: "20%", minWidth: '250px', color: 'white', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ height: 84, background: '#1B2428', borderBottom: '1px #21373D solid', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 10px' }}>
-                    <AnimatedSignature text="QUẢN LÝ PHÒNG TRỌ" />
-                </div>
+                
                 <div style={{ flexGrow: 1, overflowY: 'auto' }}>
                     {/* Cần cập nhật link "Quản lý thông báo" trong MainContainer */}
                     <MainContainer />
