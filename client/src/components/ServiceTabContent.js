@@ -1,15 +1,20 @@
 // components/ServiceTabContent.js
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { FaEye, FaTrash } from "react-icons/fa";
+import { FaEye, FaTrash, FaPlus } from "react-icons/fa";
 import InvoiceDetailPopup from "./invoiceDetailPopup";
 import AddRoomServiceModal from "./AddRoomServiceModal";
+import QuantityInputPopup from "./QuantityInputPopup";
 
 const ServiceTabContent = ({ roomId, renterId }) => {
   const [services, setServices] = useState([]);
   const [invoiceDetail, setInvoiceDetail] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [showQuantityPopup, setShowQuantityPopup] = useState(false);
+  const [popupServiceInfo, setPopupServiceInfo] = useState(null); // Lưu thông tin DV cho popup
+  const [isSavingUsage, setIsSavingUsage] = useState(false); // State loading khi lưu usage
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (roomId) {
@@ -17,10 +22,10 @@ const ServiceTabContent = ({ roomId, renterId }) => {
     }
   }, [roomId]);
 
-  const fetchServices = async () => {
+    const fetchServices = async () => {
+        setIsLoading(true); // Bật loading
     try {
-        const response = await axios.get(`/api/room-services/room/${roomId}`);
-        console.log("Dịch vụ phòng:", response.data);
+      const response = await axios.get(`/api/room-services/room/${roomId}`);
       if (Array.isArray(response.data)) {
         setServices(response.data);
       } else {
@@ -29,6 +34,8 @@ const ServiceTabContent = ({ roomId, renterId }) => {
     } catch (error) {
       console.error("Lỗi khi tải dịch vụ phòng:", error);
       setServices([]);
+    } finally {
+        setIsLoading(false); // Tắt loading
     }
   };
 
@@ -65,12 +72,12 @@ const ServiceTabContent = ({ roomId, renterId }) => {
     console.log(`Chuẩn bị xóa dịch vụ MaDV: ${serviceId} khỏi phòng MaPhong: ${roomId}`);
 
     // Xác nhận lại với người dùng
-    const confirmed = window.confirm(`Bạn có chắc muốn xóa dịch vụ "${serviceName}" khỏi phòng này không?`);
+      const confirmed = window.confirm(`Bạn có chắc muốn xóa dịch vụ "${serviceName}" khỏi phòng này không?`);
     if (!confirmed) {
         console.log("Người dùng đã hủy thao tác xóa.");
         return; // Dừng nếu người dùng không xác nhận
     }
-
+      setIsLoading(true);
     try {
         const apiUrl = `/api/room-services/delete/roomId/${roomId}/serviceId/${serviceId}`;
 
@@ -130,8 +137,60 @@ const ServiceTabContent = ({ roomId, renterId }) => {
             errorMessage = `Lỗi cấu hình request: ${err.message}`;
         }
         alert(errorMessage); // Hiển thị thông báo lỗi cho người dùng
+    } finally {
+        setIsLoading(false); // Tắt loading
     }
-};
+  };
+    
+  const handleOpenQuantityPopup = (service) => {
+    setPopupServiceInfo({
+        MaDV: service.MaDV,
+        TenDV: service.TenHienThi || service.TenDV,
+        MaPhong: service.MaPhong // Cần MaPhong để gửi API
+    });
+    setShowQuantityPopup(true);
+  };
+    
+  const handleSaveUsageRecord = async (quantity) => {
+    if (!popupServiceInfo) return;
+
+    setIsSavingUsage(true); // Bật loading riêng cho việc lưu usage
+
+    try {
+        const token = localStorage.getItem('token');
+        const config = { headers: { 'Authorization': `Bearer ${token}` } };
+
+        const response = await axios.post(`/api/room-services/add-usage`, {
+            maPhong: popupServiceInfo.MaPhong,
+            maDv: popupServiceInfo.MaDV,
+            soLuong: quantity
+        }, config );
+
+        if (response.status === 201) { // Created
+            // alert("Đã ghi nhận sử dụng dịch vụ thành công!"); // Có thể bỏ alert nếu không muốn
+            setShowQuantityPopup(false); // Đóng popup
+            setPopupServiceInfo(null);   // Reset info
+            fetchServices();             // Tải lại danh sách để cập nhật tổng số lượng
+        } else {
+             // Xử lý trường hợp API trả về status khác 201 nhưng không phải lỗi
+             console.warn("API /api/service-usage trả về status:", response.status);
+             alert(`Lưu thành công với mã: ${response.status}. Vui lòng kiểm tra lại.`);
+             setShowQuantityPopup(false);
+             setPopupServiceInfo(null);
+             fetchServices();
+        }
+
+    } catch (error) {
+        console.error("Lỗi khi lưu sử dụng dịch vụ:", error.response?.data || error.message);
+        // Hiển thị lỗi cụ thể từ backend nếu có
+        alert(`Lỗi khi lưu: ${error.response?.data?.message || 'Không thể kết nối tới máy chủ.'}`);
+        // Không đóng popup khi lỗi để người dùng thử lại
+    } finally {
+        setIsSavingUsage(false); // Tắt loading lưu usage
+    }
+  };
+    
+
 
   return (
     <div className="service-tab">
@@ -141,61 +200,99 @@ const ServiceTabContent = ({ roomId, renterId }) => {
     + Thêm dịch vụ
   </button>
 </div>
+      {/* Bảng hiển thị */}
       <table className="service-tab__table">
         <thead>
           <tr>
             <th>Tên Dịch Vụ</th>
+            <th>Loại Dịch Vụ</th>
             <th>Đơn giá</th>
             <th>Đơn vị tính</th>
-            <th>Số lượng</th>
-            <th>Xem hóa đơn</th>
+            <th>SL sử dụng (tháng)</th>{/* Sửa tiêu đề */}
+            <th>Hành động</th>
           </tr>
         </thead>
         <tbody>
-          {Array.isArray(services) && services.length > 0 ? (
-            services.map((svc, index) => (
-              <tr key={index}>
-                <td>{svc.TenDV}</td>
-                <td>{svc.Gia.toLocaleString()} đ</td>
+          {isLoading ? ( // Hiển thị loading khi đang fetch
+             <tr><td colSpan="6" style={{ textAlign: 'center' }}>Đang tải dữ liệu...</td></tr>
+          ) : Array.isArray(services) && services.length > 0 ? (
+            services.map((svc) => (
+              <tr key={`${svc.MaDV}-${svc.MaPhong}`}> {/* Key cần unique */}
+                <td>{svc.TenHienThi || svc.TenDV}</td>
+                <td>{svc.LoaiDV}</td>
+                <td>{svc.isUtility ? svc.Gia.toLocaleString() : (svc.Gia ? svc.Gia.toLocaleString() : 'N/A')} đ</td> {/* Xử lý giá điện nước */}
                 <td>{svc.DonViTinh}</td>
-                <td>{svc.SoLuong}</td>
                 <td>
-                  <button
-                    className="service-tab__button-view"
-                    onClick={() => handleViewInvoice(svc.MaDV)}
-                  >
-                    <FaEye />
-                  </button>
-                  <button
-                    className="service-tab__button-delete"
-                    onClick={() => handleDeleteService(svc)}
-><FaTrash /></button>
+                    {/* Hiển thị chỉ số nếu là Điện/Nước */}
+                    {svc.isUtility && svc.ChiSoCuoi !== undefined ?
+                     `${svc.SoLuong} (${svc.ChiSoDau} → ${svc.ChiSoCuoi})` :
+                     svc.SoLuong
+                    }
+                </td>
+                <td>
+                  <div className="action-buttons">
+                    {/* Nút +: Chỉ hiển thị cho loại 'Theo số lượng' và không phải Điện/Nước */}
+                    {svc.LoaiDV === 'Theo số lượng' && !svc.isUtility && (
+                      <button
+                        className="service-tab__button-increment" // Giữ class cũ hoặc đổi tên
+                        onClick={() => handleOpenQuantityPopup(svc)}
+                        disabled={isLoading} // Disable khi đang load chung
+                        title="Thêm lượt sử dụng"
+                      >
+                        <FaPlus />
+                      </button>
+                    )}
+
+                    {/* Nút Xem chi tiết hóa đơn */}
+                    {/* Có thể không cần thiết cho điện nước ở đây? Tùy logic xem hóa đơn */}
+                    {/* {(!svc.isUtility || canViewUtilityInvoice) && ( */}
+                        
+                    {/* )} */}
+
+
+                    {/* Nút Xóa: Không cho xóa Điện/Nước */}
+                    {!svc.isUtility && (
+                        <button
+                            className="service-tab__button-delete"
+                            onClick={() => handleDeleteService(svc)}
+                            disabled={isLoading}
+                            title="Xóa đăng ký dịch vụ khỏi phòng" // Title rõ hơn
+                        >
+                            <FaTrash />
+                        </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan="5">Không có dịch vụ nào cho phòng này</td>
+              <td colSpan="6" style={{ textAlign: 'center' }}>Không có dịch vụ nào được đăng ký/sử dụng.</td>
             </tr>
           )}
         </tbody>
       </table>
 
-      {showPopup && invoiceDetail && (
-        <InvoiceDetailPopup
-        invoiceData={invoiceDetail}
-          onClose={() => setShowPopup(false)}
-        />
-      )}
+      {/* --- Render các Modal --- */}
       {showAddModal && (
         <AddRoomServiceModal
-        isOpen={showAddModal}
+          isOpen={showAddModal}
           roomId={roomId}
           onClose={() => setShowAddModal(false)}
-                  onServiceAdded={fetchServices}
-                  existingServices={services}
+          onServiceAdded={fetchServices}
+          existingServices={services}
         />
       )}
+      {/* Render Popup nhập số lượng */}
+      {showQuantityPopup && popupServiceInfo && (
+            <QuantityInputPopup
+                isOpen={showQuantityPopup}
+                onClose={() => setShowQuantityPopup(false)}
+                onSave={handleSaveUsageRecord}
+                serviceInfo={popupServiceInfo}
+                isSaving={isSavingUsage} // Truyền trạng thái loading lưu usage
+            />
+       )}
     </div>
   );
 };

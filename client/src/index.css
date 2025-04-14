@@ -860,6 +860,27 @@ box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
   text-align: center;
 }
 
+.action-buttons {
+    display: flex;
+    gap: 5px; /* Khoảng cách giữa các nút */
+    align-items: center;
+    justify-content: center;
+  }
+
+.service-tab__button-increment {
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.service-tab__button-increment:hover {
+  background-color: #388e3c;
+}
+
 .service-tab__button-view {
   background-color: #007bff;
   color: white;
@@ -1055,97 +1076,206 @@ box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
   }
 }
 .payment-index__wrapper {
-  padding: 24px;
-  background-color: #f7f9fc;
-  width: 100%;
-  font-family: 'Segoe UI', sans-serif;
-}
+    padding: 24px;
+    background-color: #f7f9fc;
+    width: 100%;
+    font-family: 'Segoe UI', sans-serif;
+  }
+  
+  .payment-index__container {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+  
+  .payment-index__title {
+    font-size: 24px;
+    margin-bottom: 20px;
+    font-weight: 600;
+  }
+  
+  .payment-index__filter-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  
+  .payment-index__filter {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 14px;
+    min-width: 160px;
+    background-color: #fff;
+  }
+  
+  .payment-index__table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .payment-index__table th,
+  .payment-index__table td {
+    padding: 12px 10px;
+    border: 1px solid #e0e0e0;
+    text-align: center;
+    font-size: 14px;
+  }
+  
+  .payment-index__table th {
+    background-color: #f0f2f5;
+    font-weight: bold;
+  }
+  
+  .payment-index__action {
+    padding: 6px 10px;
+    border: none;
+    cursor: pointer;
+    border-radius: 6px;
+    margin: 0 4px;
+  }
+  
+  .payment-index__action--view {
+    background-color: #3498db;
+    padding: 2px 7px;
+    border-radius: 5px;
+    color: white;
+  }
+  
+  .payment-index__action--pay {
+    background-color: #27ae60;
+    padding: 2px 7px;
+    border-radius: 5px;
+    color: white;
+  }
+  
+  .payment-index__popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .payment-index__popup-box {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    width: 400px;
+    max-width: 90%;
+  }
 
-.payment-index__container {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
-
-.payment-index__title {
-  font-size: 24px;
-  margin-bottom: 20px;
-  font-weight: 600;
-}
-
-.payment-index__filter-row {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-}
-
-.payment-index__filter {
-  padding: 8px 12px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 14px;
-  min-width: 160px;
-  background-color: #fff;
-}
-
-.payment-index__table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.payment-index__table th,
-.payment-index__table td {
-  padding: 12px 10px;
-  border: 1px solid #e0e0e0;
-  text-align: center;
-  font-size: 14px;
-}
-
-.payment-index__table th {
-  background-color: #f0f2f5;
-  font-weight: bold;
-}
-
-.payment-index__action {
-  padding: 6px 10px;
-  border: none;
-  cursor: pointer;
-  border-radius: 6px;
-  margin: 0 4px;
-}
-
-.payment-index__action--view {
-  background-color: #3498db;
-  padding: 2px 7px;
-  border-radius: 5px;
-  color: white;
-}
-
-.payment-index__action--pay {
-  background-color: #27ae60;
-  padding: 2px 7px;
-  border-radius: 5px;
-  color: white;
-}
-
-.payment-index__popup-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0,0,0,0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.payment-index__popup-box {
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  width: 400px;
-  max-width: 90%;
-}
+.qip-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Đảm bảo nằm trên các phần tử khác */
+  }
+  
+  .qip-modal-content {
+    background-color: #fff;
+    padding: 25px 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    min-width: 300px;
+    max-width: 400px;
+  }
+  
+  .qip-modal-content h4 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #333;
+    text-align: center;
+  }
+  
+  .qip-input-group {
+    margin-bottom: 15px;
+  }
+  
+  .qip-input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #555;
+  }
+  
+  .qip-input-group input[type="number"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box; /* Quan trọng để padding không làm tăng kích thước */
+    font-size: 1rem;
+  }
+  /* Ẩn mũi tên lên xuống mặc định của input number (tùy chọn) */
+  .qip-input-group input[type=number]::-webkit-inner-spin-button,
+  .qip-input-group input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .qip-input-group input[type=number] {
+    -moz-appearance: textfield; /* Firefox */
+  }
+  
+  
+  .qip-error-message {
+      color: #dc3545; /* Màu đỏ cho lỗi */
+      font-size: 0.9em;
+      margin-top: -10px;
+      margin-bottom: 15px;
+  }
+  
+  
+  .qip-button-group {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px; /* Khoảng cách giữa các nút */
+    margin-top: 20px;
+  }
+  
+  .qip-button-group button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: background-color 0.2s, opacity 0.2s;
+  }
+  
+  .qip-button-cancel {
+    background-color: #6c757d; /* Màu xám */
+    color: white;
+  }
+  .qip-button-cancel:hover {
+    background-color: #5a6268;
+  }
+  .qip-button-cancel:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+  
+  
+  .qip-button-save {
+    background-color: #007bff; /* Màu xanh dương */
+    color: white;
+  }
+  .qip-button-save:hover {
+    background-color: #0056b3;
+  }
+  .qip-button-save:disabled {
+      background-color: #0056b3;
+      opacity: 0.7;
+      cursor: not-allowed;
+  }
