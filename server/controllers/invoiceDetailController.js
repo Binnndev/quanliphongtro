@@ -49,30 +49,59 @@ exports.getInvoiceDetail = async (req, res) => {
   }
 };
 exports.getInvoiceDetailsByRoomAndService = async (req, res) => {
-  const { invoiceId,maDV } = req.params;
+    // --- FIX: Use roomId to match the route parameter name ---
+    const { roomId, maDV } = req.params;
 
-  try {
-    // JOIN ChiTietHoaDon + HoaDon để lọc theo MaPhong
-    const details = await InvoiceDetail.findAll({
-      where: { MaDV: maDV },
-      include: [
-        {
-          model: Invoice,
-          as: 'Invoice',
-          where: { MaPhong: invoiceId },
-          attributes: ["MaHoaDon", "NgayLap"],
-        },
-        {
-          model: Service,
-          as: "Service",
-          attributes: ["TenDV"],
-        },
-      ],
-    });
+    // Basic validation
+    if (!roomId || !maDV) {
+        return res.status(400).json({ message: "Thiếu Mã phòng (roomId) hoặc Mã dịch vụ (maDV)." });
+    }
 
-    res.json(details);
-  } catch (error) {
-    console.error("Lỗi khi lấy chi tiết hóa đơn theo phòng và dịch vụ:", error);
-    res.status(500).json({ message: "Lỗi server", error });
-  }
+    try {
+        // Query remains largely the same, but using 'roomId' variable now
+        const details = await InvoiceDetail.findAll({
+            where: { MaDV: maDV }, // Filter by service ID
+            include: [
+                {
+                    model: Invoice,
+                    as: 'Invoice', // Ensure this alias matches your InvoiceDetail model association
+                    where: { MaPhong: roomId }, // Filter by room ID via the Invoice
+                    attributes: ["MaHoaDon", "NgayLap", "MaPhong"], // Include MaPhong for verification?
+                    required: true // Make this an INNER JOIN - only return details linked to an invoice for this room
+                },
+                {
+                    model: Service,
+                    as: "Service", // Ensure this alias matches your InvoiceDetail model association
+                    attributes: ["TenDV", "Gia", "DonViTinh"], // Maybe include more attributes? Price, Unit?
+                    required: false // Change to false (LEFT JOIN) if you want details even if Service record is missing (but check for null below)
+                                    // Keep true (INNER JOIN) if details are meaningless without a valid service
+                },
+            ],
+            // Optional: Add ordering if needed, e.g., by date
+            // order: [[{ model: Invoice, as: 'Invoice' }, 'NgayLap', 'DESC']]
+        });
+
+        // --- DEBUGGING/VALIDATION ---
+        console.log(`Found ${details.length} invoice details for roomId: ${roomId}, maDV: ${maDV}`);
+        if (details.length > 0) {
+             // Log the first result's structure, especially the Service part
+             console.log("First detail structure:", JSON.stringify(details[0], null, 2));
+
+             // Explicitly check if Service is missing in any result (if required: true is used, this shouldn't happen often)
+             const missingService = details.find(d => !d.Service);
+             if (missingService) {
+                  console.warn(`WARNING: Found invoice detail(s) but the associated Service (MaDV: ${maDV}) seems missing or failed to join.`);
+                  // Decide how to handle: return error, return partial data, etc.
+                  // For now, we'll let it pass, but the frontend needs null checks.
+             }
+        }
+        // --------------------------
+
+        // Send the response (might be an empty array if no details found)
+        res.json(details);
+
+    } catch (error) {
+        console.error(`Lỗi khi lấy chi tiết hóa đơn (Room: ${roomId}, Service: ${maDV}):`, error);
+        res.status(500).json({ message: "Lỗi máy chủ khi lấy chi tiết hóa đơn.", error: error.message });
+    }
 };

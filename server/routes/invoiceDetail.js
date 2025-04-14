@@ -5,6 +5,6 @@ const router = express.Router();
 const { getByInvoiceId,getInvoiceDetailsByRoomAndService } = require("../controllers/invoiceDetailController");
 
 // Route để lấy chi tiết hóa đơn theo ID
-router.get("/room/:invoiceId/service/:maDV", getInvoiceDetailsByRoomAndService);
+router.get("/room/:roomId/service/:maDV", getInvoiceDetailsByRoomAndService);
 
 module.exports = router;

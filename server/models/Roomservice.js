@@ -27,6 +27,7 @@ module.exports = (sequelize, DataTypes) => {
             tableName: "DichVuPhong",
             timestamps: false,
         }
+        
     );
 
     RoomService.associate = (models) => {
