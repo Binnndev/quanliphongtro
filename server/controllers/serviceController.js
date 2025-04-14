@@ -18,6 +18,49 @@ exports.getServices = async (req, res) => {
   }
 };
 
+exports.getRoomServices = async (req, res) => {
+  try {
+    const roomId = req.params.roomId;
+    const services = await db.DichVuPhong.findAll({
+      where: { MaPhong: roomId },
+      include: [{ model: db.DichVu, attributes: ['TenDV', 'Gia', 'DonViTinh'] }]
+    });
+
+    const formatted = services.map(s => ({
+      TenDV: s.DichVu?.TenDV || '',
+      Gia: s.DichVu?.Gia || 0,
+      DonViTinh: s.DichVu?.DonViTinh || '',
+      SoLuong: s.SoLuong
+    }));
+
+    res.json(formatted);
+  } catch (err) {
+    console.error("Lỗi lấy dịch vụ phòng:", err);
+    res.status(500).json({ message: "Lỗi server" });
+  }
+};
+
+
+// Lấy dịch vụ theo mã chủ trọ
+exports.getServicesByChuTro = async (req, res) => {
+  try {
+    const { maChuTro } = req.params;
+    if (!maChuTro) {
+      return res.status(400).json({ error: "Thiếu maChuTro" });
+    }
+
+    const services = await Service.findAll({
+      where: { MaChuTro: maChuTro },
+    });
+
+    res.status(200).json(services);
+  } catch (error) {
+    console.error("Lỗi lấy dịch vụ theo chủ trọ:", error);
+    res.status(500).json({ error: "Lỗi server" });
+  }
+};
+
+
 // Lấy chi tiết 1 dịch vụ
 exports.getServiceById = async (req, res) => {
   try {

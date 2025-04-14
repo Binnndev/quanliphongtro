@@ -116,28 +116,94 @@ exports.getRoomsByLandlord = async (req, res) => {
 };
 
 exports.createRoom = async (req, res) => {
-  try {
-    // Lấy dữ liệu từ form: roomName, description, price, rented, amenities
-    const { roomName, description, price, rented, amenities } = req.body;
-    let imageUrl = null;
-    // Nếu có file upload (ảnh room)
-    if (req.file) {
-      imageUrl = req.file.path;
+    const {
+        TenPhong,
+        MaNhaTro,
+        MaLoaiPhong,
+        TrangThai = 'Còn phòng', // Gán giá trị mặc định nếu frontend không gửi
+        GhiChu = null,
+        maChuTro// Mô tả có thể là null
+    } = req.body;
+
+    // Kiểm tra các trường bắt buộc
+    if (!TenPhong || !MaNhaTro || !MaLoaiPhong) {
+        return res.status(400).json({ message: 'Vui lòng cung cấp đầy đủ Tên phòng, Mã nhà trọ và Mã loại phòng.' });
     }
-    const newRoom = await Room.create({
-      roomName,
-      description,
-      price,
-      rented: rented || false,
-      imageUrl,
-      amenities,
-      MaChuTro: req.userId, // Gán mã chủ trọ từ token, đảm bảo chỉ chủ trọ đăng room của mình
-    });
-    res.status(201).json(newRoom);
-  } catch (error) {
-    console.error("Error creating room:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
+
+    // (Tùy chọn) Validate thêm nếu cần:
+    // - Kiểm tra TrangThai có hợp lệ không ('Còn phòng', 'Hết phòng', 'Đang bảo trì')
+    const validTrangThai = ['Còn phòng', 'Hết phòng', 'Đang bảo trì'];
+    if (!validTrangThai.includes(TrangThai)) {
+        return res.status(400).json({ message: `Trạng thái phòng không hợp lệ. Chỉ chấp nhận: ${validTrangThai.join(', ')}.` });
+    }
+
+    try {
+        // --- 3. Kiểm tra sự tồn tại và quyền sở hữu ---
+
+        // Kiểm tra xem NhaTro có tồn tại và thuộc sở hữu của chủ trọ đang đăng nhập không
+        // Ví dụ sử dụng Sequelize:
+        const nhaTro = await RentalHouse.findOne({
+            where: {
+                MaNhaTro: MaNhaTro,
+                MaChuTro: maChuTro // Quan trọng: Đảm bảo nhà trọ này là của chủ trọ hiện tại
+            }
+        });
+
+        if (!nhaTro) {
+            return res.status(404).json({ message: `Nhà trọ với Mã ${MaNhaTro} không tồn tại hoặc bạn không có quyền thêm phòng vào nhà trọ này.` });
+        }
+
+        // Kiểm tra xem LoaiPhong có tồn tại không
+        // Ví dụ sử dụng Sequelize:
+        const loaiPhong = await RoomType.findByPk(MaLoaiPhong);
+        if (!loaiPhong) {
+            return res.status(400).json({ message: `Loại phòng với Mã ${MaLoaiPhong} không tồn tại.` });
+        }
+
+        // --- 4. Tạo bản ghi Phòng mới trong Database ---
+        // Ví dụ sử dụng Sequelize:
+        const phongMoi = await Room.create({
+            TenPhong: TenPhong.trim(), // Trim để loại bỏ khoảng trắng thừa
+            MaNhaTro: MaNhaTro,
+            MaLoaiPhong: MaLoaiPhong,
+            TrangThai: TrangThai,
+            GhiChu: GhiChu ? GhiChu.trim() : null,
+            // Các trường khác nếu có (ví dụ: ngày tạo,...)
+        });
+
+        // --- 5. Chuẩn bị và Gửi Response ---
+
+        // Sau khi tạo thành công, có thể bạn muốn trả về thông tin phòng vừa tạo
+        // kèm theo thông tin chi tiết của Loại phòng và Nhà trọ (giống cấu trúc frontend cần)
+        // Ví dụ sử dụng Sequelize để lấy lại dữ liệu kèm association:
+        const phongMoiChiTiet = await Room.findByPk(phongMoi.MaPhong, {
+             include: [
+                 {
+                     model: RoomType,
+                 },
+                 {
+                     model: RentalHouse // Hoặc tên association khác nếu có
+                 }
+                 // Thêm các association khác nếu cần
+             ]
+        });
+
+
+        // Gửi response thành công (status 201 Created)
+        return res.status(201).json(phongMoiChiTiet || phongMoi); // Trả về chi tiết nếu lấy được, nếu không trả về bản ghi cơ bản
+
+    } catch (error) {
+        console.error('Lỗi khi thêm phòng trọ:', error);
+
+        // Xử lý lỗi trùng lặp (ví dụ: tên phòng đã tồn tại trong cùng nhà trọ)
+        // Cần kiểm tra lỗi cụ thể từ ORM/Database của bạn
+        if (error.name === 'SequelizeUniqueConstraintError') { // Ví dụ cho Sequelize
+             return res.status(409).json({ message: 'Tên phòng này đã tồn tại trong nhà trọ được chọn.' });
+        }
+
+        // Các lỗi khác từ database hoặc logic
+        return res.status(500).json({ message: 'Đã xảy ra lỗi phía máy chủ khi thêm phòng.' });
+    }
 };
 
 exports.updateRoom = async (req, res) => {

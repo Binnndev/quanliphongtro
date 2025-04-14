@@ -3,6 +3,7 @@ import InvoicePrintView from "./InvoicePrintView"; // đường dẫn đúng
 import React, { useRef } from "react";
 
 const Invoice = ({ isOpen, onClose, invoiceData, onSend, isSending }) => {
+    const phanQuyen = localStorage.loaiTaiKhoan;
   const printRef = useRef();
 
 const handleDownloadPDF = () => {

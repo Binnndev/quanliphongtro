@@ -48,9 +48,9 @@ const ThongKe = () => {
 
   return (
     <div className="thongke" style={{ width: "100%", display: "flex", flexDirection: "column" }}>
-      <h2 className="thongke__title">
+      {/* <h2 className="thongke__title">
         <i className="fas fa-chart-pie" /> Thống kê
-      </h2>
+      </h2> */}
 
       <div style={{ display: "flex", justifyContent: "space-between" }}>
         {/* Trạng thái phòng */}

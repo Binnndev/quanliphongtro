@@ -3,7 +3,8 @@ import axios from "axios";
 import ModalDichVu from "./ModalDichVu";
 import ModalConfirm from "./ModalConfirm";
 
-const DichVuIndex = () => {
+const DichVuIndex = ({ maChuTro }) => {
+  const phanQuyen = localStorage.loaiTaiKhoan;
   const [dichVuList, setDichVuList] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDichVu, setSelectedDichVu] = useState(null);
@@ -11,19 +12,24 @@ const DichVuIndex = () => {
   const [confirmAction, setConfirmAction] = useState(() => () => {});
   const [confirmContent, setConfirmContent] = useState({ title: "", message: "" });
 
-  // Load danh sách dịch vụ từ API
-  const fetchData = async () => {
-    try {
-      const res = await axios.get("/api/service");
-      setDichVuList(res.data);
-    } catch (error) {
-      console.error("Lỗi tải danh sách dịch vụ:", error);
-    }
-  };
-
+  // ✅ Load danh sách dịch vụ theo MaChuTro
   useEffect(() => {
+    const fetchData = async () => {
+      console.log(maChuTro);
+      
+      try {
+        if (maChuTro) {
+          const res = await axios.get(`/api/service/by-chutro/${maChuTro}`);
+          setDichVuList(res.data);
+        }
+      } catch (err) {
+        console.error("Lỗi khi tải dịch vụ:", err);
+      }
+    };
+
     fetchData();
-  }, []);
+  }, [maChuTro]);
+
 
   const handleOpenAdd = () => {
     setSelectedDichVu(null);
@@ -73,8 +79,8 @@ const DichVuIndex = () => {
           )
         );
       } else {
-        // Thêm mới
-        const res = await axios.post("/api/service", formData);
+        // Thêm mới (gửi kèm MaChuTro)
+        const res = await axios.post("/api/service", { ...formData, MaChuTro: maChuTro });
         setDichVuList((prev) => [...prev, res.data]);
       }
       setIsModalOpen(false);
@@ -95,9 +101,10 @@ const DichVuIndex = () => {
         }}
       >
         <h2 className="service__title">Danh sách dịch vụ</h2>
+        {phanQuyen === "Chủ trọ" && (
         <button className="service__btn-add" onClick={handleOpenAdd}>
           + Thêm dịch vụ
-        </button>
+        </button>)}
       </div>
 
       <table className="service__table" style={{ width: "100%" }}>
@@ -118,12 +125,20 @@ const DichVuIndex = () => {
               <td>{dv.DonViTinh}</td>
               <td>{Number(dv.Gia).toLocaleString()}đ</td>
               <td>
-                <button className="service__btn-edit" onClick={() => handleEdit(dv)}>
-                  Sửa
-                </button>
-                <button className="service__btn-delete" onClick={() => handleDelete(dv)}>
-                  Xoá
-                </button>
+              {phanQuyen === "Chủ trọ" ? (
+    <>
+      <button className="service__btn-edit" onClick={() => handleEdit(dv)}>
+        Sửa
+      </button>
+      <button className="service__btn-delete" onClick={() => handleDelete(dv)}>
+        Xoá
+      </button>
+    </>
+  ) : (
+    <span style={{ fontStyle: "italic", color: "#888" }}>
+      Bạn không được cấp quyền hành động
+    </span>
+  )}
               </td>
             </tr>
           ))}

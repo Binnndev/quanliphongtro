@@ -21,6 +21,7 @@ module.exports = (sequelize, DataTypes) => {
     Room.hasMany(models.Tenant, { foreignKey: "MaPhong" });
       Room.hasMany(models.Invoice, { foreignKey: "MaPhong" });
       Room.belongsTo(models.RoomType, { foreignKey: "MaLoaiPhong" });
+      
   };
 
   return Room;

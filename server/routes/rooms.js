@@ -28,7 +28,7 @@ router.post(
   getUserRole,
   upload.single("image"),
   (req, res, next) => {
-    if (req.user.role !== "Chủ Trọ")
+    if (req.role !== "Chủ trọ")
       return res.status(403).json({ error: "Không có quyền" });
     next();
   },
@@ -40,7 +40,7 @@ router.put(
   getUserRole,
   upload.single("image"),
   (req, res, next) => {
-    if (req.user.role !== "Chủ Trọ")
+    if (req.role !== "Chủ trọ")
       return res.status(403).json({ error: "Không có quyền" });
     next();
   },
@@ -51,7 +51,7 @@ router.delete(
   "/:id",
   getUserRole,
   (req, res, next) => {
-    if (req.user.role !== "Chủ Trọ")
+    if (req.role !== "Chủ trọ")
       return res.status(403).json({ error: "Không có quyền" });
     next();
   },

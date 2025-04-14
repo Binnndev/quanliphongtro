@@ -20,17 +20,15 @@ export default function Login() {
     }
 
     try {
-      // Gọi API đăng nhập với thông tin từ formData
       const response = await axios.post("/api/auth/login", {
         TenDangNhap: formData.TenDangNhap,
         MatKhau: formData.MatKhau,
       });
       console.log("Đăng nhập thành công:", response.data);
 
-      // Lưu token và tên đăng nhập vào localStorage
       localStorage.setItem("token", response.data.token);
-      localStorage.setItem("userName", formData.TenDangNhap);
 
+      // --- DEBUGGING PAYLOAD ---
       try {
         const tokenParts = response.data.token.split(".");
         if (tokenParts.length !== 3) {
@@ -38,47 +36,59 @@ export default function Login() {
         }
 
         const base64Payload = tokenParts[1];
+        // Properly decode Base64Url
         const base64 = base64Payload.replace(/-/g, "+").replace(/_/g, "/");
         const jsonPayload = decodeURIComponent(
           atob(base64)
             .split("")
-            .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+            .map(function (c) {
+              return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+            })
             .join("")
         );
+
         const payload = JSON.parse(jsonPayload);
 
-        console.log("DECODED JWT PAYLOAD:", payload);
+        console.log("DECODED JWT PAYLOAD:", payload); // <-- **** CHECK THIS LOG ****
 
-        if (payload && payload.role !== undefined) {
-          localStorage.setItem("loaiTaiKhoan", payload.role);
-          console.log("Set loaiTaiKhoan:", payload.role);
-        } else {
-          console.warn("payload.role is missing or undefined");
-          localStorage.removeItem("loaiTaiKhoan");
-        }
+        // Check if payload exists and has the expected properties before setting
+        if (payload) {
+          if (payload.role !== undefined) {
+            localStorage.setItem("loaiTaiKhoan", payload.role);
+            console.log("Set loaiTaiKhoan:", payload.role);
+          } else {
+            console.warn("payload.role is missing or undefined");
+            localStorage.removeItem("loaiTaiKhoan"); // Avoid storing "undefined"
+          }
 
-        // Lưu MaTK (id) nếu có
-        if (payload && payload.id !== undefined) {
-          localStorage.setItem("MaTK", payload.id);
-          console.log("Set MaTK:", payload.id);
+          if (payload.id !== undefined) {
+            // <-- Check specifically for MaTK existence
+            localStorage.setItem("MaTK", payload.id);
+            console.log("Set MaTK:", payload.id);
+          } else {
+            console.error("payload.MaTK is missing or undefined!"); // <-- Log error if missing
+            localStorage.removeItem("MaTK"); // Ensure it's not set to "undefined" string
+          }
         } else {
-          console.error("payload.id is missing or undefined!");
-          localStorage.removeItem("MaTK");
+          console.error("Failed to parse token payload.");
         }
       } catch (decodeError) {
         console.error("Error decoding or processing token:", decodeError);
+        // Handle this error - maybe show a message to the user?
         setErrors({ submit: "Lỗi xử lý thông tin đăng nhập." });
-        return;
+        return; // Stop execution before navigating
       }
-      // --- Kết thúc giải mã JWT ---
+      // --- END DEBUGGING PAYLOAD ---
+
+      // Check localStorage immediately AFTER setting, BEFORE navigating
       console.log(
         "localStorage MaTK right after setting:",
         localStorage.getItem("MaTK")
       );
 
-      // Chuyển hướng đến trang chủ sau khi đăng nhập thành công
       navigate("/homepage");
     } catch (error) {
+      // Log the full error object for more details
       console.error("Login API call failed:", error);
       setErrors({
         submit:

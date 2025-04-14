@@ -26,6 +26,11 @@ const RoomItem = ({ room, loaiTaiKhoan, onEdit, onDelete, onAddTenant }) => {
   if (!room) {
     return null; // Or return a placeholder/error component
   }
+    
+  const firstTenant = (Array.isArray(room.Tenants) && room.Tenants.length > 0)
+  ? room.Tenants[0] // Lấy object khách thuê đầu tiên nếu có
+  : null;          // Nếu không có thì là null
+const tenantName = firstTenant ? firstTenant.HoTen : "Chưa có khách"; // Lấy tên nếu có khách, nếu không hiển thị mặc định
     const { MaPhong, TenPhong = "N/A", TrangThai = "Không xác định" } = room;
     const isLandlord = loaiTaiKhoan === "Chủ trọ"; // Check if user is landlord
   const isAvailable = TrangThai === "Còn phòng";
@@ -57,7 +62,8 @@ const RoomItem = ({ room, loaiTaiKhoan, onEdit, onDelete, onAddTenant }) => {
         } else {
           console.warn("onAddTenant handler not provided to RoomItem");
         }
-      };
+       };
+    
     
 
       return (
@@ -79,7 +85,8 @@ const RoomItem = ({ room, loaiTaiKhoan, onEdit, onDelete, onAddTenant }) => {
             <i className="fa-solid fa-user" style={{ margin: '0 10px 0 0', width: '15px', textAlign: 'center' }}></i>
             
                   
-                  { <span>{room.Tenants[0]?.HoTen || "Chưa có khách"}</span> }
+                  {<span>{tenantName}</span>}
+                  
           </div>
     
           {/* Price */}

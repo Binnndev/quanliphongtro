@@ -21,12 +21,14 @@ app.use(bodyParser.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/tai-khoan", taiKhoanRoutes);
 app.use("/api/rooms", require("./routes/rooms"));
+app.use("/api/room-type", require("./routes/roomType"));
 app.use("/api/houses", require("./routes/rentalHouses"));
 app.use("/api/landlords", require("./routes/landlords"));
 app.use("/api/tenants", require("./routes/tenants"));
 app.use("/api/contracts", require("./routes/contracts"));
 app.use("/api/notifications", require("./routes/notifications"));
 app.use("/api/service", require("./routes/service"));
+app.use("/api/room-services", require("./routes/roomServices"));
 app.use("/api/diennuoc", require("./routes/diennuoc"));
 app.use("/api/payment", require("./routes/payment"));
 app.use("/api/payment-method", require("./routes/paymentMethod"));
@@ -46,6 +48,8 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../client/build", "index.html"));
 });
+
+require('./schedulers/invoiceScheduler');
 
 // Sync các bảng dữ liệu bạn phụ trách trước khi khởi động server
 Promise.all([
