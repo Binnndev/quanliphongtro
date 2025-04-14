@@ -228,14 +228,13 @@ const Homepage = () => {
         }}
       >
         <Header />
-        <SubHeader />
         <div
           className="control-content"
           style={{
             width: "80%",
             height: 835,
             right: 0,
-            top: 166,
+            top: 83,
             position: "fixed",
             display: "flex",
             justifyContent: "center",
