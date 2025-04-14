@@ -58,7 +58,7 @@ exports.getInvoiceDetailsByRoomAndService = async (req, res) => {
       include: [
         {
           model: Invoice,
-          as: "HoaDon",
+          as: 'Invoice',
           where: { MaPhong: invoiceId },
           attributes: ["MaHoaDon", "NgayLap"],
         },

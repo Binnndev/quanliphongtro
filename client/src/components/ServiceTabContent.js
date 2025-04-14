@@ -37,6 +37,8 @@ const ServiceTabContent = ({ roomId, renterId }) => {
       const res = await axios.get(
         `/api/invoice-detail/room/${roomId}/service/${maDv}`
       );
+      console.log(res.data);
+      
       setInvoiceDetail(res.data);
       setShowPopup(true);
     } catch (error) {
@@ -165,7 +167,7 @@ const ServiceTabContent = ({ roomId, renterId }) => {
                     <FaEye />
                   </button>
                   <button
-                    className="service-tab__action-btn delete-btn"
+                    className="service-tab__button-delete"
                     onClick={() => handleDeleteService(svc)}
 ><FaTrash /></button>
                 </td>
@@ -181,7 +183,7 @@ const ServiceTabContent = ({ roomId, renterId }) => {
 
       {showPopup && invoiceDetail && (
         <InvoiceDetailPopup
-          data={invoiceDetail}
+        invoiceData={invoiceDetail}
           onClose={() => setShowPopup(false)}
         />
       )}

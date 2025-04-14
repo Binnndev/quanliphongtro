@@ -1,33 +1,36 @@
 import React from "react";
 
 const InvoiceDetailPopup = ({ isOpen, onClose, invoiceData }) => {
-  if (!isOpen) return null;
-
+  
+  const invoice = invoiceData[0];
+  console.log("đã mở");
   return (
-    <div className="popup-overlay">
-      <div className="popup-box">
-        <h2>Chi tiết hóa đơn dịch vụ</h2>
-        <table>
+    <div className="invoice-detail-popup">
+      <div className="invoice-detail-popup__box">
+        <h2 className="invoice-detail-popup__title">Chi tiết hóa đơn dịch vụ</h2>
+        <table className="invoice-detail-popup__table">
           <thead>
             <tr>
               <th>Tên Dịch Vụ</th>
+              <th>Ngày lập</th>
               <th>Giá</th>
               <th>Số Lượng</th>
               <th>Thành Tiền</th>
             </tr>
           </thead>
           <tbody>
-            {invoiceData.Services.map((service, index) => (
-              <tr key={index}>
-                <td>{service.TenDV}</td>
-                <td>{service.Gia}</td>
-                <td>{service.SoLuong}</td>
-                <td>{service.ThanhTien}</td>
-              </tr>
-            ))}
+          <tr>
+              <td>{invoice.Service.TenDV || "Dịch vụ #" + invoice.MaDV}</td>
+              <td>{invoice.Invoice.NgayLap.toLocaleString().split('T')[0]}</td>
+              <td>{parseInt(invoice.DonGia).toLocaleString()} đ</td>
+              <td>{invoice.SoLuong}</td>
+              <td>{parseInt(invoice.ThanhTien).toLocaleString()} đ</td>
+            </tr>
           </tbody>
         </table>
-        <button onClick={onClose}>Đóng</button>
+        <button className="invoice-detail-popup__close-btn" onClick={onClose}>
+          Đóng
+        </button>
       </div>
     </div>
   );

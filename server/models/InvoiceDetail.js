@@ -39,6 +39,7 @@ module.exports = (sequelize, DataTypes) => {
         });
         InvoiceDetail.belongsTo(models.Invoice, {
             foreignKey: "MaHoaDon",
+            as: 'Invoice'
         });
     };
     return InvoiceDetail;

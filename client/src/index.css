@@ -874,6 +874,20 @@ box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
   background-color: #0056b3;
 }
 
+.service-tab__button-delete {
+  background-color: #f64c46;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.service-tab__button-delete:hover {
+  background-color: #7c2623;
+}
+
 .add-service-modal {
   position: fixed;
   inset: 0;
@@ -903,6 +917,7 @@ box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 
 .add-service-modal__list {
   display: flex;
+  text-align: center;
   flex-direction: column;
   gap: 12px;
 }
@@ -965,4 +980,77 @@ box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 .add-service-modal__button--confirm {
   background: #007bff;
   color: #fff;
+}
+
+
+.invoice-detail-popup {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.invoice-detail-popup__box {
+  background-color: #fff;
+  padding: 24px 32px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 700px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  animation: slideFade 0.3s ease-out;
+}
+
+.invoice-detail-popup__title {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.invoice-detail-popup__table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.invoice-detail-popup__table th,
+.invoice-detail-popup__table td {
+  border: 1px solid #ddd;
+  padding: 10px 12px;
+  text-align: center;
+}
+
+.invoice-detail-popup__table th {
+  background-color: #f2f2f2;
+  font-weight: 600;
+}
+
+.invoice-detail-popup__close-btn {
+  display: inline-block;
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  float: right;
+}
+
+.invoice-detail-popup__close-btn:hover {
+  background-color: #0056b3;
+}
+
+@keyframes slideFade {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
