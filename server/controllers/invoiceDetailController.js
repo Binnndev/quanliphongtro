@@ -4,7 +4,7 @@ const { InvoiceDetail,Invoice, Service } = require('../models');
 exports.getByInvoiceId = async (req, res) => {
   try {
     const invoiceDetails = await InvoiceDetail.findAll({
-      where: { MaHoaDon: req.params.invoiceId },  // Tìm theo MaHoaDon (ID)
+      where: { MaHoaDon: req.params.id },  // Tìm theo MaHoaDon (ID)
       include: [
         {
           model: Service,
