@@ -7,7 +7,7 @@ import Homepage from "./pages/homepage";
 import Renter from "./pages/Renter";
 import NotificationManagementPage from "./pages/NotificationManagementPage";
 import TenantDashboardPage from "./pages/TenantDashboardPage";
-
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -17,10 +17,14 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/homepage" element={<Homepage />} />
-              <Route path="/room/:roomId/tenants" element={<Renter />} />
-              
-              <Route path="/notifications-management/" element={<NotificationManagementPage />} />
+        <Route path="/room/:roomId/tenants" element={<Renter />} />
+
+        <Route
+          path="/notifications-management/"
+          element={<NotificationManagementPage />}
+        />
         <Route path="/tenant/notifications" element={<TenantDashboardPage />} />
       </Routes>
     </BrowserRouter>
