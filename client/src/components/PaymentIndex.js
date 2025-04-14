@@ -10,11 +10,12 @@ const PaymentIndex = () => {
   const [methodList, setMethodList] = useState([]);
   const [payMethod, setPayMethod] = useState("");
   const [isSendingReminder, setIsSendingReminder] = useState(false);
-
   const [filterThang, setFilterThang] = useState("");
   const [filterNha, setFilterNha] = useState("");
   const [filterPhong, setFilterPhong] = useState("");
   const [filterTrangThai, setFilterTrangThai] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
 
   const landlordId = 1;
 
@@ -44,6 +45,13 @@ const PaymentIndex = () => {
     const matchTrangThai = filterTrangThai ? item.TrangThaiThanhToan === filterTrangThai : true;
     return matchThang && matchNha && matchPhong && matchTrangThai;
   });
+
+  const totalPages = Math.ceil(filteredList.length / itemsPerPage);
+  const paginatedList = filteredList.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
 
   const handleViewInvoice = async (maHoaDon) => {
     try {
@@ -129,9 +137,17 @@ const PaymentIndex = () => {
   return (
     <div className="payment-index__wrapper">
       <div className="payment-index__container">
-        <h2 className="payment-index__title">Danh sách hóa đơn</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: "baseline" }}>
+          <h2 className="payment-index__title">Danh sách hóa đơn</h2>
+          <button
+            className="payment-index__action payment-index__action--refresh"
+            onClick={fetchInvoices}
+          >
+            <i className="fa fa-sync-alt" style={{ marginRight: 6 }}></i> Tải lại danh sách
+          </button>
+        </div>
 
-        <div className="payment-index__filter-row" style={{ display: 'flex', gap: 10, marginBottom: 15 }}>
+        <div className="payment-index__filter-row">
           <select className="payment-index__filter" value={filterThang} onChange={(e) => setFilterThang(e.target.value)}>
             <option value="">-- Tháng --</option>
             {uniqueMonths.map((m) => <option key={m} value={m}>{m}</option>)}
@@ -170,9 +186,9 @@ const PaymentIndex = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredList.map((item, index) => (
+            {paginatedList.map((item, index) => (
               <tr key={item.MaHoaDon}>
-                <td>{index + 1}</td>
+                <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                 <td>{new Date(item.NgayLap).toLocaleDateString("vi-VN", { month: "2-digit", year: "numeric" })}</td>
                 <td>{item.TenNhaTro}</td>
                 <td>{item.TenPhong}</td>
@@ -195,15 +211,27 @@ const PaymentIndex = () => {
             ))}
           </tbody>
         </table>
+
+        <div style={{ marginTop: 20, display: 'flex', justifyContent: 'center', gap: 8 }}>
+          {[...Array(totalPages)].map((_, i) => (
+            <button
+              key={i + 1}
+              onClick={() => handlePageChange(i + 1)}
+              className={`payment-index__action ${currentPage === i + 1 ? 'payment-index__action--active' : ''}`}
+            >
+              {i + 1}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <Invoice
+      {<Invoice
         isOpen={isPopupOpen}
         onClose={() => setIsPopupOpen(false)}
         invoiceData={selectedInvoice}
         onSend={handleSendReminder}
         isSending={isSendingReminder}
-      />
+      />}
 
       {confirmPayId && (
         <div className="popup-overlay">
