@@ -409,7 +409,6 @@ const Homepage = () => {
         }}
       >
         <Header />
-        {/* <SubHeader onAddHouseClick={() => openHouseModal('add')} /> */}
         <div
           className="control-content"
           style={{

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 
 const DienNuoc = ({ type = "Điện", month = "03/2024" }) => {
+  const phanQuyen = localStorage.loaiTaiKhoan;
   const [data, setData] = useState([]);
   const [errorModal, setErrorModal] = useState(null); // { message: "" }
 
@@ -93,12 +94,18 @@ const DienNuoc = ({ type = "Điện", month = "03/2024" }) => {
                 </td>
                 <td>{suDung}</td>
                 <td>
+                {phanQuyen === "Chủ trọ" ? (
                   <button
                     className="electric-water__button-save"
                     onClick={() => handleSave(d)}
                   >
                     Lưu
                   </button>
+                  ) : (
+                    <span style={{ fontStyle: "italic", color: "#888" }}>
+                      Bạn không được cấp quyền hành động
+                    </span>
+                  )}
                 </td>
               </tr>
             );

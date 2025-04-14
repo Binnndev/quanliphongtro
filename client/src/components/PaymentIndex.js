@@ -3,6 +3,9 @@ import axios from "axios";
 import Invoice from "./invoices";
 
 const PaymentIndex = () => {
+  const phanQuyen = localStorage.loaiTaiKhoan;
+  console.log(phanQuyen);
+  
   const [hoaDonList, setHoaDonList] = useState([]);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -201,7 +204,7 @@ const PaymentIndex = () => {
                   <button className="payment-index__action--view" onClick={() => handleViewInvoice(item.MaHoaDon)}>
                     <i className="fa fa-eye" />
                   </button>
-                  {item.ConLai > 0 && (
+                  {item.ConLai > 0 && phanQuyen === "Chủ trọ" && (
                     <button className="payment-index__action--pay" onClick={() => setConfirmPayId(item.MaHoaDon)}>
                       <i className="fa fa-money-bill" />
                     </button>

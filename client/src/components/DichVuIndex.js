@@ -4,6 +4,7 @@ import ModalDichVu from "./ModalDichVu";
 import ModalConfirm from "./ModalConfirm";
 
 const DichVuIndex = ({ maChuTro }) => {
+  const phanQuyen = localStorage.loaiTaiKhoan;
   const [dichVuList, setDichVuList] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDichVu, setSelectedDichVu] = useState(null);
@@ -100,9 +101,10 @@ const DichVuIndex = ({ maChuTro }) => {
         }}
       >
         <h2 className="service__title">Danh sách dịch vụ</h2>
+        {phanQuyen === "Chủ trọ" && (
         <button className="service__btn-add" onClick={handleOpenAdd}>
           + Thêm dịch vụ
-        </button>
+        </button>)}
       </div>
 
       <table className="service__table" style={{ width: "100%" }}>
@@ -123,12 +125,20 @@ const DichVuIndex = ({ maChuTro }) => {
               <td>{dv.DonViTinh}</td>
               <td>{Number(dv.Gia).toLocaleString()}đ</td>
               <td>
-                <button className="service__btn-edit" onClick={() => handleEdit(dv)}>
-                  Sửa
-                </button>
-                <button className="service__btn-delete" onClick={() => handleDelete(dv)}>
-                  Xoá
-                </button>
+              {phanQuyen === "Chủ trọ" ? (
+    <>
+      <button className="service__btn-edit" onClick={() => handleEdit(dv)}>
+        Sửa
+      </button>
+      <button className="service__btn-delete" onClick={() => handleDelete(dv)}>
+        Xoá
+      </button>
+    </>
+  ) : (
+    <span style={{ fontStyle: "italic", color: "#888" }}>
+      Bạn không được cấp quyền hành động
+    </span>
+  )}
               </td>
             </tr>
           ))}
