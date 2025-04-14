@@ -577,10 +577,12 @@ console.log("Data being sent:", Object.fromEntries(memberFormData)); // Xem dữ
                                     representativeTenantId={renterData?.MaKhachThue || renterData?.id}
                            />
                             )}
-                            <ServiceTabContent
-                            roomId={roomId}
-                                onViewInvoiceDetail={handleViewInvoiceDetail}
-                            />
+                            {activeTab === 'serice' && (
+                                <ServiceTabContent
+                                roomId={roomId}
+                                    onViewInvoiceDetail={handleViewInvoiceDetail}
+                                />
+                            )}
                          </>
                      )}
                     {/* Thêm log để xem giá trị state ngay trước khi render */}
