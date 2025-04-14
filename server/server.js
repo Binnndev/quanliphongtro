@@ -49,6 +49,8 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../client/build", "index.html"));
 });
 
+require('./schedulers/invoiceScheduler');
+
 // Sync các bảng dữ liệu bạn phụ trách trước khi khởi động server
 Promise.all([
   Invoice.sync(),
