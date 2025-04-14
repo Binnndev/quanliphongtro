@@ -6,5 +6,6 @@ const { getByInvoiceId,getInvoiceDetailsByRoomAndService } = require("../control
 
 // Route để lấy chi tiết hóa đơn theo ID
 router.get("/room/:roomId/service/:maDV", getInvoiceDetailsByRoomAndService);
+router.get("/:id", getByInvoiceId);
 
 module.exports = router;
