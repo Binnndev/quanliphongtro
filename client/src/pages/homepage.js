@@ -11,7 +11,6 @@ import Home from "./home";
 import DienNuoc from "../components/DienNuocIndex";
 import PaymentIndex from "../components/PaymentIndex";
 import ThongKe from "../components/ThongKe";
-import axios from "axios";
 import {
   getDsPhong,
   getNhaTroByChuTro,
@@ -19,8 +18,6 @@ import {
   suaPhong,
   xoaPhong,
 } from "../services/phongService";
-import { themNhaTro, suaNhaTro, xoaNhaTro } from "../services/nhaService";
-import NotificationManagementPage from "./NotificationManagementPage";
 
 const Homepage = () => {
   const loaiTaiKhoan = localStorage.getItem("loaiTaiKhoan");
@@ -37,17 +34,28 @@ const Homepage = () => {
   const [loadingHouses, setLoadingHouses] = useState(false);
   const [selectedHouseId, setSelectedHouseId] = useState(null); // ID of the selected house (MaNhaTro)
 
-  // --- STATE CHO MODAL NHÀ TRỌ ---
-  const [isHouseModalOpen, setIsHouseModalOpen] = useState(false);
-  const [houseModalMode, setHouseModalMode] = useState("add"); // 'add' or 'edit'
-  const [currentEditingHouse, setCurrentEditingHouse] = useState(null); // Lưu nhà đang sửa
-  const [houseFormData, setHouseFormData] = useState({
-    TenNhaTro: "",
-    DiaChi: "",
-  });
-  const [isSubmittingHouse, setIsSubmittingHouse] = useState(false);
-  const [houseFormError, setHouseFormError] = useState(null);
-  // ---------------------------------
+  const invoiceData = {
+    nha: "Nhà Q7",
+    diaChi: "Huỳnh Tấn Phát, Phường Tân Phú, Quận 7, Tp HCM",
+    hoTen: "Vũ Văn Thiết",
+    phong: "100A",
+    ngayVao: "12/03/2024",
+    thang: "02/2024",
+    danhSachChiTiet: [
+      { moTa: "Tiền nhà (01/02 - 28/02)", gia: 5310345 },
+      { moTa: "Xe máy (1 chiếc)", gia: 50000 },
+      { moTa: "Wifi (1)", gia: 250000 },
+      { moTa: "Vệ sinh (2)", gia: 40000 },
+      { moTa: "Nước (821 - 845)", gia: 480000 },
+      { moTa: "Điện (980 - 1239)", gia: 777000 },
+    ],
+    tongTien: 6907345,
+    bangChu: "sáu triệu chín trăm lẻ bảy nghìn ba trăm bốn mươi lăm",
+    nganHang: "Sacombank",
+    soTaiKhoan: "07861235123124",
+    tenChuTK: "Huỳnh Công Khanh",
+    soDienThoai: "0777905219",
+  };
 
   const dataDien = [
     { thoiGian: "3/2024", nha: "Nhà Q7", phong: "100A", cu: 1239, moi: 1290 },
@@ -230,13 +238,14 @@ const Homepage = () => {
         }}
       >
         <Header />
+        <SubHeader />
         <div
           className="control-content"
           style={{
             width: "80%",
             height: 835,
             right: 0,
-            top: 83,
+            top: 166,
             position: "fixed",
             display: "flex",
             justifyContent: "center",
@@ -332,95 +341,15 @@ const Homepage = () => {
               }}
             >
               {page === "home" && <Home selectedHouseId={selectedHouseId} />}
-              {page === "dien" && <DienNuoc type="Điện" data={dataDien} />}
-              {page === "nuoc" && <DienNuoc type="Nước" data={dataNuoc} />}
-              {page === "tinhTien" && <PaymentIndex />}
-              {page === "dichVu" && selectedHouse?.MaChuTro && (
-                <DichVuIndex maChuTro={selectedHouse.MaChuTro} />
-              )}
-              {page === "thongbao" && <NotificationManagementPage />}
+              {page == "dien" && <DienNuoc type="Điện" data={dataDien} />}
+              {page == "nuoc" && <DienNuoc type="Nước" data={dataNuoc} />}
+              {page == "tinhTien" && <PaymentIndex />}
+              {page === "dichVu" && <DichVuIndex />}
               {page === "thongke" && <ThongKe />}
             </div>
           </div>
         </div>
       </div>
-      {/* --- MODAL THÊM/SỬA NHÀ TRỌ --- */}
-      {isHouseModalOpen && (
-        <div style={modalOverlayStyle}>
-          <div style={modalContentStyle}>
-            <h2
-              style={{
-                marginTop: 0,
-                marginBottom: "20px",
-                borderBottom: "1px solid #eee",
-                paddingBottom: "10px",
-              }}
-            >
-              {houseModalMode === "add"
-                ? "Thêm nhà trọ mới"
-                : "Chỉnh sửa nhà trọ"}
-            </h2>
-
-            {houseFormError && (
-              <p style={{ color: "red", marginBottom: "15px" }}>
-                {houseFormError}
-              </p>
-            )}
-
-            <form onSubmit={handleHouseFormSubmit}>
-              <div style={formGroupStyle}>
-                <label htmlFor="TenNhaTro" style={labelStyle}>
-                  Tên nhà trọ:
-                </label>
-                <input
-                  type="text"
-                  id="TenNhaTro"
-                  name="TenNhaTro"
-                  value={houseFormData.TenNhaTro}
-                  onChange={handleHouseInputChange}
-                  style={inputStyle}
-                  required
-                  maxLength={100} // Thêm giới hạn ký tự nếu cần
-                />
-              </div>
-              <div style={formGroupStyle}>
-                <label htmlFor="DiaChi" style={labelStyle}>
-                  Địa chỉ:
-                </label>
-                <input
-                  type="text"
-                  id="DiaChi"
-                  name="DiaChi"
-                  value={houseFormData.DiaChi}
-                  onChange={handleHouseInputChange}
-                  style={inputStyle}
-                  required
-                  maxLength={255}
-                />
-              </div>
-
-              <div style={modalActionsStyle}>
-                <button
-                  type="button"
-                  className="grey-btn btn" // Sử dụng class CSS của bạn
-                  onClick={closeHouseModal}
-                  disabled={isSubmittingHouse}
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  className="green-btn btn" // Sử dụng class CSS của bạn
-                  disabled={isSubmittingHouse}
-                >
-                  {isSubmittingHouse ? "Đang lưu..." : "Lưu"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-      {/* --- KẾT THÚC MODAL --- */}
     </div>
   );
 };
