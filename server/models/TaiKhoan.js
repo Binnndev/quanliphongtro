@@ -16,12 +16,12 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING(255),
         allowNull: false,
       },
-      LoaiTaiKhoan: {
-        type: DataTypes.ENUM("Chủ Trọ", "Khách Thuê"),
-        allowNull: true,
-      },
+        MaVaiTro: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+        },
       TrangThai: {
-        type: DataTypes.ENUM("Kích hoạt", "Vô hiệu hóa"),
+        type: DataTypes.ENUM("Kích hoạt", "Vô hiệu hóa", "Tạm khóa"),
         allowNull: false,
         defaultValue: "Kích hoạt",
       },
@@ -51,8 +51,10 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
-  TaiKhoan.associate = function (models) {
-    // Các quan hệ nếu có
+    TaiKhoan.associate = function (models) {
+        TaiKhoan.belongsTo(models.Role, { foreignKey: "MaVaiTro" });
+        TaiKhoan.hasMany(models.Tenant, { foreignKey: "MaTK" });
+        TaiKhoan.hasMany(models.Landlord, { foreignKey: "MaTK" });
   };
 
   return TaiKhoan;

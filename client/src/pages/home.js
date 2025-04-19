@@ -262,7 +262,6 @@ const Home = ({ selectedHouseId }) => {
             GhiChu: formData.GhiChu,
             MaNhaTro: formData.MaNhaTro,
             MaLoaiPhong: formData.MaLoaiPhong, // <<<<<<<<<< GỬI MaLoaiPhong
-            maChuTro: localStorage.MaChuTro
         };
         // Không cần gửi DienTich, GiaPhong nếu backend lấy từ MaLoaiPhong
 

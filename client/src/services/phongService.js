@@ -74,7 +74,14 @@ export const themPhong = async (roomData) => {
 
 // 3. Sửa room
 export const suaPhong = async (id, data) => {
-  const response = await api.put(`/api/rooms/${id}`, data);
+    const config = {
+        headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+    };
+  const response = await api.put(`/api/rooms/${id}`, data, config);
+  
   return response.data;
 };
 

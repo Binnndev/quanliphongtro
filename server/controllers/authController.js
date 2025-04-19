@@ -1,4 +1,4 @@
-const { TaiKhoan, Landlord, Tenant } = require("../models");
+const { TaiKhoan, Landlord, Tenant, Role } = require("../models");
 const bcrypt = require("bcryptjs");
 const { v4: uuidv4 } = require('uuid'); // Nhập uuid
 const jwt = require("jsonwebtoken");
@@ -11,7 +11,8 @@ exports.register = async (req, res) => {
     const {
       TenDangNhap,
       MatKhau,
-      LoaiTaiKhoan,
+          LoaiTaiKhoan,
+    //   MaVaiTro,
       // Thông tin bổ sung
       HoTen,
       SoDienThoai,
@@ -30,14 +31,22 @@ exports.register = async (req, res) => {
     if (existingAccount) {
       return res.status(400).json({ error: "Tài khoản đã tồn tại" });
     }
+      
+      // *** THAY ĐỔI: Tìm MaVaiTro dựa vào TenVaiTro (LoaiTaiKhoan từ input) ***
+    const role = await Role.findOne({ where: { TenVaiTro: LoaiTaiKhoan } });
+    if (!role) {
+      // Nếu không tìm thấy vai trò tương ứng trong bảng Role
+      return res.status(400).json({ error: `Loại tài khoản '${LoaiTaiKhoan}' không hợp lệ.` });
+    }
+    const maVaiTro = role.MaVaiTro; // Lấy ID của vai trò tìm được
 
-    // Tạo tài khoản mới (hook trong model sẽ tự động mã hóa mật khẩu)
+    // *** THAY ĐỔI: Sử dụng maVaiTro thay vì LoaiTaiKhoan khi tạo TaiKhoan ***
     const newUser = await TaiKhoan.create({
-      TenDangNhap,
-      MatKhau,
-      LoaiTaiKhoan,
-      TrangThai: "Kích hoạt",
-    });
+        TenDangNhap,
+        MatKhau, // Hook trong model sẽ hash mật khẩu này
+        MaVaiTro: maVaiTro, // Lưu ID vai trò vào cột MaVaiTro
+        TrangThai: "Kích hoạt", // Hoặc 'Chờ xác thực' tùy logic của bạn
+      });
 
     if (LoaiTaiKhoan === "Chủ Trọ") {
       await Landlord.create({
@@ -85,18 +94,30 @@ exports.login = async (req, res) => {
         .json({ error: "Thiếu tên đăng nhập hoặc mật khẩu" });
     }
 
-    const user = await TaiKhoan.findOne({ where: { TenDangNhap } });
-    if (!user) {
-      return res
-        .status(400)
-        .json({ error: "Thông tin đăng nhập không hợp lệ" });
-    }
+    const user = await TaiKhoan.findOne({
+        where: { TenDangNhap },
+        include: [{
+          model: Role,
+          attributes: ['TenVaiTro']
+        }]
+      });
+  
+      if (!user) {
+        return res
+          .status(400)
+          .json({ error: "Thông tin đăng nhập không hợp lệ" });
+      }
 
     const isValid = await bcrypt.compare(MatKhau, user.MatKhau);
     if (!isValid) {
       return res
         .status(400)
         .json({ error: "Thông tin đăng nhập không hợp lệ" });
+    }
+      
+    if (!user.Role || !user.Role.TenVaiTro) {
+        console.error("Lỗi: Không tìm thấy thông tin vai trò hợp lệ cho tài khoản:", user.MaTK);
+        return res.status(500).json({ error: "Lỗi cấu hình vai trò người dùng." });
     }
 
     console.log("Đăng nhập lúc:", Date.now());
@@ -107,7 +128,7 @@ exports.login = async (req, res) => {
     const token = jwt.sign(
       {
         id: user.MaTK,
-        role: user.LoaiTaiKhoan,
+        role: user.Role.TenVaiTro, // Chủ trọ | Khách thuê
         // loginAt: loginTime, // Vẫn giữ nếu bạn cần thông tin này
         jti: jti,          // Thêm JWT ID duy nhất
       },

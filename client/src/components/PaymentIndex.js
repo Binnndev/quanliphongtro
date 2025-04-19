@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Invoice from "./invoices";
 
-const PaymentIndex = () => {
+const PaymentIndex = (landlordId) => {
   const phanQuyen = localStorage.loaiTaiKhoan;
   console.log(phanQuyen);
   
@@ -19,8 +19,6 @@ const PaymentIndex = () => {
   const [filterTrangThai, setFilterTrangThai] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
-
-  const landlordId = 1;
 
   useEffect(() => {
     fetchInvoices();

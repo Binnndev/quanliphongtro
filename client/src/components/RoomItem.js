@@ -92,7 +92,7 @@ const tenantName = firstTenant ? firstTenant.HoTen : "Chưa có khách"; // Lấ
           {/* Price */}
           <div style={{ width: "100%", marginBottom: '15px', display: "flex", justifyContent: "flex-start", alignItems: "center" }}>
             <i className="fa-solid fa-money-bill-wave" style={{ margin: '0 10px 0 0', width: '15px', textAlign: 'center' }}></i>
-            <span style={{ color: '#D84040', fontWeight: 600 }}>{formatCurrency(room.RoomType.Gia)}</span>
+            <span style={{ color: '#D84040', fontWeight: 600 }}>{formatCurrency(room.RoomType?.Gia)}</span>
           </div>
     
           {/* Action Buttons - Conditional Rendering */}

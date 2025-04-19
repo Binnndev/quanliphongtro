@@ -207,33 +207,75 @@ exports.createRoom = async (req, res) => {
 };
 
 exports.updateRoom = async (req, res) => {
-  try {
-    const { id } = req.params;
-    // Lấy dữ liệu từ form: roomName, description, price, rented, amenities
-    const { roomName, description, price, rented, amenities } = req.body;
-    const room = await Room.findByPk(id);
-    if (!room) {
-      return res.status(404).json({ error: "Room not found" });
+    try {
+      const { id } = req.params; // Lấy MaPhong từ URL
+  
+      // *** THAY ĐỔI: Nhận đúng các trường từ frontend ***
+      // Lưu ý: Không nhận DienTich, GiaPhong, SoNguoiToiDa trực tiếp từ form
+      // vì chúng thuộc về RoomType và chỉ cần MaLoaiPhong để liên kết.
+      const {
+          TenPhong,
+          TrangThai,
+          GhiChu,
+          MaLoaiPhong, // Nhận MaLoaiPhong
+          MaNhaTro // Nhận MaNhaTro (nếu cần cập nhật)
+          // Xem xét có cần nhận và xử lý maChuTro từ frontend không? Nếu không thì bỏ qua.
+      } = req.body;
+  
+      const room = await Room.findByPk(id);
+      if (!room) {
+        return res.status(404).json({ error: "Room not found" });
+      }
+  
+      // Xử lý file ảnh (nếu có) - giữ nguyên logic này nếu bạn cần upload ảnh khi sửa
+      let imageUrl = room.imageUrl; // Giữ ảnh cũ làm mặc định
+      // if (req.file) {
+      //     // TODO: Xử lý xóa ảnh cũ nếu cần trước khi cập nhật ảnh mới
+      //     imageUrl = req.file.path; // Đường dẫn tới ảnh mới
+      // }
+  
+      // *** THAY ĐỔI: Cập nhật đúng các trường trong model ***
+      await room.update({
+        TenPhong: TenPhong !== undefined ? TenPhong : room.TenPhong, // Cập nhật TenPhong
+        TrangThai: TrangThai !== undefined ? TrangThai : room.TrangThai, // Cập nhật TrangThai
+        GhiChu: GhiChu !== undefined ? GhiChu : room.GhiChu,       // Cập nhật GhiChu
+        MaLoaiPhong: MaLoaiPhong !== undefined ? MaLoaiPhong : room.MaLoaiPhong, // Cập nhật MaLoaiPhong
+        MaNhaTro: MaNhaTro !== undefined ? MaNhaTro : room.MaNhaTro, // Cập nhật MaNhaTro (nếu cho phép)
+        // imageUrl: imageUrl, // Cập nhật ảnh nếu có thay đổi
+        // Không cập nhật DienTich, GiaPhong trực tiếp ở đây vì chúng thuộc về Loại Phòng
+      });
+  
+      // --- GIẢI QUYẾT VẤN ĐỀ 2 ---
+      // *** THAY ĐỔI: Tải lại dữ liệu phòng KÈM THEO RoomType (và Tenants nếu cần) trước khi gửi về frontend ***
+      const updatedRoomWithDetails = await Room.findByPk(id, {
+          include: [
+              {
+                  model: RoomType, // Include RoomType association
+                  attributes: ['Gia', 'TenLoai', 'DienTich', 'SoNguoiToiDa'] // Lấy các trường cần thiết của RoomType
+              },
+              {
+                  model: Tenant, // Include Tenants association (nếu cần hiển thị ở RoomItem)
+                  attributes: ['HoTen'], // Lấy các trường cần thiết của Tenant
+                  limit: 1 // Có thể giới hạn nếu chỉ cần hiển thị 1 người
+              }
+              // Thêm các include khác nếu RoomItem cần hiển thị thêm thông tin liên kết
+          ]
+      });
+  
+      if (!updatedRoomWithDetails) {
+          // Trường hợp hiếm gặp sau khi update thành công
+          return res.status(404).json({ error: "Không thể tải lại chi tiết phòng sau khi cập nhật." });
+      }
+  
+      // Trả về dữ liệu phòng đã cập nhật VÀ đầy đủ thông tin liên kết
+      res.status(200).json(updatedRoomWithDetails);
+  
+    } catch (error) {
+      console.error("Error updating room:", error);
+      // Check for specific Sequelize errors if needed (e.g., validation)
+      res.status(500).json({ error: "Internal server error" });
     }
-    let imageUrl = room.imageUrl;
-    if (req.file) {
-      imageUrl = req.file.path;
-    }
-    await room.update({
-      roomName: roomName || room.roomName,
-      description: description || room.description,
-      price: price || room.price,
-      // Nếu trường rented được truyền xuống thì cập nhật, nếu không giữ nguyên
-      rented: typeof rented !== "undefined" ? rented : room.rented,
-      imageUrl,
-      amenities: amenities || room.amenities,
-    });
-    res.status(200).json(room);
-  } catch (error) {
-    console.error("Error updating room:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-};
+  };
 
 exports.deleteRoom = async (req, res) => {
   try {
