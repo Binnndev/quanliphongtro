@@ -6,7 +6,7 @@ import axios from 'axios'; // Thêm axios nếu cần gọi API
 import { FaEdit, FaTrashAlt, FaUserCheck } from 'react-icons/fa'; // Thêm icon mới
 
 // --- Component hiển thị nội dung cho Tab Thành viên ---
-const MembersTabContent = ({ members, onAddMemberClick, onEditMemberClick, onDeleteMember, onChangeRepresentative, currentRepresentativeId }) => {
+const MembersTabContent = ({ members, onAddMemberClick, onEditMemberClick, onDeleteMember, onChangeRepresentative, currentRepresentativeId, maxOccupancy }) => {
     const navigate = useNavigate(); // Vẫn giữ nếu cần cho việc khác
 
     // Gọi prop function thay vì xử lý trực tiếp

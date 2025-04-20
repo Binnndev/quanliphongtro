@@ -62,7 +62,7 @@ const NotificationHistoryItem = ({ notification, isExpanded, onClick }) => { // 
                     {formatDateTime(notification.ThoiGian)}
                 </span>
             </div>
-            <h4 style={{ margin: '0 0 5px 0', color: '#111' }}>{notification.TieuDe}</h4>
+            <h4 style={{ margin: '0 0 5px 0', color: '#111', fontWeight: 'bold' }}>Tiêu đề: {notification.TieuDe}</h4>
             {/* Sử dụng isExpanded để chọn style hiển thị nội dung */}
             <p style={isExpanded ? fullContentStyle : snippetContentStyle}>
                 {displayContent}

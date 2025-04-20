@@ -121,12 +121,20 @@ exports.getNotificationsForUser = async (req, res) => {
             include: [{ // Include để lấy tên người gửi (nếu cần)
                  model: TaiKhoan,
                  as: 'SenderAccount', // Alias của người gửi
-                 attributes: ['MaTK', 'TenDangNhap', 'LoaiTaiKhoan'],
+                 attributes: ['MaTK', 'TenDangNhap'],
                  required: false, // LEFT JOIN
-                //  include: [ // Lấy tên cụ thể nếu cần
-                //      { model: Tenant, as: 'TenantInfo', attributes: ['HoTen'], required: false },
-                //      { model: Landlord, as: 'LandlordInfo', attributes: ['HoTen'], required: false }
-                //  ]
+                 include: [
+                    {
+                        model: Tenant,
+                        attributes: ['HoTen'],
+                        required: false // Dùng false để không loại bỏ kết quả nếu không có thông tin Tenant
+                    },
+                    {
+                        model: Landlord, // <<== THÊM MODEL LANDLORD
+                        attributes: ['HoTen'],
+                        required: false // Dùng false để không loại bỏ kết quả nếu không có thông tin Landlord
+                    }
+                ]
             }],
             distinct: true
         });
@@ -138,11 +146,11 @@ exports.getNotificationsForUser = async (req, res) => {
              const rawNoti = noti.get({ plain: true });
              let senderName = rawNoti.SenderAccount?.TenDangNhap || `MaTK ${rawNoti.MaNguoiGui}`;
             // Logic tương tự như lấy RecipientName ở getSentNotifications nếu bạn include Tenant/Landlord
-            // if (rawNoti.SenderAccount?.LoaiTaiKhoan === 'Chủ trọ' && rawNoti.SenderAccount?.LandlordInfo?.HoTen) {
-            //     senderName = rawNoti.SenderAccount.LandlordInfo.HoTen;
-            // } else if (rawNoti.SenderAccount?.LoaiTaiKhoan === 'Khách thuê' && rawNoti.SenderAccount?.TenantInfo?.HoTen) {
-            //     senderName = rawNoti.SenderAccount.TenantInfo.HoTen; // Trường hợp tenant gửi tenant?
-            // }
+            if (rawNoti.SenderAccount?.Tenants?.[0].HoTen) {
+                senderName = rawNoti.SenderAccount.Tenants[0].HoTen;
+            } else if (rawNoti.SenderAccount?.Landlords?.[0].HoTen) { // <<== KIỂM TRA THÊM LANDLORD
+                senderName = rawNoti.SenderAccount.Landlords[0].HoTen;
+            }
              return { ...rawNoti, SenderName: senderName }; // Thêm SenderName
          });
 
@@ -194,19 +202,22 @@ exports.getSentNotifications = async (req, res) => {
         // Sử dụng findAndCountAll để hỗ trợ phân trang và tìm kiếm
         const { count, rows: notifications } = await Notification.findAndCountAll({
             where: whereCondition, // Áp dụng điều kiện tìm kiếm
-            include: [ // Include vẫn giữ nguyên để lấy tên người nhận
+            include: [
                 {
                     model: TaiKhoan,
                     as: 'ReceiverAccount',
-                    attributes: ['MaTK', 'TenDangNhap', 'LoaiTaiKhoan'],
+                    attributes: ['MaTK', 'TenDangNhap'], // Có thể thêm LoaiTaiKhoan nếu cần dùng trực tiếp
                     include: [
-                         {
+                        {
                             model: Tenant,
-                            as: 'TenantInfo',
                             attributes: ['HoTen'],
-                            required: false
+                            required: false // Dùng false để không loại bỏ kết quả nếu không có thông tin Tenant
                         },
-                        // { model: Landlord, as: 'LandlordInfo', attributes: ['HoTen'], required: false }
+                        {
+                            model: Landlord, // <<== THÊM MODEL LANDLORD
+                            attributes: ['HoTen'],
+                            required: false // Dùng false để không loại bỏ kết quả nếu không có thông tin Landlord
+                        }
                     ]
                 }
             ],
@@ -220,13 +231,18 @@ exports.getSentNotifications = async (req, res) => {
 
         // Xử lý để lấy tên người nhận một cách nhất quán (giữ nguyên)
         const formattedNotifications = notifications.map(noti => {
-           // ... (code map và lấy RecipientName giữ nguyên) ...
-           const rawNoti = noti.get({ plain: true });
-           let recipientName = rawNoti.ReceiverAccount?.TenDangNhap || `MaTK ${rawNoti.MaNguoiNhan}`;
-           if (rawNoti.ReceiverAccount?.LoaiTaiKhoan === 'Khách thuê' && rawNoti.ReceiverAccount?.TenantInfo?.HoTen) {
-               recipientName = rawNoti.ReceiverAccount.TenantInfo.HoTen;
-           }
-           return { ...rawNoti, RecipientName: recipientName };
+            const rawNoti = noti.get({ plain: true });
+            let recipientName = rawNoti.ReceiverAccount?.TenDangNhap || `MaTK ${rawNoti.MaNguoiNhan}`; // Giá trị mặc định
+        
+            // Ưu tiên lấy HoTen từ TenantInfo hoặc LandlordInfo nếu có
+            if (rawNoti.ReceiverAccount?.Tenants?.[0].HoTen) {
+                recipientName = rawNoti.ReceiverAccount.Tenants[0].HoTen;
+            } else if (rawNoti.ReceiverAccount?.Landlords?.[0].HoTen) { // <<== KIỂM TRA THÊM LANDLORD
+                recipientName = rawNoti.ReceiverAccount.Landlords[0].HoTen;
+            }
+            // Bạn có thể thêm các else if khác nếu có nhiều loại tài khoản với tên riêng
+        
+            return { ...rawNoti, RecipientName: recipientName }; // Giữ lại các trường khác và thêm RecipientName đã format
         });
 
          console.log(`✅ Found ${count} sent notifications for sender ${senderId} matching search "${searchTerm}". Returning page ${page}/${totalPages}.`);

@@ -59,6 +59,29 @@ export const getDsLoaiPhong = async () => {
     return response.data;
 }
 
+export const getMyRoomDetails = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("Yêu cầu xác thực.");
+      }
+      // Backend sẽ tự xác định khách thuê qua token
+      const response = await api.get(`/api/tenant/my-room`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      // API nên trả về object phòng hoặc null/undefined nếu không tìm thấy
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi khi lấy thông tin phòng của tôi:", error.response?.data || error.message);
+      // Ném lỗi ra ngoài để component có thể xử lý
+      throw error.response?.data || new Error('Không thể tải thông tin phòng.');
+    }
+};
+  
+
+
 // 2. Thêm room
 export const themPhong = async (roomData) => {
     console.log(roomData);

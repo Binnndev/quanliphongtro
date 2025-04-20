@@ -3,15 +3,27 @@ import React, { useState } from 'react';
 import AnimatedSignature from '../components/AnimatedSignature';
 import MainContainer from '../components/MainContainer'; // Sidebar Chủ trọ
 import UserIcon from '../components/UserIcon';
-// import { useAuth } from '../context/AuthContext'; // Nếu dùng context
+import { useEffect } from 'react';
 import SendNotificationForm from '../components/SendNotificationForm';
-import NotificationHistoryView from '../components/NotificationHistoryView'; // Component mới hoặc đã sửa đổi để fetch data
+import NotificationHistoryView from '../components/NotificationHistoryView';
+import ReceivedNotificationView from '../components/ReceivedNotificationView'; // Component mới
 
 const NotificationManagementPage = () => {
-    // const { currentUser } = useAuth();
-    const landlordId = 1; // <<<< THAY BẰNG MaTK CỦA CHỦ TRỌ THỰC TẾ >>>>
+    // --- Lấy User ID ---
+    const [userId, setUserId] = useState(null);
 
-    const [activeTab, setActiveTab] = useState('send'); // 'send' hoặc 'history'
+    useEffect(() => {
+        const loggedInUserId = localStorage.getItem("MaTK"); // Lấy từ localStorage
+        // Hoặc: const loggedInUserId = currentUser?.MaTK; // Nếu dùng context
+        if (loggedInUserId) {
+            setUserId(parseInt(loggedInUserId, 10)); // Chuyển sang số nếu cần
+        } else {
+            console.error("Không tìm thấy MaTK người dùng!");
+            // Có thể chuyển hướng về trang đăng nhập ở đây
+        }
+    }, []); // Chỉ chạy 1 lần khi component mount
+
+    const [activeTab, setActiveTab] = useState('received'); // 'send' hoặc 'history'
 
     // --- Styles cho Tabs (Ví dụ) ---
     const tabButtonStyle = {
@@ -32,6 +44,11 @@ const NotificationManagementPage = () => {
         color: '#007bff',
     };
     // --- Hết Styles ---
+
+    // Không render gì nếu chưa có userId
+    if (!userId) {
+        return <div>Đang tải thông tin người dùng...</div>; // Hoặc spinner loading
+    }
 
     return (
         <div style={{ display: "flex", height: '100vh', position: 'fixed', top:0, justifyContent: 'center', width: "100%", overflow: 'hidden' }}>
@@ -56,7 +73,13 @@ const NotificationManagementPage = () => {
                         position: 'sticky', // Làm cho tab dính khi cuộn
                         top: '83px', // Dính ngay dưới header
                         zIndex: 9 // Thấp hơn header
-                     }}>
+                    }}>
+                        <button
+                            style={activeTab === 'received' ? activeTabButtonStyle : tabButtonStyle}
+                            onClick={() => setActiveTab('received')}
+                        >
+                            Đã Nhận
+                        </button>
                         <button
                             style={activeTab === 'send' ? activeTabButtonStyle : tabButtonStyle}
                             onClick={() => setActiveTab('send')}
@@ -73,12 +96,15 @@ const NotificationManagementPage = () => {
 
                     {/* Tab Content Area */}
                     <div style={{ flexGrow: 1, overflowY: 'auto', padding: '20px' }}> {/* Thêm padding cho nội dung tab */}
+                        {activeTab === 'received' && (
+                            <ReceivedNotificationView recipientId={userId} /> // <<== COMPONENT MỚI
+                        )}
                         {activeTab === 'send' && (
-                            <SendNotificationForm />
+                            <SendNotificationForm senderId={userId} />
                         )}
                         {activeTab === 'history' && (
                             // Truyền landlordId vào component con để nó tự fetch dữ liệu
-                            <NotificationHistoryView landlordId={landlordId} />
+                            <NotificationHistoryView senderId={userId} />
                         )}
                     </div>
                 </div>

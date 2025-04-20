@@ -23,6 +23,9 @@ const RenterPage = () => {
 
     const [activeTab, setActiveTab] = useState('renter'); // Ví dụ bắt đầu ở tab thành viên
 
+    // State phòng
+    const [roomData, setRoomData] = useState(null); // Dữ liệu phòng
+
     // State cho dữ liệu (ví dụ)
     const [renterData, setRenterData] = useState(null);
     const [membersData, setMembersData] = useState([]);
@@ -44,14 +47,16 @@ const RenterPage = () => {
                 setIsLoading(true); // Bắt đầu loading tổng
                 try {
                     const results = await Promise.allSettled([
+                        getRoomData(roomId),
                         getRenterData(roomId),
                         getMembersData(roomId),
                         getContractData(roomId)
                     ]);
-                     // Xử lý kết quả...
-                    if (results[0].status === 'rejected') { console.warn("Không tải được renter data."); setRenterData(null); }
-                    if (results[1].status === 'rejected') { console.error("Lỗi tải members data."); setMembersData([]); }
-                    if (results[2].status === 'rejected') { console.warn("Không tải được contract data."); setContractData(null); }
+                    // Xử lý kết quả...
+                    if (results[0].status === 'fulfilled') { console.log("Dữ liệu phòng đã được tải thành công."); }
+                    if (results[1].status === 'rejected') { console.warn("Không tải được renter data."); setRenterData(null); }
+                    if (results[2].status === 'rejected') { console.error("Lỗi tải members data."); setMembersData([]); }
+                    if (results[3].status === 'rejected') { console.warn("Không tải được contract data."); setContractData(null); }
 
                 } catch (error) {
                     console.error("Lỗi fetch data trang:", error);
@@ -66,6 +71,7 @@ const RenterPage = () => {
        } else {
             console.warn("RenterPage: Không có roomId, không fetch data.");
             // Reset state nếu cần khi không có roomId
+            setRoomData(null);
             setRenterData(null);
             setMembersData([]);
             setContractData(null);
@@ -74,7 +80,16 @@ const RenterPage = () => {
     }, [roomId]);
 
     const [isLoading, setIsLoading] = useState(true);
-    
+    const maxOccupancy = roomData?.RoomType?.SoNguoiToiDa;
+
+    const getRoomData = async (roomId) => {
+        const response = await axios.get(`/api/rooms/${roomId}`);
+        if (response.status === 200) {
+            setRoomData(response.data);
+        } else {
+            console.error("Lỗi khi lấy dữ liệu phòng:", response.statusText);
+        }
+    };
 
     const getRenterData = async (roomId) => {
         const response = await axios.get(`/api/tenants/room/${roomId}/representative`);
@@ -558,14 +573,13 @@ console.log("Data being sent:", Object.fromEntries(memberFormData)); // Xem dữ
                             )}
                             {activeTab === 'member' && !showMemberForm && ( // Đảm bảo không hiển thị khi form member đang mở
                              <MembersTabContent
-                                 members={membersData}
-                                 onAddMemberClick={handleShowAddMemberForm}
-                                 onEditMemberClick={handleShowEditMemberForm}
-                                 onDeleteMember={handleSoftDeleteTenant}
-                                 // Truyền hàm xử lý thay đổi đại diện xuống
-                                 onChangeRepresentative={handleChangeRepresentative}
-                                 // Truyền thêm ID người đại diện hiện tại để disable nút cho chính họ (nếu cần)
-                                 currentRepresentativeId={renterData?.MaKhachThue || renterData?.id}
+                                    members={membersData}
+                                    onAddMemberClick={handleShowAddMemberForm}
+                                    onEditMemberClick={handleShowEditMemberForm}
+                                    onDeleteMember={handleSoftDeleteTenant}
+                                    onChangeRepresentative={handleChangeRepresentative}
+                                    currentRepresentativeId={renterData?.MaKhachThue || renterData?.id}
+                                    maxOccupancy={maxOccupancy}
                              />
                          )}
                             {activeTab === 'contract' && (

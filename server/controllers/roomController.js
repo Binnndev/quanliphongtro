@@ -1,5 +1,5 @@
 const { Room, Landlord, RentalHouse, Tenant, RoomType } = require("../models");
-const { Op } = require("sequelize");
+const { Op, where } = require("sequelize");
 
 exports.getRooms = async (req, res) => {
   try {
@@ -22,8 +22,15 @@ exports.getRooms = async (req, res) => {
 };
 
 exports.getRoomById = async (req, res) => {
-  try {
-    const room = await Room.findByPk(req.params.id);
+    try {
+        const room = await Room.findByPk(req.params.id, {
+            include: [
+                {
+                    model: RoomType,
+                    attributes: ['SoNguoiToiDa']
+                }
+            ]
+        });
     if (!room) {
       return res.status(404).json({ error: "Room not found" });
     }
@@ -84,10 +91,11 @@ exports.getRoomsByLandlord = async (req, res) => {
                     // This assumes a DIRECT Room -> Tenant relationship (e.g., Room.TenantId)
                     // If it's via Contract (Room -> Contract -> Tenant), this needs adjustment
                     model: Tenant, // Include Tenant data
-                    attributes: ['HoTen'], // Select tenant's name
+                    attributes: ['HoTen', 'LaNguoiDaiDien'], // Select tenant's name
                     required: false, // LEFT JOIN (get room even if no tenant linked)
-                    // Removed the problematic 'where' clause { LaNguoiDaiDien: true }
-                    // TODO: Revisit this include if you need specific tenant based on Contract status
+                    where: {
+                        TrangThai: "Đang thuê", // Only include tenants that are currently renting
+                    },
                 }
             ],
              // Where clause for the Room itself (applied AFTER filtering by landlord via RentalHouse include)

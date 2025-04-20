@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react'; // Thê
 import axios from 'axios';
 import NotificationHistoryList from './NotificationHistoryList';
 
-const NotificationHistoryView = ({ landlordId }) => {
+const NotificationHistoryView = ({ senderId }) => {
     const [notifications, setNotifications] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
@@ -90,11 +90,11 @@ const NotificationHistoryView = ({ landlordId }) => {
     // --- Effect chính để Fetch Data ---
     // Chạy khi landlordId, currentPage, limit, hoặc debouncedSearchTerm thay đổi
     useEffect(() => {
-        if (landlordId) {
-            fetchHistory(landlordId, currentPage, limit, debouncedSearchTerm);
+        if (senderId) {
+            fetchHistory(senderId, currentPage, limit, debouncedSearchTerm);
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [landlordId, currentPage, limit, debouncedSearchTerm, fetchHistory]); // Thêm debouncedSearchTerm
+    }, [senderId, currentPage, limit, debouncedSearchTerm, fetchHistory]); // Thêm debouncedSearchTerm
 
     // === HÀM ĐIỀU HƯỚNG TRANG (Giữ nguyên) ===
     const goToPage = (pageNumber) => {

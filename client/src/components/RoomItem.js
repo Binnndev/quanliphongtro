@@ -27,10 +27,15 @@ const RoomItem = ({ room, loaiTaiKhoan, onEdit, onDelete, onAddTenant }) => {
     return null; // Or return a placeholder/error component
   }
     
-  const firstTenant = (Array.isArray(room.Tenants) && room.Tenants.length > 0)
-  ? room.Tenants[0] // Lấy object khách thuê đầu tiên nếu có
-  : null;          // Nếu không có thì là null
-const tenantName = firstTenant ? firstTenant.HoTen : "Chưa có khách"; // Lấy tên nếu có khách, nếu không hiển thị mặc định
+      // Tìm đối tượng khách thuê là người đại diện
+    const representativeTenant = (Array.isArray(room.Tenants) && room.Tenants.length > 0)
+    ? room.Tenants.find(tenant => tenant && tenant.LaNguoiDaiDien === true) // Tìm người có LaNguoiDaiDien = true
+    : null; // Nếu không có mảng Tenants hoặc mảng rỗng, kết quả là null
+
+    // Lấy tên của người đại diện nếu tìm thấy, ngược lại hiển thị thông báo phù hợp
+    const tenantName = representativeTenant
+    ? representativeTenant.HoTen // Lấy họ tên của người đại diện
+    : (Array.isArray(room.Tenants) && room.Tenants.length > 0 ? "Chưa có người đại diện" : "Chưa có khách"); // Phân biệt trường hợp có khách nhưng không có ai là đại diện và trường hợp chưa có khách nào
     const { MaPhong, TenPhong = "N/A", TrangThai = "Không xác định" } = room;
     const isLandlord = loaiTaiKhoan === "Chủ trọ"; // Check if user is landlord
   const isAvailable = TrangThai === "Còn phòng";
@@ -99,11 +104,12 @@ const tenantName = firstTenant ? firstTenant.HoTen : "Chưa có khách"; // Lấ
           {isLandlord && (
             <div style={{ width: "100%", borderTop: '1px solid #eee', paddingTop: '15px', marginTop: 'auto' }}>
             {/* Show "Thêm Khách" only if room is available */}
-            {isAvailable ? (
-                <div style={{ marginBottom: '10px' }}>
-                    <button className="blue-btn-item btn" onClick={handleAddTenantClick}>Thêm Khách</button>
-                </div>
-            ) : (
+                      {isAvailable && (
+                          <div style={{ marginBottom: '10px' }}>
+                              <button className="blue-btn-item btn" onClick={handleAddTenantClick}>Thêm Khách</button>
+                          </div>
+                      )}
+                      {isRented && (
                 /* Show "Xem Khách" if room is not available */
                 <div style={{ marginBottom: '10px' }}>
                     <button className="blue-btn-item btn" onClick={handleAddTenantClick}>Xem thông tin thuê</button>
