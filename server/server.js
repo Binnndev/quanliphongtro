@@ -74,7 +74,7 @@ if (!isTest) {
   ])
     .then(() => {
       console.log("✅ Đã sync các bảng hóa đơn, dịch vụ, thanh toán...");
-      app.listen(5001, () => {
+      app.listen(5000, () => {
         console.log("✅ Server đang chạy tại http://localhost:5000");
       });
     })

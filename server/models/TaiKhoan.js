@@ -61,9 +61,9 @@ module.exports = (sequelize, DataTypes) => {
   );
 
   TaiKhoan.associate = (models) => {
-    TaiKhoan.belongsTo(models.Role, { foreignKey: "MaVaiTro", as: "Role" });
-    TaiKhoan.hasMany(models.Tenant, { foreignKey: "MaTK", as: "Tenants" });
-    TaiKhoan.hasMany(models.Landlord, { foreignKey: "MaTK", as: "Landlords" });
+    TaiKhoan.belongsTo(models.Role, { foreignKey: "MaVaiTro" });
+         TaiKhoan.hasMany(models.Tenant, { foreignKey: "MaTK" });
+         TaiKhoan.hasMany(models.Landlord, { foreignKey: "MaTK" });
   };
 
   return TaiKhoan;

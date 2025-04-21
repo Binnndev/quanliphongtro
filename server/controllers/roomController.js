@@ -2,24 +2,24 @@ const { Room, Landlord, RentalHouse, Tenant, RoomType } = require("../models");
 const { Op, where } = require("sequelize");
 
 exports.getRooms = async (req, res) => {
-  try {
-    const { status, search } = req.query;
-    let filter = {};
-    if (status) {
-      // Nếu status là "rented" thì room đã được cho thuê, ngược lại chưa cho thuê (rented = false)
-      filter.rented = status === "rented" ? true : false;
+    try {
+      const { status, search } = req.query;
+      let filter = {};
+      if (status) {
+        // Nếu status là "rented" thì room đã được cho thuê, ngược lại chưa cho thuê (rented = false)
+        filter.rented = status === "rented" ? true : false;
+      }
+      if (search) {
+        // Dùng đúng tên trường "roomName"
+        filter.TenPhong = { [Op.like]: `%${search}%` };
+      }
+      const rooms = await Room.findAll({ where: filter });
+      res.status(200).json(rooms);
+    } catch (error) {
+      console.error("Error retrieving rooms:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
-    if (search) {
-      // Dùng đúng tên trường "roomName"
-      filter.TenPhong = { [Op.like]: `%${search}%` };
-    }
-    const rooms = await Room.findAll({ where: filter });
-    res.status(200).json(rooms);
-  } catch (error) {
-    console.error("Error retrieving rooms:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-};
+  };
 
 exports.getRoomById = async (req, res) => {
     try {

@@ -5,11 +5,11 @@ import PushNumb from "../components/PushNumb";
 import RoomItem from "../components/RoomItem";
 import {
     getDsPhongByChuTro,
-    getDsLoaiPhong,
     themPhong,
     suaPhong,
     xoaPhong,
 } from "../services/phongService";
+import { getRoomType } from "../services/roomTypeService"; // Import the service to fetch room types
 import { useNavigate } from "react-router-dom"; // Import useNavigate for navigation
 
 // --- Simple Modal Styles (Replace with a library or CSS classes for better styling) ---
@@ -124,7 +124,7 @@ const Home = ({ selectedHouseId }) => {
             setLoading(true); // Có thể set loading ở đây nếu muốn
             setError(null);
             try {
-                const dsLoaiPhong = await getDsLoaiPhong();
+                const dsLoaiPhong = await getRoomType();
                 if (Array.isArray(dsLoaiPhong)) {
                     setAllRoomTypes(dsLoaiPhong); // <<<<<<< Lưu danh sách loại phòng
                 } else {

@@ -8,6 +8,7 @@ import DichVuIndex from "../components/DichVuIndex";
 import { useNavigate } from "react-router-dom";
 import { isAuthenticated } from "../services/authService";
 import Home from "./home";
+import RoomTypeIndex from "../components/RoomTypeIndex";
 import DienNuoc from "../components/DienNuocIndex";
 import PaymentIndex from "../components/PaymentIndex";
 import ThongKe from "../components/ThongKe";
@@ -19,16 +20,23 @@ import {
   suaPhong,
   xoaPhong,
 } from "../services/phongService";
-import {themNhaTro, suaNhaTro, xoaNhaTro } from "../services/nhaService";
+import { themNhaTro, suaNhaTro, xoaNhaTro } from "../services/nhaService";
+import {
+    getRoomType,
+    addRoomType,
+    updateRoomType,
+    deleteRoomType,
+} from "../services/roomTypeService";
 import NotificationManagementPage from "./NotificationManagementPage";
 
 const Homepage = () => {
     const loaiTaiKhoan = localStorage.getItem("loaiTaiKhoan");
     const MaTK = localStorage.getItem("MaTK");
+    const MaChuTro = localStorage.getItem("MaChuTro"); 
 
-  const [rooms, setRooms] = useState([]);
+    const [rooms, setRooms] = useState([]);
 
-  const [isOpen, setIsOpen] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
 
     const [page, setPage] = useState("home");
     
@@ -51,6 +59,22 @@ const Homepage = () => {
     const [houseFormError, setHouseFormError] = useState(null);
     // ---------------------------------
 
+    // --- STATE CHO LOẠI PHÒNG ---
+    const [roomTypes, setRoomTypes] = useState([]);
+    const [loadingRoomTypes, setLoadingRoomTypes] = useState(false);
+    const [isRoomTypeModalOpen, setIsRoomTypeModalOpen] = useState(false);
+    const [roomTypeModalMode, setRoomTypeModalMode] = useState('add');
+    const [currentEditingRoomType, setCurrentEditingRoomType] = useState(null);
+    const [roomTypeFormData, setRoomTypeFormData] = useState({
+        // *** Sửa tên trường và thêm trường mới ***
+        TenLoai: '',
+        Gia: '',
+        DienTich: '', // Thêm Diện tích
+        SoNguoiToiDa: '', // Thêm Số người
+        MoTa: '', // Giữ Mô tả (nếu model có hoặc bạn muốn thêm vào DB)
+    });
+    const [isSubmittingRoomType, setIsSubmittingRoomType] = useState(false);
+    const [roomTypeError, setRoomTypeError] = useState(null);
   
 
   const dataDien = [
@@ -114,7 +138,38 @@ const Homepage = () => {
 
     fetchRentalHouses();
 
-  }, [navigate, loaiTaiKhoan, MaTK]); // Dependencies for fetching houses
+  }, [navigate, loaiTaiKhoan, MaTK]);
+    
+  useEffect(() => {
+    const fetchRoomTypesForLandlord = async () => {
+        // Lấy MaChuTro mới nhất từ localStorage mỗi lần effect chạy
+        const currentMaChuTro = localStorage.getItem("MaChuTro");
+
+        // Chỉ fetch nếu là chủ trọ và CÓ MaChuTro
+        if (loaiTaiKhoan === "Chủ trọ" && currentMaChuTro) {
+            setLoadingRoomTypes(true);
+            setRoomTypes([]);
+            try {
+                console.log(`Workspaceing room types for landlord ID: ${currentMaChuTro}`);
+                // *** Gọi hàm service mới ***
+                const fetchedRoomTypes = await getRoomType(currentMaChuTro);
+                setRoomTypes(fetchedRoomTypes);
+                console.log("Fetched Room Types:", fetchedRoomTypes);
+            } catch (error) {
+                console.error(`Lỗi khi lấy danh sách loại phòng cho chủ trọ ${currentMaChuTro}:`, error);
+                setRoomTypes([]);
+            } finally {
+                setLoadingRoomTypes(false);
+            }
+        } else {
+            // Nếu không phải chủ trọ hoặc không có MaChuTro, danh sách loại phòng rỗng
+            setRoomTypes([]);
+        }
+    };
+
+    fetchRoomTypesForLandlord();
+
+}, [loaiTaiKhoan, MaChuTro]); // Chạy lại khi loại tài khoản thay đổi hoặc MaChuTro (lấy từ state/context nếu có thay vì localStorage) thay đổi
 
   useEffect(() => {
     const fetchHouses = async () => {
@@ -315,6 +370,129 @@ const Homepage = () => {
 
     // --- KẾT THÚC HÀM XỬ LÝ MODAL NHÀ TRỌ ---
 
+    // --- HÀM XỬ LÝ CHO MODAL LOẠI PHÒNG (Cập nhật) ---
+    const openRoomTypeModal = (mode = 'add', roomTypeData = null) => {
+        setRoomTypeModalMode(mode);
+        setIsSubmittingRoomType(false);
+        setRoomTypeError(null);
+
+        if (mode === 'edit' && roomTypeData) {
+            setCurrentEditingRoomType(roomTypeData);
+            setRoomTypeFormData({
+                // *** Cập nhật tên trường và thêm trường ***
+                TenLoai: roomTypeData.TenLoai || '',
+                Gia: roomTypeData.Gia || '',
+                DienTich: roomTypeData.DienTich || '',
+                SoNguoiToiDa: roomTypeData.SoNguoiToiDa || '',
+                MoTa: roomTypeData.MoTa || '', // Giả sử có trường MoTa trong data trả về
+            });
+        } else {
+            setCurrentEditingRoomType(null);
+            setRoomTypeFormData({ // Reset form
+                TenLoai: '',
+                Gia: '',
+                DienTich: '',
+                SoNguoiToiDa: '',
+                MoTa: '',
+            });
+        }
+        setIsRoomTypeModalOpen(true);
+    };
+
+    const closeRoomTypeModal = () => {
+        setIsRoomTypeModalOpen(false);
+        setCurrentEditingRoomType(null);
+        // *** Cập nhật reset form ***
+        setRoomTypeFormData({ TenLoai: '', Gia: '', DienTich: '', SoNguoiToiDa: '', MoTa: '' });
+        setRoomTypeError(null);
+    };
+
+    const handleRoomTypeInputChange = (event) => {
+        const { name, value } = event.target;
+        setRoomTypeFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleRoomTypeFormSubmit = async (event) => {
+        event.preventDefault();
+        setIsSubmittingRoomType(true);
+        setRoomTypeError(null);
+        const currentMaChuTro = localStorage.getItem("MaChuTro"); // Lấy MaChuTro
+
+        // Validation
+        // *** Cập nhật tên trường validate ***
+        if (!roomTypeFormData.TenLoai || !roomTypeFormData.Gia || !roomTypeFormData.DienTich || !roomTypeFormData.SoNguoiToiDa) {
+            setRoomTypeError("Vui lòng nhập đầy đủ Tên loại, Giá, Diện tích và Số người tối đa.");
+            setIsSubmittingRoomType(false);
+            return;
+        }
+        if (!currentMaChuTro) { // Kiểm tra MaChuTro
+            setRoomTypeError("Lỗi: Không xác định được Chủ trọ. Vui lòng thử tải lại trang.");
+            setIsSubmittingRoomType(false);
+            return;
+        }
+
+        // Chuẩn bị payload
+        const payload = {
+            ...roomTypeFormData,
+            // *** Parse các giá trị số ***
+            Gia: parseFloat(roomTypeFormData.Gia) || 0,
+            DienTich: parseFloat(roomTypeFormData.DienTich) || 0,
+            SoNguoiToiDa: parseInt(roomTypeFormData.SoNguoiToiDa, 10) || 0,
+            // *** Thêm MaChuTro vào payload khi thêm mới ***
+            ...(roomTypeModalMode === 'add' && { MaChuTro: parseInt(currentMaChuTro, 10) }) // Parse MaChuTro nếu cần
+        };
+         // Loại bỏ MaChuTro khỏi payload khi sửa (API sửa dựa vào ID trên URL)
+         if (roomTypeModalMode === 'edit') {
+            delete payload.MaChuTro;
+         }
+
+
+        try {
+            if (roomTypeModalMode === 'add') {
+                console.log("Submitting ADD Room Type:", payload);
+                const addedRoomType = await addRoomType(payload);
+                setRoomTypes(prev => [...prev, addedRoomType]);
+                alert('Thêm loại phòng thành công!');
+            } else if (roomTypeModalMode === 'edit' && currentEditingRoomType) {
+                console.log("Submitting EDIT Room Type:", payload, "for ID:", currentEditingRoomType.MaLoaiPhong);
+                const updatedRoomType = await updateRoomType(currentEditingRoomType.MaLoaiPhong, payload);
+                setRoomTypes(prev => prev.map(rt =>
+                    rt.MaLoaiPhong === currentEditingRoomType.MaLoaiPhong ? { ...rt, ...updatedRoomType } : rt // Merge data
+                ));
+                alert('Cập nhật loại phòng thành công!');
+            }
+            closeRoomTypeModal();
+        } catch (apiError) {
+            console.error(`Lỗi khi ${roomTypeModalMode === 'add' ? 'thêm' : 'cập nhật'} loại phòng:`, apiError);
+            setRoomTypeError(`Thao tác thất bại: ${apiError.response?.data?.message || apiError.message || 'Vui lòng thử lại.'}`);
+        } finally {
+            setIsSubmittingRoomType(false);
+        }
+    };
+
+    // *** Cập nhật tham số tên loại phòng nếu cần ***
+    const handleDeleteRoomType = async (loaiPhongId, tenLoai) => {
+        if (!loaiPhongId) return;
+
+        if (!window.confirm(`Bạn có chắc chắn muốn xóa loại phòng "${tenLoai || loaiPhongId}" không? Hành động này có thể thất bại nếu có phòng đang sử dụng loại này.`)) {
+            return;
+        }
+
+        try {
+            await deleteRoomType(loaiPhongId);
+            setRoomTypes(prev => prev.filter(rt => rt.MaLoaiPhong !== loaiPhongId));
+            alert('Xóa loại phòng thành công!');
+        } catch (deleteError) {
+            console.error(`Lỗi khi xóa loại phòng ${loaiPhongId}:`, deleteError);
+             let errorMessage = `Lỗi xóa loại phòng: ${deleteError.response?.data?.message || deleteError.message || 'Vui lòng thử lại.'}`;
+            if (deleteError.response?.status === 409 || (deleteError.response?.data?.message && deleteError.response.data.message.toLowerCase().includes('constraint'))) {
+                 errorMessage = `Lỗi xóa loại phòng: Không thể xóa vì vẫn còn phòng thuộc loại này. Vui lòng xóa các phòng liên quan trước.`;
+             }
+             alert(errorMessage);
+        }
+    };
+    // --- KẾT THÚC HÀM XỬ LÝ MODAL LOẠI PHÒNG ---
+
     const modalOverlayStyle = {
         position: 'fixed',
         top: 0,
@@ -362,182 +540,189 @@ const Homepage = () => {
         gap: '10px',
     };
 
-  return (
-    <div style={{ display: "flex", width: "100vw", height: "100vh" }}>
-      <div
-        style={{ background: "#1B2428", flex: "1 1 20%" }}
-        className="min-h-screen bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
-      >
-        <div
-          style={{
-            width: 384,
-            height: 84,
-            left: 0,
-            top: 0,
-            background: "#1B2428",
-            borderBottom: "1px #21373D solid",
-          }}
-        >
-          <div
-            style={{
-              width: 363,
-              height: 65,
-              left: 10,
-              top: 9,
-              position: "absolute",
-              textAlign: "center",
-              color: "white",
-              fontSize: 32,
-              fontFamily: "Inter",
-              fontWeight: "400",
-              wordWrap: "break-word",
-            }}
-          >
-            <AnimatedSignature text="Quản Lý Nhà Trọ" />
-          </div>
-        </div>
-        <MainContainer onSelectPage={setPage} currentPage={page} />
-      </div>
-      <div
-        style={{
-          display: "flex",
-          width: "80%",
-          minHeight: "100vh",
-          background: "#E0E0E0",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <Header />
-        <div
-          className="control-content"
-          style={{
-            width: "80%",
-            height: 835,
-            right: 0,
-            top: 83,
-            position: "fixed",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            background: "#E0E0E0",
-            borderBottom: "1px #D2D2D2 solid",
-          }}
-        >
-          <div
-            style={{
-              width: "calc(100% - 23px)",
-              height: 815,
-              backgroundColor: "white",
-              flexDirection: "column",
-              borderRadius: "10px",
-              display: "flex",
-              justifyContent: "space-around",
-              alignItems: "center",
-            }}
-          >
+    return (
+        <div style={{ display: "flex", width: "100vw", height: "100vh" }}>
             <div
-              style={{
-                width: "calc(100% - 23px)",
-                height: 83,
-                right: 0,
-                top: 83,
-                display: "flex",
-                justifyContent: "flex-start",
-                alignItems: "center",
-                background: "white",
-                borderBottom: "1px #D2D2D2 solid",
-              }}
+                style={{ background: "#1B2428", flex: "1 1 20%" }}
+                className="min-h-screen bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
             >
-              {/* Rental House Selection Buttons (Only for Landlord) */}
-              {loaiTaiKhoan === "Chủ trọ" && (
-        <div style={{ width: "100%", padding: "10px 15px", display: "flex", gap: "15px", alignItems: "center", background: "#fff", borderBottom: "1px solid #D2D2D2", boxSizing: 'border-box', marginBottom: '10px' }}>
-            <label htmlFor="houseSelect" style={{ fontWeight: 'bold' }}>Chọn nhà trọ:</label>
-            {loadingHouses ? (
-                <p style={{ color: 'grey' }}>Đang tải...</p>
-            ) : rentalHouses.length === 0 ? (
-                <p style={{ color: 'grey' }}>Chưa có nhà trọ nào.</p>
-            ) : (
-                <select
-                    id="houseSelect"
-                    value={selectedHouseId || ""} // Dùng selectedHouseId, đảm bảo có giá trị rỗng cho option mặc định
-                    onChange={(e) => handleHouseSelect(e.target.value ? parseInt(e.target.value, 10) : null)} // ParseInt nếu ID là số, hoặc giữ nguyên nếu là chuỗi. Xử lý giá trị rỗng.
-                    style={{ padding: '8px 10px', borderRadius: '5px', border: '1px solid #ccc', minWidth: '200px', flexGrow: 1 /* Cho phép co giãn */ }}
+                <div
+                    style={{
+                        width: 384,
+                        height: 84,
+                        left: 0,
+                        top: 0,
+                        background: "#1B2428",
+                        borderBottom: "1px #21373D solid",
+                    }}
                 >
-                    <option value="">-- Chọn nhà trọ --</option> {/* Option mặc định */}
-                    {rentalHouses.map((house) => (
-                        <option key={house.MaNhaTro} value={house.MaNhaTro}>
-                            {house.TenNhaTro || `Nhà ${house.MaNhaTro}`} {/* Hiển thị tên hoặc ID */}
-                        </option>
-                    ))}
-                </select>
-            )}
-
-            {/* Nút Sửa/Xóa chỉ hiển thị KHI ĐÃ CHỌN một nhà */}
-            {selectedHouseId && !loadingHouses && (
-                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                     {/* Nút Sửa */}
-                     <button
-                         onClick={() => {
-                             const houseToEdit = rentalHouses.find(h => h.MaNhaTro === selectedHouseId);
-                             if (houseToEdit) openHouseModal('edit', houseToEdit);
-                         }}
-                         title="Sửa thông tin nhà trọ đang chọn"
-                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3b82f6', fontSize: '1.1em' }}
-                     >
-                         <i className="fa-solid fa-pen-to-square"></i>
-                     </button>
-                     {/* Nút Xóa */}
-                     <button
-                         onClick={() => {
-                             const houseToDelete = rentalHouses.find(h => h.MaNhaTro === selectedHouseId);
-                             if (houseToDelete) handleDeleteHouse(houseToDelete.MaNhaTro, houseToDelete.TenNhaTro);
-                         }}
-                         title="Xóa nhà trọ đang chọn"
-                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: '1.1em' }}
-                     >
-                         <i className="fa-solid fa-trash-can"></i>
-                     </button>
-                 </div>
-            )}
-
-            {/* Nút Thêm Nhà có thể đặt ở đây hoặc trong SubHeader */}
-             <button className="orange-btn" onClick={() => openHouseModal('add')} style={{ marginLeft: 'auto' }}>Thêm nhà</button>
-
-        </div>
-    )}
+                    <div
+                        style={{
+                            width: 363,
+                            height: 65,
+                            left: 10,
+                            top: 9,
+                            position: "absolute",
+                            textAlign: "center",
+                            color: "white",
+                            fontSize: 32,
+                            fontFamily: "Inter",
+                            fontWeight: "400",
+                            wordWrap: "break-word",
+                        }}
+                    >
+                        <AnimatedSignature text="Quản Lý Nhà Trọ" />
+                    </div>
+                </div>
+                <MainContainer onSelectPage={setPage} currentPage={page} />    
             </div>
             <div
-              style={{
-                width: "calc(100% - 23px)",
-                height: "100%",
-                right: 0,
-                top: 83,
-                display: "flex",
-                justifyContent: "flex-start",
-                borderRadius: "10px",
-                margin: "10px 0",
-                flexDirection: "column",
-                alignItems: "center",
-                background: "#ccc",
-                borderBottom: "1px #D2D2D2 solid",
-              }}
+                style={{
+                    display: "flex",
+                    width: "80%",
+                    minHeight: "100vh",
+                    background: "#E0E0E0",
+                    justifyContent: "center",
+                    alignItems: "center",
+                }}
             >
-              {page === "home" && <Home selectedHouseId={selectedHouseId} />}
-              {page === "dien" && <DienNuoc type="Điện" data={dataDien} />}
-              {page === "nuoc" && <DienNuoc type="Nước" data={dataNuoc} />}
-              {page === "tinhTien" && <PaymentIndex landlordId={selectedHouse.MaChuTro} />}
-              {page === "dichVu" && selectedHouse?.MaChuTro && (
-            <DichVuIndex maChuTro={selectedHouse.MaChuTro} />
-                          )}
-                          {page === "thongbao" && <NotificationManagementPage/>}
-              {page === "thongke" && <ThongKe />}
+                <Header />                
+                <div
+                    className="control-content"
+                    style={{
+                        width: "80%",
+                        height: 835,
+                        right: 0,
+                        top: 83,
+                        position: "fixed",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        background: "#E0E0E0",
+                        borderBottom: "1px #D2D2D2 solid",
+                    }}
+                >
+                    <div
+                        style={{
+                            width: "calc(100% - 23px)",
+                            height: 815,
+                            backgroundColor: "white",
+                            flexDirection: "column",
+                            borderRadius: "10px",
+                            display: "flex",
+                            justifyContent: "space-around",
+                            alignItems: "center",
+                        }}
+                    >
+                        <div
+                            style={{
+                                width: "calc(100% - 23px)",
+                                height: 83,
+                                right: 0,
+                                top: 83,
+                                display: "flex",
+                                justifyContent: "flex-start",
+                                alignItems: "center",
+                                background: "white",
+                                borderBottom: "1px #D2D2D2 solid",
+                            }}
+                        >
+                
+                            {/* Rental House Selection Buttons (Only for Landlord) */}
+                            {loaiTaiKhoan === "Chủ trọ" && (
+                                <div style={{ width: "100%", padding: "10px 15px", display: "flex", gap: "15px", alignItems: "center", background: "#fff", borderBottom: "1px solid #D2D2D2", boxSizing: 'border-box', marginBottom: '10px' }}>
+                                    <label htmlFor="houseSelect" style={{ fontWeight: 'bold' }}>Chọn nhà trọ:</label>
+                                    {loadingHouses ? (
+                                        <p style={{ color: 'grey' }}>Đang tải...</p>
+                                    ) : rentalHouses.length === 0 ? (
+                                            <p style={{ color: 'grey' }}>Chưa có nhà trọ nào.</p>
+                                        ) : (
+                                                <select
+                                                    id="houseSelect"
+                                                    value={selectedHouseId || ""} // Dùng selectedHouseId, đảm bảo có giá trị rỗng cho option mặc định
+                                                    onChange={(e) => handleHouseSelect(e.target.value ? parseInt(e.target.value, 10) : null)} // ParseInt nếu ID là số, hoặc giữ nguyên nếu là chuỗi. Xử lý giá trị rỗng.
+                                                    style={{ padding: '8px 10px', borderRadius: '5px', border: '1px solid #ccc', minWidth: '200px', flexGrow: 1 /* Cho phép co giãn */ }}
+                                                >
+                                                    <option value="">-- Chọn nhà trọ --</option> {/* Option mặc định */}
+                                                    {rentalHouses.map((house) => (
+                                                        <option key={house.MaNhaTro} value={house.MaNhaTro}>
+                                                            {house.TenNhaTro || `Nhà ${house.MaNhaTro}`} {/* Hiển thị tên hoặc ID */}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                    )}
+                                    {/* Nút Sửa/Xóa chỉ hiển thị KHI ĐÃ CHỌN một nhà */}
+                                    {selectedHouseId && !loadingHouses && (
+                                         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                             {/* Nút Sửa */}
+                                             <button
+                                                 onClick={() => {
+                                                     const houseToEdit = rentalHouses.find(h => h.MaNhaTro === selectedHouseId);
+                                                     if (houseToEdit) openHouseModal('edit', houseToEdit);
+                                                 }}
+                                                 title="Sửa thông tin nhà trọ đang chọn"
+                                                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3b82f6', fontSize: '1.1em' }}
+                                             >
+                                                 <i className="fa-solid fa-pen-to-square"></i>
+                                             </button>
+                                             {/* Nút Xóa */}
+                                             <button
+                                                 onClick={() => {
+                                                     const houseToDelete = rentalHouses.find(h => h.MaNhaTro === selectedHouseId);
+                                                     if (houseToDelete) handleDeleteHouse(houseToDelete.MaNhaTro, houseToDelete.TenNhaTro);
+                                                 }}
+                                                 title="Xóa nhà trọ đang chọn"
+                                                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: '1.1em' }}
+                                             >
+                                                 <i className="fa-solid fa-trash-can"></i>
+                                             </button>
+                                         </div>
+                                    )}
+                                    {/* Nút Thêm Nhà có thể đặt ở đây hoặc trong SubHeader */}
+                                     <button className="orange-btn" onClick={() => openHouseModal('add')} style={{ marginLeft: 'auto' }}>Thêm nhà</button>
+
+                                </div>
+                            )}
+                        </div>
+                        <div
+                            style={{
+                                width: "calc(100% - 23px)",
+                                height: "100%",
+                                right: 0,
+                                top: 83,
+                                display: "flex",
+                                justifyContent: "flex-start",
+                                borderRadius: "10px",
+                                margin: "10px 0",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                background: "#ccc",
+                                borderBottom: "1px #D2D2D2 solid",
+                            }}
+                        >
+                            {page === "home" && <Home selectedHouseId={selectedHouseId} />}
+                            {page === "loaiPhong" && loaiTaiKhoan === "Chủ trọ" && (
+                            <RoomTypeIndex
+                                // selectedHouseId={selectedHouseId} // <= BỎ ĐI
+                                roomTypes={roomTypes}
+                                loading={loadingRoomTypes}
+                                onAdd={() => openRoomTypeModal('add')}
+                                onEdit={(roomType) => openRoomTypeModal('edit', roomType)}
+                                onDelete={handleDeleteRoomType} // Đảm bảo tên loại phòng đúng (TenLoai)
+                            />
+                            )}
+                            {page === "dien" && <DienNuoc type="Điện" data={dataDien} />}
+                            {page === "nuoc" && <DienNuoc type="Nước" data={dataNuoc} />}
+                            {page === "tinhTien" && <PaymentIndex landlordId={selectedHouse.MaChuTro} />}
+                            {page === "dichVu" && selectedHouse?.MaChuTro && <DichVuIndex maChuTro={selectedHouse.MaChuTro} />}
+                            {page === "thongbao" && <NotificationManagementPage/>}
+                            {page === "thongke" && <ThongKe />}
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
-          </div>
-          {/* --- MODAL THÊM/SỬA NHÀ TRỌ --- */}
-          {isHouseModalOpen && (
+            {/* --- MODAL THÊM/SỬA NHÀ TRỌ --- */}
+            {isHouseModalOpen && (
                 <div style={modalOverlayStyle}>
                     <div style={modalContentStyle}>
                         <h2 style={{ marginTop: 0, marginBottom: '20px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
@@ -595,7 +780,7 @@ const Homepage = () => {
                     </div>
                 </div>
             )}
-             {/* --- KẾT THÚC MODAL --- */}
+            {/* --- KẾT THÚC MODAL --- */}
     </div>
   );
 };
