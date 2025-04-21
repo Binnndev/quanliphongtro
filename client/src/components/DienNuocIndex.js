@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
+import UserIcon from "./UserIcon";
 
 const DienNuoc = ({ type = "Điện", month = "03/2024" }) => {
   const phanQuyen = localStorage.loaiTaiKhoan;
@@ -59,7 +60,13 @@ const DienNuoc = ({ type = "Điện", month = "03/2024" }) => {
   };
   
 
-  return (
+    return (
+        <div style={{ display: "flex", height: '100vh', position: 'fixed', top: 0, justifyContent: 'center', width: "100%", overflow: 'hidden' }}>
+        <div style={{ width: '80%', display: 'flex', flexDirection: 'column', position: 'relative', background: '#F4F4F4' }}>
+            <div style={{ height: 83, width: 'calc(80% - 0px)', background: 'white', borderBottom: '1px #D2D2D2 solid', display: "flex", justifyContent: 'space-between', alignItems: "center", position: 'fixed', top: 0, right: 0, zIndex: 10 }}>
+                <p style={{ fontSize: '1.5rem', fontWeight: 'bold', marginLeft: 20 }}>Chỉ số {type.toLowerCase()}</p> {/* Tiêu đề chung */}
+                <div style={{ marginRight: '20px' }}> <UserIcon /> </div>
+            </div>
     <div className="electric-water" style={{ padding: 20 }}>
       <h2 className="electric-water__title">Chỉ số {type.toLowerCase()}</h2>
       <p className="electric-water__month"><strong>Tháng/năm:</strong> {month}</p>
@@ -134,7 +141,9 @@ const DienNuoc = ({ type = "Điện", month = "03/2024" }) => {
   </div>
 )}
 
-    </div>
+                </div>
+            </div>
+        </div>
   );
 };
 

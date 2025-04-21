@@ -71,7 +71,6 @@ const Homepage = () => {
         Gia: '',
         DienTich: '', // Thêm Diện tích
         SoNguoiToiDa: '', // Thêm Số người
-        MoTa: '', // Giữ Mô tả (nếu model có hoặc bạn muốn thêm vào DB)
     });
     const [isSubmittingRoomType, setIsSubmittingRoomType] = useState(false);
     const [roomTypeError, setRoomTypeError] = useState(null);
@@ -384,7 +383,6 @@ const Homepage = () => {
                 Gia: roomTypeData.Gia || '',
                 DienTich: roomTypeData.DienTich || '',
                 SoNguoiToiDa: roomTypeData.SoNguoiToiDa || '',
-                MoTa: roomTypeData.MoTa || '', // Giả sử có trường MoTa trong data trả về
             });
         } else {
             setCurrentEditingRoomType(null);
@@ -393,7 +391,6 @@ const Homepage = () => {
                 Gia: '',
                 DienTich: '',
                 SoNguoiToiDa: '',
-                MoTa: '',
             });
         }
         setIsRoomTypeModalOpen(true);
@@ -403,7 +400,7 @@ const Homepage = () => {
         setIsRoomTypeModalOpen(false);
         setCurrentEditingRoomType(null);
         // *** Cập nhật reset form ***
-        setRoomTypeFormData({ TenLoai: '', Gia: '', DienTich: '', SoNguoiToiDa: '', MoTa: '' });
+        setRoomTypeFormData({ TenLoai: '', Gia: '', DienTich: '', SoNguoiToiDa: '' });
         setRoomTypeError(null);
     };
 
@@ -532,6 +529,8 @@ const Homepage = () => {
         borderRadius: '4px',
         boxSizing: 'border-box', // Important for width: 100%
     };
+
+    const textAreaStyle = { ...inputStyle, minHeight: '80px' };
     
     const modalActionsStyle = {
         marginTop: '20px',
@@ -781,6 +780,95 @@ const Homepage = () => {
                 </div>
             )}
             {/* --- KẾT THÚC MODAL --- */}
+
+            {/* --- MODAL THÊM/SỬA LOẠI PHÒNG --- */}
+            {isRoomTypeModalOpen && (
+                <div style={modalOverlayStyle}>
+                    <div style={modalContentStyle}>
+                        <h2 style={{ marginTop: 0, marginBottom: '20px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
+                            {roomTypeModalMode === 'add' ? 'Thêm loại phòng mới' : 'Chỉnh sửa loại phòng'}
+                        </h2>
+
+                        {roomTypeError && <p style={{ color: 'red', marginBottom: '15px' }}>{roomTypeError}</p>}
+
+                        <form onSubmit={handleRoomTypeFormSubmit}>
+                            <div style={formGroupStyle}>
+                                <label htmlFor="TenLoai" style={labelStyle}>Tên loại phòng:</label>
+                                <input
+                                    type="text"
+                                    id="TenLoai"       // <= Sửa ID
+                                    name="TenLoai"      // <= Sửa Name
+                                    value={roomTypeFormData.TenLoai}
+                                    onChange={handleRoomTypeInputChange}
+                                    style={inputStyle}
+                                    required
+                                    maxLength={100}
+                                />
+                            </div>
+                            <div style={formGroupStyle}>
+                                <label htmlFor="Gia" style={labelStyle}>Giá (VNĐ):</label>
+                                <input
+                                    type="number" // Sử dụng type number cho giá tiền
+                                    id="Gia"
+                                    name="Gia"
+                                    value={roomTypeFormData.Gia}
+                                    onChange={handleRoomTypeInputChange}
+                                    style={inputStyle}
+                                    required
+                                    min="0" // Giá không được âm
+                                />
+                            </div>
+                            <div style={formGroupStyle}>
+                                <label htmlFor="DienTich" style={labelStyle}>Diện tích (m²):</label>
+                                <input
+                                    type="number"
+                                    id="DienTich"
+                                    name="DienTich"
+                                    value={roomTypeFormData.DienTich}
+                                    onChange={handleRoomTypeInputChange}
+                                    style={inputStyle}
+                                    required
+                                    min="1" // Diện tích tối thiểu là 1? Hoặc 0 nếu cho phép
+                                    step="0.1" // Cho phép nhập số thập phân (ví dụ: 20.5 m²)
+                                />
+                            </div>
+                             <div style={formGroupStyle}>
+                                <label htmlFor="SoNguoiToiDa" style={labelStyle}>Số người tối đa:</label>
+                                <input
+                                    type="number"
+                                    id="SoNguoiToiDa"
+                                    name="SoNguoiToiDa"
+                                    value={roomTypeFormData.SoNguoiToiDa}
+                                    onChange={handleRoomTypeInputChange}
+                                    style={inputStyle}
+                                    required
+                                    min="1" // Tối thiểu 1 người
+                                    step="1" // Chỉ cho phép số nguyên
+                                />
+                            </div>
+
+                            <div style={modalActionsStyle}>
+                                <button
+                                    type="button"
+                                    className="grey-btn btn"
+                                    onClick={closeRoomTypeModal}
+                                    disabled={isSubmittingRoomType}
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="green-btn btn"
+                                    disabled={isSubmittingRoomType}
+                                >
+                                    {isSubmittingRoomType ? 'Đang lưu...' : 'Lưu'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+             {/* --- KẾT THÚC MODAL LOẠI PHÒNG --- */}
     </div>
   );
 };

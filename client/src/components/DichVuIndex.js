@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import ModalDichVu from "./ModalDichVu";
 import ModalConfirm from "./ModalConfirm";
+import UserIcon from "./UserIcon";  
 
 const DichVuIndex = ({ maChuTro }) => {
   const phanQuyen = localStorage.loaiTaiKhoan;
@@ -89,78 +90,84 @@ const DichVuIndex = ({ maChuTro }) => {
     }
   };
 
-  return (
-    <div className="service" style={{ padding: 20 }}>
-      <div
-        className="service__header"
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 20,
-        }}
-      >
-        <h2 className="service__title">Danh sách dịch vụ</h2>
-        {phanQuyen === "Chủ trọ" && (
-        <button className="service__btn-add" onClick={handleOpenAdd}>
-          + Thêm dịch vụ
-        </button>)}
-      </div>
+    return (
+        <div style={{ display: "flex", height: '100vh', position: 'fixed', top: 0, justifyContent: 'center', width: "100%", overflow: 'hidden' }}>
+            <div style={{ width: '80%', display: 'flex', flexDirection: 'column', position: 'relative', background: '#F4F4F4' }}>
+            <div style={{ height: 83, width: 'calc(80% - 0px)', background: 'white', borderBottom: '1px #D2D2D2 solid', display: "flex", justifyContent: 'space-between', alignItems: "center", position: 'fixed', top: 0, right: 0, zIndex: 10 }}>
+                    <p style={{ fontSize: '1.5rem', fontWeight: 'bold', marginLeft: 20 }}>Danh Sách Dịch Vụ</p> {/* Tiêu đề chung */}
+                    <div style={{ marginRight: '20px' }}> <UserIcon /> </div>
+                </div>
+                <div className="service" style={{ padding: 20 }}>
+                    <div
+                        className="service__header"
+                        style={{
+                            display: "flex",
+                            justifyContent: "flex-end",
+                            alignItems: "center",
+                            marginBottom: 20,
+                            paddingTop: '80px'
+                        }}
+                    >
+                        {phanQuyen === "Chủ trọ" && (
+                        <button className="green-btn btn" onClick={handleOpenAdd}>
+                                + Thêm dịch vụ
+                            </button>)}
+                    </div>
+                          <table className="service__table" style={{ width: "100%" }}>
+                        <thead>
+                            <tr style={{ backgroundColor: "#f0f0f0" }}>
+                                <th>Tên dịch vụ</th>
+                                <th>Loại</th>
+                                <th>Đơn vị</th>
+                                <th>Giá</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {dichVuList.map((dv) => (
+                                <tr key={dv.MaDV} style={{ backgroundColor: "#fff" }}>
+                                <td>{dv.TenDV}</td>
+                                <td>{dv.LoaiDichVu}</td>
+                                <td>{dv.DonViTinh}</td>
+                                <td>{Number(dv.Gia).toLocaleString()}đ</td>
+                                    <td>
+                                        {phanQuyen === "Chủ trọ" ? (
+                                            <>
+                                                <button className="blue-btn btn" onClick={() => handleEdit(dv)}>
+                                                    <i className="fa-solid fa-pen-to-square"></i>
+                                                </button>
+                                                <button className="delete-btn btn" onClick={() => handleDelete(dv)}>
+                                                    <i className="fa-solid fa-trash-can"></i>
+                                                </button>
+                                            </>
+                                        ) : (
+                                                <span style={{ fontStyle: "italic", color: "#888" }}>
+                                                    Bạn không được cấp quyền hành động
+                                                </span>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    <ModalDichVu
+                        isOpen={isModalOpen}
+                        onClose={() => setIsModalOpen(false)}
+                        onSave={handleSave}
+                        dichVuData={selectedDichVu}
+                    />
 
-      <table className="service__table" style={{ width: "100%" }}>
-        <thead>
-          <tr style={{ backgroundColor: "#f0f0f0" }}>
-            <th>Tên dịch vụ</th>
-            <th>Loại</th>
-            <th>Đơn vị</th>
-            <th>Giá</th>
-            <th>Hành động</th>
-          </tr>
-        </thead>
-        <tbody>
-          {dichVuList.map((dv) => (
-            <tr key={dv.MaDV}>
-              <td>{dv.TenDV}</td>
-              <td>{dv.LoaiDichVu}</td>
-              <td>{dv.DonViTinh}</td>
-              <td>{Number(dv.Gia).toLocaleString()}đ</td>
-              <td>
-              {phanQuyen === "Chủ trọ" ? (
-    <>
-      <button className="service__btn-edit" onClick={() => handleEdit(dv)}>
-        Sửa
-      </button>
-      <button className="service__btn-delete" onClick={() => handleDelete(dv)}>
-        Xoá
-      </button>
-    </>
-  ) : (
-    <span style={{ fontStyle: "italic", color: "#888" }}>
-      Bạn không được cấp quyền hành động
-    </span>
-  )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <ModalDichVu
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSave}
-        dichVuData={selectedDichVu}
-      />
-
-      <ModalConfirm
-        isOpen={isConfirmOpen}
-        onClose={() => setIsConfirmOpen(false)}
-        onConfirm={confirmAction}
-        title={confirmContent.title}
-        message={confirmContent.message}
-      />
-    </div>
-  );
+                    <ModalConfirm
+                        isOpen={isConfirmOpen}
+                        onClose={() => setIsConfirmOpen(false)}
+                        onConfirm={confirmAction}
+                        title={confirmContent.title}
+                        message={confirmContent.message}
+                    />
+                </div>
+            </div>
+        </div>
+    );
 };
 
 export default DichVuIndex;

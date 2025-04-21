@@ -17,4 +17,34 @@ router.get("/",
     },
     roomTypeController.getAllRoomTypes); // Lấy danh sách loại phòng
 
-    module.exports = router;
+router.post("/",
+    getUserRole,
+    (req, res, next) => {
+        if (req.role !== "Chủ trọ") {
+            return res.status(403).json({ error: "Không có quyền truy cập." });
+        }
+        next();
+    },
+    roomTypeController.createRoomType); // Tạo loại phòng mới
+
+router.put("/:id",
+    getUserRole,
+    (req, res, next) => {
+        if (req.role !== "Chủ trọ") {
+            return res.status(403).json({ error: "Không có quyền truy cập." });
+        }
+        next();
+    },
+    roomTypeController.updateRoomType); // Cập nhật loại phòng
+
+router.delete("/:id",
+    getUserRole,
+    (req, res, next) => {
+        if (req.role !== "Chủ trọ") {
+            return res.status(403).json({ error: "Không có quyền truy cập." });
+        }
+        next();
+    },
+    roomTypeController.deleteRoomType); // Xóa loại phòng
+
+module.exports = router;

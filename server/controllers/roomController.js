@@ -264,6 +264,9 @@ exports.updateRoom = async (req, res) => {
               {
                   model: Tenant, // Include Tenants association (nếu cần hiển thị ở RoomItem)
                   attributes: ['HoTen'], // Lấy các trường cần thiết của Tenant
+                  where: {
+                      TrangThai: "Đang thuê" // Chỉ lấy những người đang thuê
+                  },
                   limit: 1 // Có thể giới hạn nếu chỉ cần hiển thị 1 người
               }
               // Thêm các include khác nếu RoomItem cần hiển thị thêm thông tin liên kết

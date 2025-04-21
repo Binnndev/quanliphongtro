@@ -377,8 +377,8 @@ box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
   padding: 20px;
   background: white;
   border-radius: 10px;
-  width: 98%;
-  margin: 20px auto;
+  width: 100%;
+  margin: 40px 0;
 }
 
 .electric-water__title {
@@ -490,10 +490,10 @@ box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
   background-color: #e74c3c;
 }
 .service {
-  width: 98%;
+  width: 100%;
   padding: 20px;
-  margin: 15px 0;
-  background-color: #fff;
+  margin: 5px 0;
+  /* background-color: #fff; */
   border-radius: 10px;
 }
 
@@ -1076,12 +1076,13 @@ box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
 .payment-index__wrapper {
     padding: 24px;
-    background-color: #f7f9fc;
+    background-color: #ffffff;
     width: 100%;
     font-family: 'Segoe UI', sans-serif;
   }
   
   .payment-index__container {
+    margin-top: 80px;
     background: #ffffff;
     border-radius: 12px;
     padding: 20px;
@@ -1096,9 +1097,16 @@ box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
   
   .payment-index__filter-row {
     display: flex;
+    justify-content: space-between;
     gap: 16px;
     margin-bottom: 20px;
     flex-wrap: wrap;
+  }
+
+  .payment-index__filter-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
   }
   
   .payment-index__filter {

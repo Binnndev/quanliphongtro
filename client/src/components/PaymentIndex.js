@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Invoice from "./invoices";
+import UserIcon from "./UserIcon";
 
 const PaymentIndex = (landlordId) => {
   const phanQuyen = localStorage.loaiTaiKhoan;
@@ -136,21 +137,20 @@ const PaymentIndex = (landlordId) => {
     }
   };
 
-  return (
-    <div className="payment-index__wrapper">
+    return (
+      <div style={{ display: "flex", height: '100vh', position: 'fixed', top: 0, justifyContent: 'center', width: "100%", overflow: 'hidden' }}>
+                  <div style={{ width: '80%', display: 'flex', flexDirection: 'column', position: 'relative', background: '#F4F4F4' }}>
+                      <div style={{ height: 83, width: 'calc(80% - 0px)', background: 'white', borderBottom: '1px #D2D2D2 solid', display: "flex", justifyContent: 'space-between', alignItems: "center", position: 'fixed', top: 0, right: 0, zIndex: 10 }}>
+                          <p style={{ fontSize: '1.5rem', fontWeight: 'bold', marginLeft: 20 }}>Danh sách hóa đơn</p> {/* Tiêu đề chung */}
+                          <div style={{ marginRight: '20px' }}> <UserIcon /> </div>
+                      </div>
+    {/* <div className="payment-index__wrapper"> */}
       <div className="payment-index__container">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: "baseline" }}>
-          <h2 className="payment-index__title">Danh sách hóa đơn</h2>
-          <button
-            className="payment-index__action payment-index__action--refresh"
-            onClick={fetchInvoices}
-          >
-            <i className="fa fa-sync-alt" style={{ marginRight: 6 }}></i> Tải lại danh sách
-          </button>
-        </div>
+        
 
         <div className="payment-index__filter-row">
-          <select className="payment-index__filter" value={filterThang} onChange={(e) => setFilterThang(e.target.value)}>
+                        <div className="payment-index__filter-container">
+                        <select className="payment-index__filter" value={filterThang} onChange={(e) => setFilterThang(e.target.value)}>
             <option value="">-- Tháng --</option>
             {uniqueMonths.map((m) => <option key={m} value={m}>{m}</option>)}
           </select>
@@ -169,9 +169,19 @@ const PaymentIndex = (landlordId) => {
             <option value="">-- Trạng thái --</option>
             <option value="Chưa thanh toán">Chưa thanh toán</option>
             <option value="Đã thanh toán">Đã thanh toán</option>
-          </select>
+                        </select>
+          </div>
+                        
+                        <button
+            className="payment-index__action payment-index__action--refresh"
+            onClick={fetchInvoices}
+          >
+            <i className="fa fa-sync-alt" style={{ marginRight: 6 }}></i> Tải lại danh sách
+          </button>
         </div>
 
+                    
+                    
         <table className="payment-index__table">
           <thead>
             <tr>
@@ -252,7 +262,9 @@ const PaymentIndex = (landlordId) => {
           </div>
         </div>
       )}
-    </div>
+                </div>
+            </div>
+        // </div>
   );
 };
 
