@@ -1,3 +1,5 @@
+const bcrypt = require("bcryptjs");
+
 module.exports = (sequelize, DataTypes) => {
   const TaiKhoan = sequelize.define(
     "TaiKhoan",
@@ -11,23 +13,24 @@ module.exports = (sequelize, DataTypes) => {
       TenDangNhap: {
         type: DataTypes.STRING(50),
         allowNull: false,
+        unique: true,
       },
       MatKhau: {
         type: DataTypes.STRING(255),
         allowNull: false,
       },
-        MaVaiTro: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-        },
+      MaVaiTro: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
       TrangThai: {
         type: DataTypes.ENUM("Kích hoạt", "Vô hiệu hóa", "Tạm khóa"),
         allowNull: false,
         defaultValue: "Kích hoạt",
       },
       NgayTao: {
-        type: DataTypes.DATEONLY,
-        allowNull: true,
+        type: DataTypes.DATE,
+        allowNull: false,
         defaultValue: DataTypes.NOW,
       },
       resetToken: {
@@ -44,17 +47,23 @@ module.exports = (sequelize, DataTypes) => {
       timestamps: false,
       hooks: {
         beforeCreate: async (taiKhoan) => {
-          const bcrypt = require("bcryptjs");
-          taiKhoan.MatKhau = await bcrypt.hash(taiKhoan.MatKhau, 10);
+          if (taiKhoan.MatKhau) {
+            taiKhoan.MatKhau = await bcrypt.hash(taiKhoan.MatKhau, 10);
+          }
+        },
+        beforeUpdate: async (taiKhoan) => {
+          if (taiKhoan.changed("MatKhau")) {
+            taiKhoan.MatKhau = await bcrypt.hash(taiKhoan.MatKhau, 10);
+          }
         },
       },
     }
   );
 
-    TaiKhoan.associate = function (models) {
-        TaiKhoan.belongsTo(models.Role, { foreignKey: "MaVaiTro" });
-        TaiKhoan.hasMany(models.Tenant, { foreignKey: "MaTK" });
-        TaiKhoan.hasMany(models.Landlord, { foreignKey: "MaTK" });
+  TaiKhoan.associate = (models) => {
+    TaiKhoan.belongsTo(models.Role, { foreignKey: "MaVaiTro", as: "Role" });
+    TaiKhoan.hasMany(models.Tenant, { foreignKey: "MaTK", as: "Tenants" });
+    TaiKhoan.hasMany(models.Landlord, { foreignKey: "MaTK", as: "Landlords" });
   };
 
   return TaiKhoan;

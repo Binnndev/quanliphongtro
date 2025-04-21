@@ -1,3 +1,4 @@
+// models/index.js
 const fs = require("fs");
 const path = require("path");
 const Sequelize = require("sequelize");
@@ -7,9 +8,18 @@ const config = require(path.join(__dirname, "/../config/config.json"))[env];
 const db = {};
 
 let sequelize;
-if (config.use_env_variable) {
+if (config.dialect === "sqlite") {
+  // Chạy test với SQLite in‑memory (config.test ở config.json phải có storage: ":memory:")
+  sequelize = new Sequelize({
+    dialect: config.dialect,
+    storage: config.storage, // ví dụ ":memory:"
+    logging: config.logging ?? false,
+  });
+} else if (config.use_env_variable) {
+  // Ví dụ production hoặc khi dùng CLEARDB_DATABASE_URL
   sequelize = new Sequelize(process.env[config.use_env_variable], config);
 } else {
+  // Môi trường development / test nếu vẫn dùng MySQL
   sequelize = new Sequelize(
     config.database,
     config.username,
@@ -18,12 +28,15 @@ if (config.use_env_variable) {
   );
 }
 
+// Tự load model
 fs.readdirSync(__dirname)
-  .filter((file) => {
-    return (
-      file.indexOf(".") !== 0 && file !== basename && file.slice(-3) === ".js"
-    );
-  })
+  .filter(
+    (file) =>
+      file.indexOf(".") !== 0 &&
+      file !== basename &&
+      file.slice(-3) === ".js" &&
+      !file.endsWith(".test.js")
+  )
   .forEach((file) => {
     const model = require(path.join(__dirname, file))(
       sequelize,
@@ -32,6 +45,7 @@ fs.readdirSync(__dirname)
     db[model.name] = model;
   });
 
+// Thiết lập association nếu có
 Object.keys(db).forEach((modelName) => {
   if (db[modelName].associate) {
     db[modelName].associate(db);
@@ -40,5 +54,4 @@ Object.keys(db).forEach((modelName) => {
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
-
 module.exports = db;

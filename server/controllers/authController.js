@@ -1,70 +1,107 @@
-const { TaiKhoan, Landlord, Tenant, Role } = require("../models");
+// authController.js
+const { TaiKhoan, Tenant, Landlord, Role } = require("../models");
 const bcrypt = require("bcryptjs");
-const { v4: uuidv4 } = require('uuid'); // Nhập uuid
+const { v4: uuidv4 } = require("uuid");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+const { Op } = require("sequelize");
 
 const JWT_SECRET = process.env.JWT_SECRET || "mat_khau_jwt_cua_ban";
 const JWT_THOI_HAN = process.env.JWT_THOI_HAN || "1h";
 
+const resetTokens = new Map();
+
+// Đăng ký tài khoản
 exports.register = async (req, res) => {
   try {
     const {
       TenDangNhap,
       MatKhau,
-          LoaiTaiKhoan,
-    //   MaVaiTro,
-      // Thông tin bổ sung
+      confirmPassword,
+      LoaiTaiKhoan,
       HoTen,
-      SoDienThoai,
-      Email,
-      DiaChi,
       CCCD,
       NgaySinh,
       GioiTinh,
+      SoDienThoai,
+      Email,
+      DiaChi,
     } = req.body;
-    if (!TenDangNhap || !MatKhau || !LoaiTaiKhoan) {
+
+    if (!TenDangNhap || !MatKhau || !confirmPassword || !LoaiTaiKhoan) {
       return res.status(400).json({ error: "Thiếu thông tin bắt buộc" });
     }
 
-    // Kiểm tra tài khoản đã tồn tại hay chưa (dựa trên TenDangNhap)
+    if (TenDangNhap.length < 4 || TenDangNhap.length > 30) {
+      return res
+        .status(400)
+        .json({ error: "Tên đăng nhập phải từ 4-30 ký tự" });
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(TenDangNhap)) {
+      return res
+        .status(400)
+        .json({ error: "Tên đăng nhập chỉ chứa chữ cái, số và dấu gạch dưới" });
+    }
+
+    if (MatKhau.length < 6 || MatKhau.length > 50) {
+      return res.status(400).json({ error: "Mật khẩu phải từ 6-50 ký tự" });
+    }
+    if (MatKhau !== confirmPassword) {
+      return res.status(400).json({ error: "Mật khẩu xác nhận không khớp" });
+    }
+
     const existingAccount = await TaiKhoan.findOne({ where: { TenDangNhap } });
     if (existingAccount) {
       return res.status(400).json({ error: "Tài khoản đã tồn tại" });
     }
-      
-      // *** THAY ĐỔI: Tìm MaVaiTro dựa vào TenVaiTro (LoaiTaiKhoan từ input) ***
+
     const role = await Role.findOne({ where: { TenVaiTro: LoaiTaiKhoan } });
     if (!role) {
-      // Nếu không tìm thấy vai trò tương ứng trong bảng Role
-      return res.status(400).json({ error: `Loại tài khoản '${LoaiTaiKhoan}' không hợp lệ.` });
+      return res
+        .status(400)
+        .json({ error: `Loại tài khoản '${LoaiTaiKhoan}' không hợp lệ.` });
     }
-    const maVaiTro = role.MaVaiTro; // Lấy ID của vai trò tìm được
 
-    // *** THAY ĐỔI: Sử dụng maVaiTro thay vì LoaiTaiKhoan khi tạo TaiKhoan ***
     const newUser = await TaiKhoan.create({
-        TenDangNhap,
-        MatKhau, // Hook trong model sẽ hash mật khẩu này
-        MaVaiTro: maVaiTro, // Lưu ID vai trò vào cột MaVaiTro
-        TrangThai: "Kích hoạt", // Hoặc 'Chờ xác thực' tùy logic của bạn
-      });
+      TenDangNhap,
+      MatKhau,
+      MaVaiTro: role.MaVaiTro,
+      TrangThai: "Kích hoạt",
+    });
 
-    if (LoaiTaiKhoan === "Chủ Trọ") {
-      await Landlord.create({
-        HoTen,
-        SoDienThoai,
-        Email,
-        MaTK: newUser.MaTK,
-      });
-    } else if (LoaiTaiKhoan === "Khách Thuê") {
+    if (LoaiTaiKhoan === "Khách Thuê") {
+      if (!HoTen || !CCCD || !NgaySinh || !GioiTinh || !SoDienThoai || !Email) {
+        return res.status(400).json({
+          error:
+            "Khách Thuê cần Họ tên, CCCD, Ngày sinh, Giới tính, SĐT và Email",
+        });
+      }
+
       await Tenant.create({
+        MaTK: newUser.MaTK,
         HoTen,
-        SoDienThoai,
-        Email,
         CCCD,
         NgaySinh,
         GioiTinh,
+        SoDienThoai,
+        Email,
         DiaChi,
+        TrangThai: "Đang thuê",
+      });
+    }
+
+    if (LoaiTaiKhoan === "Chủ Trọ") {
+      if (!HoTen || !SoDienThoai || !Email) {
+        return res.status(400).json({
+          error: "Chủ Trọ cần cung cấp đầy đủ Họ tên, SĐT và Email",
+        });
+      }
+
+      await Landlord.create({
         MaTK: newUser.MaTK,
+        HoTen,
+        SoDienThoai,
+        Email,
       });
     }
 
@@ -77,14 +114,7 @@ exports.register = async (req, res) => {
   }
 };
 
-// Xác thực email (chưa triển khai)
-exports.verifyEmail = async (req, res) => {
-  return res
-    .status(501)
-    .json({ error: "Chức năng xác thực email chưa được triển khai" });
-};
-
-// Đăng nhập tài khoản
+// Đăng nhập
 exports.login = async (req, res) => {
   try {
     const { TenDangNhap, MatKhau } = req.body;
@@ -95,18 +125,15 @@ exports.login = async (req, res) => {
     }
 
     const user = await TaiKhoan.findOne({
-        where: { TenDangNhap },
-        include: [{
-          model: Role,
-          attributes: ['TenVaiTro']
-        }]
-      });
-  
-      if (!user) {
-        return res
-          .status(400)
-          .json({ error: "Thông tin đăng nhập không hợp lệ" });
-      }
+      where: { TenDangNhap },
+      include: [{ model: Role, attributes: ["TenVaiTro"] }],
+    });
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ error: "Thông tin đăng nhập không hợp lệ" });
+    }
 
     const isValid = await bcrypt.compare(MatKhau, user.MatKhau);
     if (!isValid) {
@@ -114,32 +141,27 @@ exports.login = async (req, res) => {
         .status(400)
         .json({ error: "Thông tin đăng nhập không hợp lệ" });
     }
-      
+
     if (!user.Role || !user.Role.TenVaiTro) {
-        console.error("Lỗi: Không tìm thấy thông tin vai trò hợp lệ cho tài khoản:", user.MaTK);
-        return res.status(500).json({ error: "Lỗi cấu hình vai trò người dùng." });
+      console.error(
+        "Lỗi: Không tìm thấy thông tin vai trò hợp lệ cho tài khoản:",
+        user.MaTK
+      );
+      return res
+        .status(500)
+        .json({ error: "Lỗi cấu hình vai trò người dùng." });
     }
 
-    console.log("Đăng nhập lúc:", Date.now());
-      
-    const loginTime = Date.now();
-    const jti = uuidv4(); // Tạo một ID duy nhất cho token này (JWT ID)
-
+    const jti = uuidv4();
     const token = jwt.sign(
       {
         id: user.MaTK,
-        role: user.Role.TenVaiTro, // Chủ trọ | Khách thuê
-        // loginAt: loginTime, // Vẫn giữ nếu bạn cần thông tin này
-        jti: jti,          // Thêm JWT ID duy nhất
+        role: user.Role.TenVaiTro,
+        jti,
       },
       JWT_SECRET,
       { expiresIn: JWT_THOI_HAN }
     );
-      
-      
-    //   474c9484-d15d-453e-ba7b-8128323a88ac
-    console.log("Generated JTI:", jti);
-      console.log("Token:", token);
 
     return res.status(200).json({ message: "Đăng nhập thành công", token });
   } catch (error) {
@@ -148,6 +170,13 @@ exports.login = async (req, res) => {
   }
 };
 
+exports.verifyEmail = async (req, res) => {
+  return res
+    .status(501)
+    .json({ error: "Chức năng xác thực email chưa được triển khai" });
+};
+
+// Quên mật khẩu
 exports.forgotPassword = async (req, res) => {
   try {
     const { TenDangNhap } = req.body;
@@ -156,31 +185,29 @@ exports.forgotPassword = async (req, res) => {
     }
     const user = await TaiKhoan.findOne({ where: { TenDangNhap } });
     if (!user) {
-      // Nếu không tìm thấy tài khoản, trả về message an toàn (không tiết lộ thông tin)
+      // Trả 200 để bảo mật, không tiết lộ user có tồn tại hay không
       return res
         .status(200)
         .json({ message: "Nếu tài khoản tồn tại, reset token sẽ được tạo" });
     }
-    // Tạo reset token (sử dụng crypto)
     const resetToken = crypto.randomBytes(20).toString("hex");
-    // Đặt thời gian hết hạn (1 giờ)
-    const resetTokenExpiry = Date.now() + 3600000;
+    const resetTokenExpiry = Date.now() + 3600000; // 1 giờ
 
-    // Lưu token vào DB cho tài khoản
     user.resetToken = resetToken;
     user.resetTokenExpiry = resetTokenExpiry;
     await user.save();
 
-    return res.status(200).json({
-      message: "Reset token đã được tạo",
-      resetToken,
-    });
+    // Thực tế: gửi email có link chứa resetToken
+    return res
+      .status(200)
+      .json({ message: "Reset token đã được tạo", resetToken });
   } catch (error) {
     console.error("Lỗi quên mật khẩu:", error);
     return res.status(500).json({ error: "Lỗi máy chủ" });
   }
 };
 
+// Đặt lại mật khẩu
 exports.resetPassword = async (req, res) => {
   try {
     const { resetToken, newPassword } = req.body;
@@ -189,24 +216,19 @@ exports.resetPassword = async (req, res) => {
         .status(400)
         .json({ error: "Thiếu reset token hoặc mật khẩu mới" });
     }
-
-    // Tìm tài khoản có resetToken phù hợp và chưa hết hạn
     const user = await TaiKhoan.findOne({
       where: {
-        resetToken: resetToken,
-        resetTokenExpiry: { [require("sequelize").Op.gt]: Date.now() },
+        resetToken,
+        resetTokenExpiry: { [Op.gt]: Date.now() },
       },
     });
-
     if (!user) {
       return res
         .status(400)
         .json({ error: "Reset token không hợp lệ hoặc đã hết hạn" });
     }
-
-    // Hash mật khẩu mới và cập nhật
+    // Hash và lưu mật khẩu mới
     user.MatKhau = await bcrypt.hash(newPassword, 10);
-    // Xóa các trường reset token sau khi đặt lại mật khẩu
     user.resetToken = null;
     user.resetTokenExpiry = null;
     await user.save();
