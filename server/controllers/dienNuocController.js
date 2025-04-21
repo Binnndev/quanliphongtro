@@ -1,4 +1,4 @@
-const { ElectricWater } = require("../models");
+const { ElectricWater, Tenant, Room } = require("../models");
 const { Op } = require("sequelize");
 
 // Lấy danh sách chỉ số điện/nước (tùy chọn lọc theo phòng hoặc loại)
@@ -112,5 +112,23 @@ exports.delete = async (req, res) => {
   } catch (error) {
     console.error("Lỗi xoá:", error);
     res.status(500).json({ error: "Lỗi server" });
+  }
+};
+
+exports.getMyElectricWater = async (req, res) => {
+  try {
+    const userId = req.user.MaTK;
+
+    const tenant = await Tenant.findOne({ where: { MaTK: userId } });
+    if (!tenant) return res.status(404).json({ message: "Không tìm thấy thông tin khách thuê." });
+
+    const readings = await ElectricWater.findAll({
+      where: { MaPhong: tenant.MaPhong },
+    });
+
+    res.json(readings);
+  } catch (error) {
+    console.error("Lỗi lấy chỉ số điện nước:", error);
+    res.status(500).json({ message: "Đã xảy ra lỗi máy chủ." });
   }
 };

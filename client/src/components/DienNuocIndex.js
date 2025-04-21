@@ -12,7 +12,10 @@ const DienNuoc = ({ type = "Điện", month = "03/2024" }) => {
 
   const fetchChiSo = async () => {
     try {
-      const res = await axios.get(`/api/diennuoc?loai=${type}`);
+      const url = phanQuyen === "Khách Thuê"
+        ? `/api/diennuoc/mine?loai=${type}`
+        : `/api/diennuoc?loai=${type}`;
+      const res = await axios.get(url);
       const formatData = res.data.map((d) => ({
         id: d.MaDienNuoc,
         thoiGian: d.NgayGhi,

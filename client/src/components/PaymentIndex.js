@@ -27,7 +27,8 @@ const PaymentIndex = (landlordId) => {
 
   const fetchInvoices = async () => {
     try {
-      const res = await axios.get("/api/invoice");
+      const url = phanQuyen === "Khách Thuê" ? "/api/invoice/mine" : "/api/invoice";
+      const res = await axios.get(url);
       setHoaDonList(res.data);
     } catch (err) {
       console.error("Lỗi khi tải danh sách hóa đơn:", err);

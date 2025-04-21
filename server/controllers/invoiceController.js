@@ -213,3 +213,20 @@ exports.delete = async (req, res) => {
     res.status(500).json({ error: "Lỗi server" });
   }
 };
+exports.getInvoicesForLoggedInTenant = async (req, res) => {
+  try {
+    const loggedInUserId = req.user.MaTK;
+
+    const tenant = await Tenant.findOne({ where: { MaTK: loggedInUserId } });
+    if (!tenant) return res.status(404).json({ message: "Không tìm thấy khách thuê." });
+
+    const invoices = await Invoice.findAll({
+      where: { MaKhachThue: tenant.MaKhachThue },
+    });
+
+    res.json(invoices);
+  } catch (error) {
+    console.error("Lỗi lấy hóa đơn khách thuê:", error);
+    res.status(500).json({ message: "Lỗi server." });
+  }
+};

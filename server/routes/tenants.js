@@ -3,6 +3,7 @@ const multer = require('multer'); // 1. Import multer
 const path = require('path'); // Để xử lý đường dẫn file
 const tenantController = require("../controllers/tenantController");
 const router = express.Router();
+const { authenticate } = require("../middlewares/authMiddleware");
 
 // --- Cấu hình Multer ---
 // Nơi lưu file
@@ -47,6 +48,7 @@ router.get(
     // isTenant, // Hoặc middleware kiểm tra vai trò
     tenantController.getLandlordAccountForTenant
 );
+router.get("/mine", authenticate, tenantController.getMyProfile);
 
 // 2. Áp dụng middleware upload.single('documentPhoto') cho route update
 // 'documentPhoto' là tên field trong FormData gửi từ frontend

@@ -466,3 +466,51 @@ exports.searchTenantByName = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 }
+
+exports.getMyRoom = async (req, res) => {
+    try {
+      const maTK = req.user.id; // Lấy từ token sau khi xác thực
+  
+      const tenant = await Tenant.findOne({
+        where: { MaTK: maTK },
+        include: [
+          {
+            model: Room, // Phòng đang thuê
+            include: [RoomType, RentalHouse], // Nếu cần
+          },
+        ],
+      });
+  
+      if (!tenant) return res.status(404).json({ error: "Không tìm thấy thông tin người thuê." });
+  
+      return res.status(200).json(tenant); // Trả về thông tin phòng
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Lỗi máy chủ" });
+    }
+  };
+
+  exports.getMyProfile = async (req, res) => {
+    try {
+      const maTK = req.user.id;
+  
+      const tenant = await Tenant.findOne({
+        where: { MaTK: maTK },
+        include: [
+          {
+            model: Room,
+            include: [RentalHouse]
+          },
+        ],
+      });
+  
+      if (!tenant) {
+        return res.status(404).json({ message: "Không tìm thấy khách thuê." });
+      }
+  
+      res.json(tenant);
+    } catch (error) {
+      console.error("❌ Lỗi khi lấy thông tin khách thuê:", error);
+      res.status(500).json({ message: "Lỗi máy chủ khi lấy thông tin cá nhân." });
+    }
+  };
