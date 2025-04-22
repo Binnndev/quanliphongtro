@@ -8,6 +8,7 @@ import {
     themPhong,
     suaPhong,
     xoaPhong,
+    // getTenantRoom,
 } from "../services/phongService";
 import { getRoomType } from "../services/roomTypeService"; // Import the service to fetch room types
 import { useNavigate } from "react-router-dom"; // Import useNavigate for navigation
@@ -63,7 +64,7 @@ const modalActionsStyle = {
 
 
 // Receive selectedHouseId as a prop
-const Home = ({ selectedHouseId }) => {
+const Home = ({ selectedHouseId, setPage, setSelectedRoomIdForTenant }) => {
     const navigate = useNavigate(); // Initialize useNavigate
 
     console.log("Home component received selectedHouseId PROP:", selectedHouseId);
@@ -145,6 +146,32 @@ const Home = ({ selectedHouseId }) => {
         fetchAllLandlordRooms();
         fetchAllRoomTypes();
     }, [MaTK, loaiTaiKhoan]);
+
+    // useEffect(() => {
+    //     const fetchTenantRoom = async () => {
+    //         if (loaiTaiKhoan === "Khách thuê") {
+    //             setLoading(true);
+    //             setError(null); // Reset error on new fetch
+    //             try {
+    //                 const ds = await getTenantRoom();
+    //                 if (ds) {
+    //                     setAllRooms(ds); // Set the room data directly
+    //                     console.log("Fetched tenant room data:", allRooms);
+    //                 }
+    //             } catch (fetchError) {
+    //                 console.error(`Lỗi khi lấy thông tin phòng của tôi:`, fetchError);
+    //                 setError(`Không thể tải thông tin phòng: ${fetchError.message}`);
+    //                 setAllRooms([]);
+    //             } finally {
+    //                 setLoading(false);
+    //             }
+    //         } else {
+    //             setAllRooms([]); // Clear room data if not a tenant
+    //             setLoading(false);
+    //         }
+    //     };
+    //     fetchTenantRoom();
+    // }, [loaiTaiKhoan]); // Fetch tenant room only when loaiTaiKhoan changes
 
     // --- Filter rooms based on selectedHouseId ---
     // Use useMemo to avoid re-filtering on every render unless rooms or selectedHouseId change
@@ -294,8 +321,9 @@ const Home = ({ selectedHouseId }) => {
 
     // --- Room Action Handlers ---
     const handleNavigateToAddTenant = (roomId) => {
-        console.log("Navigating to Add Tenant page for room:", roomId);
-        navigate(`/room/${roomId}/tenants`); // Navigate to the add route
+        // console.log("Navigating to Add Tenant page for room:", roomId);
+        // navigate(`/room/${roomId}/tenants`); // Navigate to the add route
+        localStorage.setItem("roomId", roomId);
     };
 
     const handleThemPhong = () => {
@@ -336,6 +364,16 @@ const Home = ({ selectedHouseId }) => {
         }
     };
 
+    const handleTenantAction = (roomId) => {
+        console.log(`Action for tenant page triggered for room ID: ${roomId}`);
+        if (roomId && setSelectedRoomIdForTenant && setPage) {
+            setSelectedRoomIdForTenant(roomId); // Set ID phòng được chọn ở Homepage
+            setPage("khachthue");             // Đổi page state ở Homepage thành "khachthue"
+        } else {
+            console.error("Missing required props (setPage, setSelectedRoomIdForTenant) or roomId");
+        }
+    };
+
     // --- Render Logic ---
     if (loading) return <div style={{ padding: "20px", textAlign: "center" }}>Đang tải dữ liệu phòng...</div>;
 
@@ -351,7 +389,8 @@ const Home = ({ selectedHouseId }) => {
     return (
         <div style={{ width: "100%" }}>
             {/* Header Section (Statistics for the SELECTED house) */}
-            <div
+            {loaiTaiKhoan === "Chủ trọ" && (
+                <div
                 style={{
                     minHeight: 83, margin: "10px", padding: "10px 20px",
                     display: "flex", flexWrap: "wrap", justifyContent: "space-between",
@@ -371,7 +410,8 @@ const Home = ({ selectedHouseId }) => {
                         <button className="green-btn btn" onClick={handleThemPhong}>Thêm phòng</button>
                     )}
                 </div>
-            </div>
+                </div>
+            )}
 
             {/* Room List Section (for the SELECTED house) */}
             <div
@@ -385,14 +425,27 @@ const Home = ({ selectedHouseId }) => {
                         Nhà trọ này chưa có phòng nào. Hãy nhấn "Thêm phòng".
                     </p>
                 )}
-                 {loaiTaiKhoan !== "Chủ trọ" && filteredRooms.length === 0 && !loading && (
+                 {loaiTaiKhoan === "Chủ trọ" && filteredRooms.length === 0 && !loading && (
                       <p style={{ width: '100%', textAlign: 'center', color: '#777', padding: '30px 0' }}>
                         Không có phòng nào để hiển thị.
                      </p>
                  )}
 
                 {/* Map over FILTERED rooms */}
-                {filteredRooms.map((room) => (
+                {loaiTaiKhoan === "Chủ trọ" && filteredRooms.map((room) => (
+                    room?.MaPhong ? (
+                        <RoomItem
+                            key={room.MaPhong}
+                            room={room}
+                            loaiTaiKhoan={loaiTaiKhoan}
+                            onEdit={handleSuaPhong}
+                            onDelete={handleXoaPhong}
+                            onTenantAction={handleTenantAction}
+                        />
+                    ) : null
+                ))}
+
+                {/* {loaiTaiKhoan === "Khách thuê" && allRooms.map((room) => (
                     room?.MaPhong ? (
                         <RoomItem
                             key={room.MaPhong}
@@ -403,7 +456,7 @@ const Home = ({ selectedHouseId }) => {
                             onAddTenant={handleNavigateToAddTenant}
                         />
                     ) : null
-                ))}
+                ))} */}
             </div>
             {/* --- Add/Edit Room Modal --- */}
             {isModalOpen && (

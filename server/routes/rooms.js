@@ -20,7 +20,8 @@ const upload = multer({ storage });
 // Các endpoint sử dụng roomController duy nhất
 router.get("/", roomController.getRooms); // Lấy danh sách room (có lọc)
 router.get("/:id", roomController.getRoomById); // Lấy chi tiết 1 room
-router.get("/landlord/:landlordId", roomController.getRoomsByLandlord); // Lấy room theo chủ trọ
+router.get("/landlord/:landlordId", roomController.getRoomsByLandlord);
+router.get("/tenant/:tenantId", roomController.getRoomsByTenant); // Lấy danh sách phòng của một khách thuê
 
 // Các endpoint cho thao tác tạo, cập nhật, xóa (có kiểm tra quyền nếu cần)
 router.post(
@@ -59,50 +60,3 @@ router.delete(
 );
 
 module.exports = router;
-
-// module.exports = (sequelize, DataTypes) => {
-//   const Room = sequelize.define(
-//     "Room",
-//     {
-//       id: {
-//         type: DataTypes.INTEGER,
-//         primaryKey: true,
-//         autoIncrement: true,
-//       },
-//       roomName: {
-//         type: DataTypes.STRING,
-//         allowNull: false,
-//       },
-//       description: {
-//         type: DataTypes.TEXT,
-//         allowNull: true,
-//       },
-//       price: {
-//         type: DataTypes.INTEGER,
-//         allowNull: false,
-//       },
-//       rented: {
-//         type: DataTypes.BOOLEAN,
-//         defaultValue: false,
-//       },
-//       imageUrl: {
-//         type: DataTypes.STRING,
-//         allowNull: true,
-//       },
-//       amenities: {
-//         type: DataTypes.STRING, // Nếu muốn lưu dữ liệu dạng mảng thì có thể dùng JSON
-//         allowNull: true,
-//       },
-//       MaChuTro: {
-//         type: DataTypes.INTEGER,
-//         allowNull: false,
-//       },
-//     },
-//     {
-//       tableName: "Phong", // Tên bảng trong DB giữ nguyên là "Phong"
-//       timestamps: false,
-//     }
-//   );
-
-//   return Room;
-// };

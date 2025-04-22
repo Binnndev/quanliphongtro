@@ -123,6 +123,71 @@ exports.getRoomsByLandlord = async (req, res) => {
     }
 };
 
+exports.getRoomsByTenant = async (req, res) => {
+    const tenantUserId = req.params.tenantId; // This is MaTK
+    if (!tenantUserId) {
+        return res.status(400).send({ message: "Thiếu ID của khách thuê (MaTK)." });
+    }
+    try {
+        // 1. Find MaKhachThue from MaTK
+        const tenant = await Tenant.findOne({
+            where: { MaTK: tenantUserId },
+            attributes: ["MaKhachThue", "MaPhong"],
+        });
+        if (!tenant) {
+            console.log(`Không tìm thấy khách thuê với MaTK: ${tenantUserId}`);
+            return res.status(200).json([]); // Return empty array if tenant not found
+        }
+        const tenantMaKhachThue = tenant.MaKhachThue;
+        const tenantMaPhong = tenant.MaPhong;
+        // 2. Find all rooms for this tenant, including RoomType and RentalHouse
+        const rooms = await Room.findAll({
+            include: [
+                {
+                    model: RentalHouse,
+                    attributes: ['MaNhaTro', 'TenNhaTro'], // Include house details
+                    required: true, // INNER JOIN to ensure room belongs to a house
+                },
+                {
+                    model: RoomType, // Include RoomType data
+                    attributes: ['MaLoaiPhong', 'TenLoai', 'Gia', 'DienTich', 'SoNguoiToiDa'], // Select needed fields
+                    required: false, // LEFT JOIN (get room even if RoomType link is broken)
+                    // Removed the problematic 'where' clause from here
+                },
+                {
+                    // This assumes a DIRECT Room -> Tenant relationship (e.g., Room.TenantId)
+                    // If it's via Contract (Room -> Contract -> Tenant), this needs adjustment
+                    model: Tenant, // Include Tenant data
+                    attributes: ['HoTen', 'LaNguoiDaiDien'], // Select tenant's name
+                    required: false, // LEFT JOIN (get room even if no tenant linked)
+                    where: {
+                        TrangThai: "Đang thuê", // Only include tenants that are currently renting
+                        MaKhachThue: tenantMaKhachThue, // Filter by the tenant
+                    },
+                }
+            ],
+            where: {
+                MaPhong: tenantMaPhong, // Filter by the room of the tenant
+            },
+            order: [
+                // Sorting remains the same
+                [{ model: RentalHouse }, "MaNhaTro", "ASC"],
+                ["TenPhong", "ASC"],
+            ],
+        });
+        // Send the array of rooms (potentially empty)
+        res.status(200).json(rooms);
+    } catch (error) {
+        console.error(
+            `Error fetching rooms for tenant MaTK ${tenantUserId}:`,
+            error
+        );
+        // Send generic error message
+        res.status(500).send({ message: "Lỗi xảy ra khi lấy danh sách phòng." });
+    }
+};
+
+
 exports.createRoom = async (req, res) => {
     const {
         TenPhong,

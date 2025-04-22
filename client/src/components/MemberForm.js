@@ -11,6 +11,8 @@ import Button from './Button';     // Đảm bảo import đúng đường dẫn
 // - onClose: Hàm gọi khi nhấn Quay lại/Hủy
 
 const MemberForm = ({ initialData, roomId, onSave, onClose }) => {
+    const loaiTaiKhoan = localStorage.getItem('loaiTaiKhoan'); // Lấy loại tài khoản từ localStorage
+    const isReadOnly = loaiTaiKhoan !== 'Chủ trọ'; // Kiểm tra xem có phải là chủ trọ hay không
     const docPhotoInputRef = useRef(null);
     const [formData, setFormData] = useState({
             roomId, fullName: '', cccd: '', phone: '', email: '', notes: '',
@@ -274,7 +276,7 @@ const MemberForm = ({ initialData, roomId, onSave, onClose }) => {
     return (
         <div style={{ padding: '20px' }}>
             <h3 style={{ textAlign: 'center', marginBottom: '25px', fontWeight: 'bold', fontSize: '1.3rem' }}>
-                {isEditMode ? 'Sửa thông tin thành viên' : 'Thêm thành viên mới'}
+                {isEditMode ? 'Thông tin thành viên' : 'Thêm thành viên mới'}
             </h3>
             {errorMessage && <div style={{ color: 'red', marginBottom: '15px', textAlign: 'center', fontWeight: 'bold', border: '1px solid red', padding: '10px', borderRadius: '4px' }}>{errorMessage}</div>}
 
@@ -283,77 +285,78 @@ const MemberForm = ({ initialData, roomId, onSave, onClose }) => {
 
                     {/* Cột 1 */}
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                        <FormField label="Họ và tên" id="fullName" name="fullName" required value={formData.fullName} onChange={handleChange} style={{ width: '100%', marginBottom: 0 }}/>
-                        <FormField label="CCCD" id="cccd" name="cccd" required value={formData.cccd} onChange={handleChange} style={{ width: '100%', marginBottom: 0 }}/>
-                        <FormField label="Số điện thoại" id="phone" name="phone" type="tel" required value={formData.phone} onChange={handleChange} style={{ width: '100%', marginBottom: 0 }}/>
-                        <FormField label="Email" id="email" name="email" type="email" value={formData.email} onChange={handleChange} style={{ width: '100%', marginBottom: 0 }}/>
-                        <FormField label="Ghi chú" id="notes" name="notes" style={{ width: '100%', marginBottom: 0 }}>
-                            <textarea id="notes" name="notes" value={formData.notes} onChange={handleChange} rows="5" style={{ width: '100%', padding: '8px 10px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', resize: 'vertical' }} />
+                    <FormField label="Họ và tên" id="fullName" name="fullName" required value={formData.fullName} onChange={handleChange} disabled={isReadOnly} />
+                    <FormField label="CCCD" id="cccd" name="cccd" required value={formData.cccd} onChange={handleChange} maxLength={12} disabled={isReadOnly} />
+                    <FormField label="Số điện thoại" id="phone" name="phone" type="tel" required value={formData.phone} onChange={handleChange} maxLength={11} disabled={isReadOnly} />
+                    <FormField label="Email" id="email" name="email" type="email" value={formData.email} onChange={handleChange} disabled={isReadOnly} />
+                    <FormField label="Ghi chú" id="notes" name="notes">
+                        <textarea
+                            id="notes"
+                            name="notes"
+                            value={formData.notes}
+                            onChange={handleChange}
+                            rows="5"
+                            style={{ width: '100%', padding: '8px 10px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', resize: 'vertical' }}
+                            disabled={isReadOnly}
+                            />
                         </FormField>
                     </div>
 
-                    {/* Cột 2 */}
+                    {/* --- Cột 2 --- */}
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                        <FormField label="Ngày sinh" id="dob" name="dob" type="date" required value={formData.dob} onChange={handleChange} style={{ width: '100%', marginBottom: 0 }}/>
-                        <FormField label="Giới tính" id="gender" required style={{ width: '100%', marginBottom: 0 }}>
+                        <FormField label="Ngày sinh" id="dob" name="dob" type="date" required value={formData.dob} onChange={handleChange} disabled={isReadOnly} />
+                        <FormField label="Giới tính" id="gender" required>
                             <div style={{ display: 'flex', alignItems: 'center', height: '38px' }}>
-                                <input type="radio" id="male" name="gender" value="Nam" checked={formData.gender === 'Nam'} onChange={handleChange} style={{ marginRight: '5px' }} />
+                                <input type="radio" id="male" name="gender" value="Nam" checked={formData.gender === 'Nam'} onChange={handleChange} style={{ marginRight: '5px' }} disabled={isReadOnly} />
                                 <label htmlFor="male" style={{ marginRight: '20px' }}>Nam</label>
-                                <input type="radio" id="female" name="gender" value="Nữ" checked={formData.gender === 'Nữ'} onChange={handleChange} style={{ marginRight: '5px' }} />
+                                <input type="radio" id="female" name="gender" value="Nữ" checked={formData.gender === 'Nữ'} onChange={handleChange} style={{ marginRight: '5px' }} disabled={isReadOnly} />
                                 <label htmlFor="female">Nữ</label>
                             </div>
                         </FormField>
-                        <FormField label="Ngày thuê" id="rentDate" name="rentDate" type="date" required value={formData.rentDate} onChange={handleChange} style={{ width: '100%', marginBottom: 0 }}/>
+                        <FormField label="Ngày thuê" id="rentDate" name="rentDate" type="date" required value={formData.rentDate} onChange={handleChange} disabled={isReadOnly} />
 
-                        {/* --- Phần Ảnh giấy tờ (Sử dụng label như cũ) --- */}
-                        <FormField label="Ảnh giấy tờ" id="documentPhotoWrapper" required style={{ width: '100%', marginBottom: 0 }}>
-                             {/* Bỏ children mặc định, tự render nội dung bên trong FormField */}
+                        {/* --- Ảnh giấy tờ --- */}
+                        <FormField label="Ảnh giấy tờ" id="documentPhotoWrapper" required={!isEditMode || !existingPhotoName}>
                             <>
-                                 {/* Input file ẩn */}
-                                 <input
-                                     type="file"
-                                     id="documentPhotoInput" // ID này phải khớp với label htmlFor
-                                     ref={docPhotoInputRef}
-                                     onChange={handleDocPhotoChange}
-                                     style={{ display: 'none' }}
-                                     accept="image/png, image/jpeg, image/jpg"
-                                 />
-                                 {/* Khu vực hiển thị ảnh và label trigger */}
-                                 <div style={{ border: '1px dashed #ccc', padding: '10px', borderRadius: '4px', textAlign: 'center' }}>
-                                     {/* Xem trước ảnh */}
-                                     {photoPreviewUrl && (
-                                         <img
-                                             src={photoPreviewUrl}
-                                             alt="Xem trước ảnh giấy tờ"
-                                             style={{ maxWidth: '100%', maxHeight: '150px', marginBottom: '10px', display: 'block', marginLeft: 'auto', marginRight: 'auto', border: '1px solid #eee' }}
-                                         />
-                                     )}
-
-                                     {/* Label hoạt động như nút upload, giống thiết kế gốc */}
-                                     <label htmlFor="documentPhotoInput" style={{ cursor: 'pointer', color: '#007bff', fontSize: '0.9rem', display: 'block' }}>
-                                         {/* Icon và Text */}
-                                         <span style={{fontSize: '1.5rem', display:'block', marginBottom: '3px'}}>↑</span>
-                                         Tải ảnh lên
-                                     </label>
-
-                                      {/* Hiển thị tên file (tùy chọn) */}
-                                      {(selectedDocPhoto || existingPhotoName) && (
+                                {/* Thêm thuộc tính disabled={isReadOnly} vào input file ẩn */}
+                                <input
+                                    type="file"
+                                    id="documentPhotoInput"
+                                    ref={docPhotoInputRef}
+                                    onChange={handleDocPhotoChange}
+                                    style={{ display: 'none' }}
+                                    accept="image/png, image/jpeg, image/jpg"
+                                    disabled={isReadOnly} // Thêm disable ở đây
+                                />
+                                <div style={{ border: '1px dashed #ccc', padding: '10px', borderRadius: '4px', textAlign: 'center', marginTop:'5px' }}>
+                                    {photoPreviewUrl && (
+                                        <img src={photoPreviewUrl} alt="Xem trước" style={{ maxWidth: '100%', maxHeight: '150px', marginBottom: '10px', display: 'block', marginLeft: 'auto', marginRight: 'auto', border: '1px solid #eee' }}/>
+                                    )}
+                                    {/* Logic này đã đúng: chỉ hiển thị label tải lên cho Chủ trọ */}
+                                    {loaiTaiKhoan === "Chủ trọ" && (
+                                        <label htmlFor="documentPhotoInput" style={{ cursor: isReadOnly ? 'default' : 'pointer', color: '#007bff', fontSize: '0.9rem', display: 'block', pointerEvents: isReadOnly ? 'none' : 'auto' }}> {/* Cập nhật style cho label khi bị disable */}
+                                            <span style={{ fontSize: '1.5rem', display: 'block', marginBottom: '3px' }}>↑</span> Tải ảnh lên
+                                        </label>
+                                    )}
+                                    {(selectedDocPhoto || existingPhotoName) && (
                                          <span style={fileInfoStyles}>
-                                             {selectedDocPhoto ? `Mới: ${selectedDocPhoto.name}` : `Hiện có: ${existingPhotoName}`}
+                                               {selectedDocPhoto ? `Mới: ${selectedDocPhoto.name}` : `Hiện có: ${existingPhotoName}`}
                                          </span>
                                      )}
-                                 </div>
-                             </>
+                                </div>
+                            </>
                         </FormField>
-                        
                     </div>
                 </div>
 
-                {/* Nút Lưu */}
                 <div style={{ marginTop: '30px', textAlign: 'center' }}>
-                    <Button type="submit" label='Lưu' class_name='green-btn btn' />
+                {loaiTaiKhoan === 'Chủ trọ' && (
+                  <Button type="submit" label='Cập nhật' class_name='green-btn btn' />  
+                )}
                     <button type="button" onClick={onClose} className="delete-btn btn">Quay lại</button>
-                </div>
+                    </div>
+
+                
             </form>
         </div>
     );

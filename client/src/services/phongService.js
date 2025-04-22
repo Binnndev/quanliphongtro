@@ -5,9 +5,9 @@ const api = axios.create({
 });
 
 // 1. Lấy danh sách room
-export const getDsPhong = async () => {
+export const getTenantRoom = async () => {
     const MaTK = localStorage.getItem("MaTK");
-    const response = await api.get(`/api/rooms/landlord/${MaTK}`);
+    const response = await api.get(`/api/rooms/tenant/${MaTK}`);
     return response.data;
 };
 

@@ -14,7 +14,8 @@ const ServiceTabContent = ({ roomId }) => {
     const [showQuantityPopup, setShowQuantityPopup] = useState(false);
   const [popupServiceInfo, setPopupServiceInfo] = useState(null); // Lưu thông tin DV cho popup
   const [isSavingUsage, setIsSavingUsage] = useState(false); // State loading khi lưu usage
-  const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const loaiTaiKhoan = localStorage.getItem("loaiTaiKhoan");
 
   useEffect(() => {
     if (roomId) {
@@ -196,9 +197,11 @@ const ServiceTabContent = ({ roomId }) => {
     <div className="service-tab">
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
   <h3 className="service-tab__title">Dịch vụ sử dụng</h3>
-  <button className="service-tab__btn-add" onClick={() => setShowAddModal(true)}>
+              {loaiTaiKhoan === "Chủ trọ" && (
+    <button className="service-tab__btn-add" onClick={() => setShowAddModal(true)}>
     + Thêm dịch vụ
-  </button>
+                  </button>
+  )}
 </div>
       {/* Bảng hiển thị */}
       <table className="service-tab__table">
@@ -209,7 +212,7 @@ const ServiceTabContent = ({ roomId }) => {
             <th>Đơn giá</th>
             <th>Đơn vị tính</th>
             <th>SL sử dụng (tháng)</th>{/* Sửa tiêu đề */}
-            <th>Hành động</th>
+            {loaiTaiKhoan === "Chủ trọ" && <th>Hành động</th>} {/* Chỉ hiển thị cho Chủ trọ */}
           </tr>
         </thead>
         <tbody>
@@ -217,7 +220,7 @@ const ServiceTabContent = ({ roomId }) => {
              <tr><td colSpan="6" style={{ textAlign: 'center' }}>Đang tải dữ liệu...</td></tr>
           ) : Array.isArray(services) && services.length > 0 ? (
             services.map((svc) => (
-              <tr key={`${svc.MaDV}-${svc.MaPhong}`}> {/* Key cần unique */}
+              <tr key={`${svc.MaDV}-${svc.MaPhong}`} > {/* Key cần unique */}
                 <td>{svc.TenHienThi || svc.TenDV}</td>
                 <td>{svc.LoaiDV}</td>
                 <td>{svc.isUtility ? svc.Gia.toLocaleString() : (svc.Gia ? svc.Gia.toLocaleString() : 'N/A')} đ</td> {/* Xử lý giá điện nước */}
@@ -229,40 +232,42 @@ const ServiceTabContent = ({ roomId }) => {
                      svc.SoLuong
                     }
                 </td>
-                <td>
-                  <div className="action-buttons">
-                    {/* Nút +: Chỉ hiển thị cho loại 'Theo số lượng' và không phải Điện/Nước */}
-                    {svc.LoaiDV === 'Theo số lượng' && !svc.isUtility && (
-                      <button
-                        className="service-tab__button-increment" // Giữ class cũ hoặc đổi tên
-                        onClick={() => handleOpenQuantityPopup(svc)}
-                        disabled={isLoading} // Disable khi đang load chung
-                        title="Thêm lượt sử dụng"
-                      >
-                        <FaPlus />
-                      </button>
-                    )}
-
-                    {/* Nút Xem chi tiết hóa đơn */}
-                    {/* Có thể không cần thiết cho điện nước ở đây? Tùy logic xem hóa đơn */}
-                    {/* {(!svc.isUtility || canViewUtilityInvoice) && ( */}
-                        
-                    {/* )} */}
-
-
-                    {/* Nút Xóa: Không cho xóa Điện/Nước */}
-                    {!svc.isUtility && (
+                    {loaiTaiKhoan === "Chủ trọ" && (
+                    <td>
+                    <div className="action-buttons">
+                      {/* Nút +: Chỉ hiển thị cho loại 'Theo số lượng' và không phải Điện/Nước */}
+                      {svc.LoaiDV === 'Theo số lượng' && !svc.isUtility && (
                         <button
-                            className="service-tab__button-delete"
-                            onClick={() => handleDeleteService(svc)}
-                            disabled={isLoading}
-                            title="Xóa đăng ký dịch vụ khỏi phòng" // Title rõ hơn
+                          className="service-tab__button-increment" // Giữ class cũ hoặc đổi tên
+                          onClick={() => handleOpenQuantityPopup(svc)}
+                          disabled={isLoading} // Disable khi đang load chung
+                          title="Thêm lượt sử dụng"
                         >
-                            <FaTrash />
+                          <FaPlus />
                         </button>
-                    )}
-                  </div>
-                </td>
+                      )}
+  
+                      {/* Nút Xem chi tiết hóa đơn */}
+                      {/* Có thể không cần thiết cho điện nước ở đây? Tùy logic xem hóa đơn */}
+                      {/* {(!svc.isUtility || canViewUtilityInvoice) && ( */}
+                          
+                      {/* )} */}
+  
+  
+                      {/* Nút Xóa: Không cho xóa Điện/Nước */}
+                      {!svc.isUtility && (
+                          <button
+                              className="service-tab__button-delete"
+                              onClick={() => handleDeleteService(svc)}
+                              disabled={isLoading}
+                              title="Xóa đăng ký dịch vụ khỏi phòng" // Title rõ hơn
+                          >
+                              <FaTrash />
+                          </button>
+                      )}
+                    </div>
+                        </td>
+                  )}
               </tr>
             ))
           ) : (

@@ -21,7 +21,7 @@ const formatCurrency = (value) => {
     }
   };
 
-const RoomItem = ({ room, loaiTaiKhoan, onEdit, onDelete, onAddTenant }) => {
+const RoomItem = ({ room, loaiTaiKhoan, onEdit, onDelete, onTenantAction }) => {
     // Ensure room object exists before trying to access properties
   if (!room) {
     return null; // Or return a placeholder/error component
@@ -61,13 +61,14 @@ const RoomItem = ({ room, loaiTaiKhoan, onEdit, onDelete, onAddTenant }) => {
         }
       };
     
-       const handleAddTenantClick = () => {
-        if (onAddTenant) {
-          onAddTenant(MaPhong); // Pass room ID back to parent handler
+      const handleTenantClick = (e) => {
+        e.stopPropagation();
+        if (MaPhong && onTenantAction) {
+            onTenantAction(MaPhong); // Gọi hàm từ props Home truyền xuống
         } else {
-          console.warn("onAddTenant handler not provided to RoomItem");
+             console.warn("onTenantAction handler not provided or room ID missing in RoomItem");
         }
-       };
+    };
     
     
 
@@ -106,13 +107,13 @@ const RoomItem = ({ room, loaiTaiKhoan, onEdit, onDelete, onAddTenant }) => {
             {/* Show "Thêm Khách" only if room is available */}
                       {isAvailable && (
                           <div style={{ marginBottom: '10px' }}>
-                              <button className="blue-btn-item btn" onClick={handleAddTenantClick}>Thêm Khách</button>
+                              <button className="blue-btn-item btn" onClick={handleTenantClick}>Thêm Khách</button>
                           </div>
                       )}
                       {isRented && (
                 /* Show "Xem Khách" if room is not available */
                 <div style={{ marginBottom: '10px' }}>
-                    <button className="blue-btn-item btn" onClick={handleAddTenantClick}>Xem thông tin thuê</button>
+                    <button className="blue-btn-item btn" onClick={handleTenantClick}>Xem thông tin thuê</button>
                 </div>
                       )}
                       
@@ -121,7 +122,14 @@ const RoomItem = ({ room, loaiTaiKhoan, onEdit, onDelete, onAddTenant }) => {
                           <button className="delete-btn-item btn" onClick={handleDeleteClick}>Xóa</button>
               </div>
             </div>
-          )}
+              )}
+              {!isLandlord && (
+                <div style={{ width: "100%", borderTop: '1px solid #eee', paddingTop: '15px', marginTop: 'auto' }}>
+                  <div style={{ marginBottom: '10px' }}>
+                      <button className="blue-btn-item btn" onClick={handleTenantClick}>Xem thông tin thuê</button>
+                  </div>
+                </div>
+              )}
     
            {/* View Mode for Tenant */}
            {!isLandlord && (

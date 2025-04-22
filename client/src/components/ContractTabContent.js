@@ -6,6 +6,7 @@ import axios from 'axios'; // Chỉ cần nếu gọi API trực tiếp (ví d�
 // Props: contractData, onSave, onTerminate, roomId
 const ContractTabContent = ({ contractData, onSave, onTerminate, roomId, representativeTenantId }) => {
     const fileInputRef = useRef(null);
+    const loaiTaiKhoan = localStorage.getItem("loaiTaiKhoan") || ''; // Lấy loại tài khoản từ localStorage
 
     // --- State ---
     const [mode, setMode] = useState('loading'); // 'loading', 'display', 'add', 'edit'
@@ -476,30 +477,32 @@ const ContractTabContent = ({ contractData, onSave, onTerminate, roomId, represe
                          </span>
                     </div>             
                      {/* === CÁC NÚT HÀNH ĐỘNG DỰA VÀO TRẠNG THÁI === */}
-                    <div style={{ textAlign: 'center', borderTop: '1px solid #eee', paddingTop: '20px' }}>
-                        {displayStatus === 'Có hiệu lực' && (
-                            <>
-                                 <button className='blue-btn btn' onClick={handleEditClick} disabled={isLoading}>Chỉnh sửa</button>
-                                 <button className='delete-btn btn' onClick={handleTerminateClick} disabled={isLoading}>Hủy hợp đồng</button>
-                                 <button className='green-btn btn' onClick={() => handleAddNewClick(true)} disabled={isLoading}>Gia hạn</button>
-                            </>
-                        )}
-                         {displayStatus === 'Hết hiệu lực' && (
+                     {loaiTaiKhoan === "Chủ trọ" && (
+                         <div style={{ textAlign: 'center', borderTop: '1px solid #eee', paddingTop: '20px' }}>
+                         {displayStatus === 'Có hiệu lực' && (
                              <>
-                                {/* Có thể vẫn cho tải file nếu muốn */}
-                                <button className='green-btn btn' onClick={() => handleAddNewClick(true)} disabled={isLoading}>Gia hạn</button>
-                                {/* Nút Thêm mới cũng có thể hiển thị ở đây nếu muốn */}
-                                 <button className='green-btn btn' onClick={() => handleAddNewClick(false)} disabled={isLoading}>Thêm mới</button>
+                                  <button className='blue-btn btn' onClick={handleEditClick} disabled={isLoading}>Chỉnh sửa</button>
+                                  <button className='delete-btn btn' onClick={handleTerminateClick} disabled={isLoading}>Hủy hợp đồng</button>
+                                  <button className='green-btn btn' onClick={() => handleAddNewClick(true)} disabled={isLoading}>Gia hạn</button>
                              </>
                          )}
-                         {displayStatus === 'Đã hủy' && (
-                            <>
-                                <p style={{fontStyle: 'italic', color: '#888', marginBottom: '15px'}}>Hợp đồng này đã bị hủy.</p>
-                                {/* Nút THÊM MỚI thay thế */}
-                                <button className='green-btn btn' onClick={() => handleAddNewClick(false)} disabled={isLoading}>Thêm mới</button>
-                            </>
-                         )}
-                    </div>
+                          {displayStatus === 'Hết hiệu lực' && (
+                              <>
+                                 {/* Có thể vẫn cho tải file nếu muốn */}
+                                 <button className='green-btn btn' onClick={() => handleAddNewClick(true)} disabled={isLoading}>Gia hạn</button>
+                                 {/* Nút Thêm mới cũng có thể hiển thị ở đây nếu muốn */}
+                                  <button className='green-btn btn' onClick={() => handleAddNewClick(false)} disabled={isLoading}>Thêm mới</button>
+                              </>
+                          )}
+                          {displayStatus === 'Đã hủy' && (
+                             <>
+                                 <p style={{fontStyle: 'italic', color: '#888', marginBottom: '15px'}}>Hợp đồng này đã bị hủy.</p>
+                                 {/* Nút THÊM MỚI thay thế */}
+                                 <button className='green-btn btn' onClick={() => handleAddNewClick(false)} disabled={isLoading}>Thêm mới</button>
+                             </>
+                          )}
+                     </div>
+                    )}
                      {/* === KẾT THÚC CÁC NÚT HÀNH ĐỘNG === */}
                  </div>
              </div>

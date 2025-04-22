@@ -14,11 +14,11 @@ import InvoiceDetailPopup from "../components/invoiceDetailPopup";
 import ServiceTabContent from "../components/ServiceTabContent";
 import MemberForm from "../components/MemberForm"; // Import form thành viên
 
-const RenterPage = () => {
+const RenterPage = ({ roomId, setPage }) => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { maChuTro } = location.state || {}; // Lấy MaChuTro từ state nếu có
-    const { roomId } = useParams(); // Lấy ID phòng từ URL
+    const loaiTaiKhoan = localStorage.getItem("loaiTaiKhoan");
+    // const roomId = localStorage.getItem("roomId"); // Lấy ID phòng từ URL
     console.log(roomId);  // Kiểm tra giá trị của roomId
 
     const [activeTab, setActiveTab] = useState('renter'); // Ví dụ bắt đầu ở tab thành viên
@@ -38,6 +38,8 @@ const RenterPage = () => {
     const [isChangingRepresentative, setIsChangingRepresentative] = useState(false); // State loading mới
     const [selectedService, setSelectedService] = useState(null);
     const [showInvoiceDetailPopup, setShowInvoiceDetailPopup] = useState(false);
+
+    
 
     // --- Gọi API để lấy dữ liệu ---
     useEffect(() => {
@@ -479,16 +481,11 @@ console.log("Data being sent:", Object.fromEntries(memberFormData)); // Xem dữ
     const activeTabStyle = { ...tabStyle, color: '#007bff', borderBottom: '3px solid #007bff' };
 
     return (
-        <div style={{ display: "flex", height: '100vh', overflow: 'hidden' }}>
+        <div style={{ display: "flex", height: '100vh', position: 'fixed', top:0, justifyContent: 'center', width: "100%", overflow: 'hidden' }}>
             {/* Sidebar */}
-             <div style={{ background: '#1B2428', width: "20%", minWidth: '250px', color: 'white', display: 'flex', flexDirection: 'column' }}>
-                 {/* ... code sidebar ... */}
-                 <div style={{ height: 84, background: '#1B2428', borderBottom: '1px #21373D solid', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 10px' }}>
-                     <AnimatedSignature text="QUẢN LÝ PHÒNG TRỌ" />
-                 </div>
-                 <div style={{ flexGrow: 1, overflowY: 'auto' }}> <MainContainer /> </div>
-                 <div style={{ padding: '15px', borderTop: '1px solid #21373D' }}> <input type="search" placeholder="Search" style={{ width: '100%', padding: '8px', borderRadius: '4px', border: 'none', background: '#2C3A40', color: 'white' }} /> </div>
-             </div>
+            
+
+            
 
             {/* Right Content Area */}
             <div style={{ width: '80%', display: 'flex', flexDirection: 'column', position: 'relative', background: '#F4F4F4' }}>
@@ -549,7 +546,9 @@ console.log("Data being sent:", Object.fromEntries(memberFormData)); // Xem dữ
                         {/* --- Kết thúc phần Tab --- */}
 
                         {/* Nút Quay lại */}
-                        <button className="delete-btn btn" onClick={() => navigate(-1)}>Quay lại</button>
+                        {loaiTaiKhoan === 'Chủ trọ' && (
+                            <button className="delete-btn btn" onClick={() => setPage('home')}>Quay lại</button>
+                        )}
                         
                     </div>
                 )}

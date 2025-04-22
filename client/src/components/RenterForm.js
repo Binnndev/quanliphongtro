@@ -12,7 +12,11 @@ import axios from 'axios';
 // - onDeleteRenter: Function (callback khi nhấn nút xóa/rời đi, nhận renterId làm tham số)
 const RenterForm = ({ renterData, roomId, onSaveSuccess, onDeleteRenter }) => {
     // const navigate = useNavigate(); // Có thể không cần navigate ở đây nữa
+    const loaiTaiKhoan = localStorage.getItem("loaiTaiKhoan"); // Lấy loại tài khoản từ localStorage
+    const isReadOnly = loaiTaiKhoan !== "Chủ trọ"; // Kiểm tra xem có phải chủ trọ không
+    console.log("RenterForm: Loại tài khoản:", loaiTaiKhoan); 
     const docPhotoInputRef = useRef(null);
+
 
     // Xác định chế độ hoạt động ban đầu
     const isEditMode = Boolean(renterData?.MaKhachThue || renterData?.id);
@@ -293,13 +297,14 @@ const RenterForm = ({ renterData, roomId, onSaveSuccess, onDeleteRenter }) => {
          backgroundColor: '#dc3545', color: 'white', padding: '10px 15px', border: 'none',
          borderRadius: '4px', cursor: 'pointer', fontSize: '0.9rem', marginLeft: '10px'
      };
+     
 
 
     // --- Render Form ---
     return (
         <div style={{ padding: '20px' }}>
             <h3 style={{ textAlign: 'center', marginBottom: '25px', fontWeight: 'bold', fontSize: '1.3rem' }}>
-                {isEditMode ? 'Cập nhật thông tin người thuê chính' : 'Thêm người thuê chính'}
+                {isEditMode ? 'Thông tin người thuê chính' : 'Thêm người thuê chính'}
             </h3>
             {errorMessage && (
                  <div style={{ color: 'white', backgroundColor: 'red', padding: '10px 15px', borderRadius: '4px', marginBottom: '15px', textAlign: 'center' }}>
@@ -311,40 +316,62 @@ const RenterForm = ({ renterData, roomId, onSaveSuccess, onDeleteRenter }) => {
                 <div style={{ display: 'flex', flexDirection: 'row', gap: '20px' }}>
                     {/* --- Cột 1 --- */}
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                        <FormField label="Họ và tên" id="fullName" name="fullName" required value={formData.fullName} onChange={handleChange} />
-                        <FormField label="CCCD" id="cccd" name="cccd" required value={formData.cccd} onChange={handleChange} maxLength={12} />
-                        <FormField label="Số điện thoại" id="phone" name="phone" type="tel" required value={formData.phone} onChange={handleChange} maxLength={11}/>
-                        <FormField label="Email" id="email" name="email" type="email" value={formData.email} onChange={handleChange} />
-                        <FormField label="Ghi chú" id="notes" name="notes">
-                            <textarea id="notes" name="notes" value={formData.notes} onChange={handleChange} rows="5" style={{ width: '100%', padding: '8px 10px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', resize: 'vertical' }} />
+                    <FormField label="Họ và tên" id="fullName" name="fullName" required value={formData.fullName} onChange={handleChange} disabled={isReadOnly} />
+                    <FormField label="CCCD" id="cccd" name="cccd" required value={formData.cccd} onChange={handleChange} maxLength={12} disabled={isReadOnly} />
+                    <FormField label="Số điện thoại" id="phone" name="phone" type="tel" required value={formData.phone} onChange={handleChange} maxLength={11} disabled={isReadOnly} />
+                    <FormField label="Email" id="email" name="email" type="email" value={formData.email} onChange={handleChange} disabled={isReadOnly} />
+                    <FormField label="Ghi chú" id="notes" name="notes">
+                        <textarea
+                            id="notes"
+                            name="notes"
+                            value={formData.notes}
+                            onChange={handleChange}
+                            rows="5"
+                            style={{ width: '100%', padding: '8px 10px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', resize: 'vertical' }}
+                            disabled={isReadOnly}
+                            />
                         </FormField>
                     </div>
 
                     {/* --- Cột 2 --- */}
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                        <FormField label="Ngày sinh" id="dob" name="dob" type="date" required value={formData.dob} onChange={handleChange} />
+                        <FormField label="Ngày sinh" id="dob" name="dob" type="date" required value={formData.dob} onChange={handleChange} disabled={isReadOnly} />
                         <FormField label="Giới tính" id="gender" required>
                             <div style={{ display: 'flex', alignItems: 'center', height: '38px' }}>
-                                <input type="radio" id="male" name="gender" value="Nam" checked={formData.gender === 'Nam'} onChange={handleChange} style={{ marginRight: '5px' }} /> <label htmlFor="male" style={{ marginRight: '20px' }}>Nam</label>
-                                <input type="radio" id="female" name="gender" value="Nữ" checked={formData.gender === 'Nữ'} onChange={handleChange} style={{ marginRight: '5px' }} /> <label htmlFor="female">Nữ</label>
+                                <input type="radio" id="male" name="gender" value="Nam" checked={formData.gender === 'Nam'} onChange={handleChange} style={{ marginRight: '5px' }} disabled={isReadOnly} />
+                                <label htmlFor="male" style={{ marginRight: '20px' }}>Nam</label>
+                                <input type="radio" id="female" name="gender" value="Nữ" checked={formData.gender === 'Nữ'} onChange={handleChange} style={{ marginRight: '5px' }} disabled={isReadOnly} />
+                                <label htmlFor="female">Nữ</label>
                             </div>
                         </FormField>
-                        <FormField label="Ngày thuê" id="rentDate" name="rentDate" type="date" required value={formData.rentDate} onChange={handleChange} />
+                        <FormField label="Ngày thuê" id="rentDate" name="rentDate" type="date" required value={formData.rentDate} onChange={handleChange} disabled={isReadOnly} />
 
                         {/* --- Ảnh giấy tờ --- */}
-                         <FormField label="Ảnh giấy tờ" id="documentPhotoWrapper" required={!isEditMode || !existingPhotoName}>
+                        <FormField label="Ảnh giấy tờ" id="documentPhotoWrapper" required={!isEditMode || !existingPhotoName}>
                             <>
-                                <input type="file" id="documentPhotoInput" ref={docPhotoInputRef} onChange={handleDocPhotoChange} style={{ display: 'none' }} accept="image/png, image/jpeg, image/jpg" />
+                                {/* Thêm thuộc tính disabled={isReadOnly} vào input file ẩn */}
+                                <input
+                                    type="file"
+                                    id="documentPhotoInput"
+                                    ref={docPhotoInputRef}
+                                    onChange={handleDocPhotoChange}
+                                    style={{ display: 'none' }}
+                                    accept="image/png, image/jpeg, image/jpg"
+                                    disabled={isReadOnly} // Thêm disable ở đây
+                                />
                                 <div style={{ border: '1px dashed #ccc', padding: '10px', borderRadius: '4px', textAlign: 'center', marginTop:'5px' }}>
                                     {photoPreviewUrl && (
                                         <img src={photoPreviewUrl} alt="Xem trước" style={{ maxWidth: '100%', maxHeight: '150px', marginBottom: '10px', display: 'block', marginLeft: 'auto', marginRight: 'auto', border: '1px solid #eee' }}/>
                                     )}
-                                    <label htmlFor="documentPhotoInput" style={{ cursor: 'pointer', color: '#007bff', fontSize: '0.9rem', display: 'block' }}>
-                                        <span style={{ fontSize: '1.5rem', display: 'block', marginBottom: '3px' }}>↑</span> Tải ảnh lên
-                                    </label>
-                                     {(selectedDocPhoto || existingPhotoName) && (
+                                    {/* Logic này đã đúng: chỉ hiển thị label tải lên cho Chủ trọ */}
+                                    {loaiTaiKhoan === "Chủ trọ" && (
+                                        <label htmlFor="documentPhotoInput" style={{ cursor: isReadOnly ? 'default' : 'pointer', color: '#007bff', fontSize: '0.9rem', display: 'block', pointerEvents: isReadOnly ? 'none' : 'auto' }}> {/* Cập nhật style cho label khi bị disable */}
+                                            <span style={{ fontSize: '1.5rem', display: 'block', marginBottom: '3px' }}>↑</span> Tải ảnh lên
+                                        </label>
+                                    )}
+                                    {(selectedDocPhoto || existingPhotoName) && (
                                          <span style={fileInfoStyles}>
-                                             {selectedDocPhoto ? `Mới: ${selectedDocPhoto.name}` : `Hiện có: ${existingPhotoName}`}
+                                               {selectedDocPhoto ? `Mới: ${selectedDocPhoto.name}` : `Hiện có: ${existingPhotoName}`}
                                          </span>
                                      )}
                                 </div>
@@ -354,7 +381,8 @@ const RenterForm = ({ renterData, roomId, onSaveSuccess, onDeleteRenter }) => {
                 </div>
 
                 {/* --- Nút Lưu và Xóa --- */}
-                <div style={{ marginTop: '30px', textAlign: 'center', borderTop: '1px solid #eee', paddingTop: '20px' }}>
+                {loaiTaiKhoan === "Chủ trọ" && (
+                    <div style={{ marginTop: '30px', textAlign: 'center', borderTop: '1px solid #eee', paddingTop: '20px' }}>
                     <Button type="submit" label={isEditMode ? 'Cập nhật' : 'Thêm mới'} class_name='green-btn btn' disabled={isLoading} />
                     {/* Chỉ hiển thị nút xóa/rời đi khi đang ở chế độ sửa */}
                     {isEditMode && (
@@ -364,7 +392,8 @@ const RenterForm = ({ renterData, roomId, onSaveSuccess, onDeleteRenter }) => {
                     )}
                      {/* Có thể thêm nút Hủy/Quay lại nếu cần */}
                      {/* <button type="button" onClick={() => navigate(-1)} className="gray-btn btn" style={{marginLeft: '10px'}} disabled={isLoading}>Quay lại</button> */}
-                </div>
+                    </div>
+                )}
             </form>
         </div>
     );

@@ -7,11 +7,13 @@ import Button from "../components/Button";
 import DichVuIndex from "../components/DichVuIndex";
 import { useNavigate } from "react-router-dom";
 import { isAuthenticated } from "../services/authService";
+import TenantDashboard from "../components/TenantDashboard";
 import Home from "./home";
 import RoomTypeIndex from "../components/RoomTypeIndex";
 import DienNuoc from "../components/DienNuocIndex";
 import PaymentIndex from "../components/PaymentIndex";
 import ThongKe from "../components/ThongKe";
+import Renter from "./Renter";
 import axios from "axios";
 import {
     getDsPhong,
@@ -39,6 +41,7 @@ const Homepage = () => {
     const [isOpen, setIsOpen] = useState(false);
 
     const [page, setPage] = useState("home");
+    const [selectedRoomIdForTenant, setSelectedRoomIdForTenant] = useState(null);
     
     // State for rental houses
     const [rentalHouses, setRentalHouses] = useState([]);
@@ -192,60 +195,6 @@ const Homepage = () => {
         // setPage('home');
         console.log("Selected House ID:", houseId);
     };
-  const fetchRooms = async () => {
-    try {
-      const dsPhong = await getDsPhong();
-      setRooms(dsPhong);
-    } catch (error) {
-      console.error("Lỗi khi lấy danh sách room:", error);
-    }
-  };
-
-  const handleThemPhong = async () => {
-    // Ví dụ: thêm phòng demo
-    const phongMoi = {
-      roomName: "Room Demo",
-      description: "Mô tả phòng demo",
-      price: 1000000,
-      rented: false,
-      amenities: "WiFi, Điều hòa",
-    };
-    try {
-      const result = await themPhong(phongMoi);
-      console.log("Thêm room thành công:", result);
-      setRooms([...rooms, result]);
-    } catch (error) {
-      console.error("Lỗi khi thêm room:", error);
-    }
-  };
-
-  const handleSuaNha = async (id) => {
-    // Ví dụ: sửa thông tin phòng
-    const dataCapNhat = {
-      roomName: "Room Edited",
-      description: "Cập nhật mô tả cho room",
-      price: 2000000,
-      rented: true,
-      amenities: "WiFi, TV",
-    };
-    try {
-      const result = await suaPhong(id, dataCapNhat);
-      console.log("Sửa room thành công:", result);
-      setRooms(rooms.map((room) => (room.id === id ? result : room)));
-    } catch (error) {
-      console.error("Lỗi khi sửa room:", error);
-    }
-  };
-
-  const handleXoaPhong = async (id) => {
-    try {
-      const result = await xoaPhong(id);
-      console.log("Xóa room thành công:", result);
-      setRooms(rooms.filter((room) => room.id !== id));
-    } catch (error) {
-      console.error("Lỗi khi xóa room:", error);
-    }
-  };
     
     console.log("Homepage RENDER - current selectedHouseId STATE:", selectedHouseId); // <-- ADD THIS LOG
     
@@ -490,6 +439,11 @@ const Homepage = () => {
     };
     // --- KẾT THÚC HÀM XỬ LÝ MODAL LOẠI PHÒNG ---
 
+    const handleNavigateToAddTenant = (roomId) => {
+        console.log("Navigating to Add Tenant page for room:", roomId);
+        navigate(`/room/${roomId}/tenants`); // Navigate to the add route
+    };
+
     const modalOverlayStyle = {
         position: 'fixed',
         top: 0,
@@ -699,7 +653,9 @@ const Homepage = () => {
                                 borderBottom: "1px #D2D2D2 solid",
                             }}
                         >
-                            {page === "home" && <Home selectedHouseId={selectedHouseId} />}
+                            {page === "home" && loaiTaiKhoan === "Chủ trọ" && <Home selectedHouseId={selectedHouseId} setPage={setPage}
+                                setSelectedRoomIdForTenant={setSelectedRoomIdForTenant} />}
+                            {page === "home" && loaiTaiKhoan === "Khách thuê" && <TenantDashboard onSelectPage={setPage} />}
                             {page === "loaiPhong" && loaiTaiKhoan === "Chủ trọ" && (
                             <RoomTypeIndex
                                 // selectedHouseId={selectedHouseId} // <= BỎ ĐI
@@ -716,6 +672,25 @@ const Homepage = () => {
                             {page === "dichVu" && selectedHouse?.MaChuTro && <DichVuIndex maChuTro={selectedHouse.MaChuTro} />}
                             {page === "thongbao" && <NotificationManagementPage/>}
                             {page === "thongke" && <ThongKe />}
+                            {page === "khachthue" && loaiTaiKhoan === "Chủ trọ" && selectedRoomIdForTenant &&
+                            <Renter roomId={selectedRoomIdForTenant} setPage={setPage} />
+                            
+                            }
+                            {page === "khachthue" && loaiTaiKhoan === "Khách thuê" &&
+                            (() => { // Sử dụng IIFE để đọc localStorage và xử lý logic
+                                const tenantRoomId = localStorage.getItem("roomId");
+                                console.log("Homepage rendering 'khachthue' for Tenant, roomId from localStorage:", tenantRoomId); // Kiểm tra
+                                if (tenantRoomId) {
+                                    // Render RenterPage với roomId lấy từ localStorage
+                                    // Truyền setPage nếu RenterPage của khách thuê cũng cần nút quay lại Home
+                                    return <Renter roomId={tenantRoomId} setPage={setPage} />;
+                                } else {
+                                    // Xử lý trường hợp không tìm thấy roomId (có thể dashboard chưa kịp lưu)
+                                    console.warn("Homepage: Could not find tenant roomId in localStorage for RenterPage.");
+                                    return <div style={{padding: '20px', textAlign: 'center', color: 'red'}}>Lỗi: Không tìm thấy thông tin phòng. Vui lòng quay lại trang chủ hoặc thử lại.</div>;
+                                }
+                            })()
+                        }
                         </div>
                     </div>
                 </div>

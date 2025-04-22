@@ -1286,3 +1286,208 @@ box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
       opacity: 0.7;
       cursor: not-allowed;
   }
+
+
+  /* src/components/TenantDashboard.css */
+
+/* Container chính của Dashboard */
+.tenant-dashboard {
+    display: flex;
+    flex-wrap: wrap; /* Cho phép các card xuống dòng */
+    gap: 25px; /* Khoảng cách giữa các card */
+    padding: 25px; /* Padding xung quanh dashboard */
+    margin-top: 80px;
+    width: 100%;
+    height: 100%;
+    overflow-y: auto; /* Cho phép cuộn nếu nội dung quá dài */
+    align-content: flex-start; /* Căn các card lên trên khi xuống dòng */
+    background-color: #f8f9fa; /* Màu nền xám rất nhạt cho khu vực dashboard */
+  }
+  
+  /* Tiêu đề chào mừng */
+  .dashboard-header {
+    width: 100%;
+    margin-bottom: 5px; /* Giảm khoảng cách dưới */
+    font-size: 1.8em;
+    color: #343a40; /* Màu chữ đậm */
+    font-weight: 600;
+  }
+  
+  /* Dòng chữ phụ giới thiệu phòng */
+  .dashboard-subheader {
+    width: 100%;
+    margin-top: 0px; /* Bỏ margin trên */
+    margin-bottom: 25px; /* Khoảng cách trước các card */
+    color: #6c757d; /* Màu xám cho chữ phụ */
+    font-size: 1.1em;
+  }
+  
+  .dashboard-subheader strong {
+    color: #0d6efd; /* Màu xanh dương nổi bật cho tên phòng */
+    font-weight: 600;
+  }
+  
+  /* Kiểu dáng chung cho các Card */
+  .dashboard-card {
+    background: #ffffff; /* Nền trắng */
+    padding: 20px 25px;
+    border-radius: 12px; /* Bo góc nhiều hơn */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); /* Shadow rõ hơn chút */
+    margin-bottom: 15px;
+    /* width: calc(50% - 12.5px); */ /* Layout 2 cột (tính toán lại gap) */
+    width: calc(33.333% - 17px); /* Layout 3 cột (tính toán lại gap) */
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; /* Hiệu ứng mượt hơn */
+  }
+  
+  /* Hiệu ứng khi hover vào card */
+  .dashboard-card:hover {
+    transform: translateY(-5px); /* Nâng card lên một chút */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  }
+  
+  /* Tiêu đề của Card (H3) */
+  .dashboard-card h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #0d6efd; /* Màu xanh dương chủ đạo */
+    font-size: 1.25em; /* To hơn một chút */
+    font-weight: 600;
+    display: flex; /* Để icon và chữ căn giữa */
+    align-items: center;
+    gap: 10px; /* Khoảng cách giữa icon và chữ */
+    border-bottom: 1px solid #e9ecef; /* Đường kẻ mờ */
+    padding-bottom: 10px;
+  }
+  
+  /* Icon trong tiêu đề card */
+  .dashboard-card h3 svg {
+    font-size: 1.1em; /* Kích thước icon vừa phải */
+    color: #0d6efd; /* Cùng màu với tiêu đề */
+  }
+  
+  /* Nội dung trong Card (P) */
+  .dashboard-card p {
+    margin: 8px 0 12px 0; /* Điều chỉnh khoảng cách */
+    color: #495057; /* Màu chữ tối hơn */
+    line-height: 1.6; /* Tăng chiều cao dòng cho dễ đọc */
+    /* flex-grow: 1; Cho phép text chiếm không gian */
+  }
+  
+  /* Chữ được nhấn mạnh (Strong) */
+  .dashboard-card strong {
+    color: #212529; /* Màu đen */
+    font-weight: 600;
+  }
+  
+  /* Highlight đặc biệt */
+  .highlight-overdue {
+    color: #dc3545 !important; /* Màu đỏ cảnh báo */
+    font-weight: bold;
+  }
+  
+  .highlight-unread {
+      color: #fd7e14 !important; /* Màu cam cho thông báo chưa đọc */
+      font-weight: bold;
+  }
+  
+  .latest-notification {
+    font-style: italic;
+    color: #6c757d;
+    font-size: 0.95em;
+    margin-top: 8px;
+  }
+  
+  /* Kiểu dáng chung cho các nút */
+  .dashboard-button {
+    padding: 10px 20px; /* Nút to hơn */
+    border: none;
+    border-radius: 8px; /* Bo góc */
+    cursor: pointer;
+    margin-top: 15px;
+    font-weight: 500;
+    font-size: 0.95em;
+    transition: all 0.2s ease; /* Hiệu ứng cho tất cả thuộc tính */
+    align-self: flex-start; /* Căn nút về bên trái */
+    display: inline-flex; /* Để căn icon và text */
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .dashboard-button svg {
+      font-size: 1.1em; /* Icon trong nút */
+  }
+  
+  /* Nút chính (Xem Hóa Đơn, Xem Tất Cả...) */
+  .dashboard-button.primary {
+    background-color: #0d6efd; /* Màu xanh dương */
+    color: white;
+    box-shadow: 0 2px 4px rgba(13, 110, 253, 0.3);
+  }
+  .dashboard-button.primary:hover {
+    background-color: #0b5ed7;
+    box-shadow: 0 4px 8px rgba(13, 110, 253, 0.4);
+    transform: translateY(-1px);
+  }
+  
+  /* Nút phụ (Xem Lịch Sử...) */
+  .dashboard-button.secondary {
+    background-color: #6c757d; /* Màu xám */
+    color: white;
+     box-shadow: 0 2px 4px rgba(108, 117, 125, 0.2);
+  }
+  .dashboard-button.secondary:hover {
+    background-color: #5a6268;
+    box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+    transform: translateY(-1px);
+  }
+  
+  /* Nút thông tin (Xem Lịch Sử Nước...) */
+  .dashboard-button.info {
+    background-color: #0dcaf0; /* Màu xanh ngọc */
+    color: #000; /* Chữ đen cho dễ đọc trên nền sáng */
+     box-shadow: 0 2px 4px rgba(13, 202, 240, 0.2);
+  }
+  .dashboard-button.info:hover {
+    background-color: #0baccc;
+    box-shadow: 0 4px 8px rgba(13, 202, 240, 0.3);
+    transform: translateY(-1px);
+  }
+  
+  /* Container cho các nút Điện/Nước */
+  .utility-buttons {
+    display: flex;
+    flex-direction: column; /* Xếp nút dọc */
+    gap: 10px;
+    margin-top: 15px;
+    align-items: flex-start; /* Căn các nút về bên trái */
+  }
+  
+  .utility-buttons .dashboard-button {
+    margin-top: 0; /* Bỏ margin top riêng của nút trong group */
+  }
+  
+  /* Kiểu dáng cho Loading / Error */
+  .dashboard-loading,
+  .dashboard-error {
+    padding: 40px 20px;
+    text-align: center;
+    width: 100%;
+    font-size: 1.1em;
+    border-radius: 8px;
+  }
+  .dashboard-loading {
+      color: #6c757d;
+  }
+  .dashboard-error {
+    color: #842029; /* Màu chữ đỏ đậm */
+    background-color: #f8d7da; /* Nền hồng nhạt */
+    border: 1px solid #f5c2c7;
+  }
+  
+  /* Thêm CSS cho spinner nếu bạn dùng thư viện spinner */
+  /* Ví dụ:
+  .spinner { ... }
+  */

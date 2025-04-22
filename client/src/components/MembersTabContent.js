@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom";
 import Button from './Button';
 import axios from 'axios'; // Thêm axios nếu cần gọi API
 // import { FaEdit, FaTrashAlt } from 'react-icons/fa'; // Bỏ comment nếu dùng react-icons
-import { FaEdit, FaTrashAlt, FaUserCheck } from 'react-icons/fa'; // Thêm icon mới
+import { FaEdit, FaTrashAlt, FaUserCheck, FaEye } from 'react-icons/fa'; // Thêm icon mới
 
 // --- Component hiển thị nội dung cho Tab Thành viên ---
 const MembersTabContent = ({ members, onAddMemberClick, onEditMemberClick, onDeleteMember, onChangeRepresentative, currentRepresentativeId, maxOccupancy }) => {
     const navigate = useNavigate(); // Vẫn giữ nếu cần cho việc khác
+    const loaiTaiKhoan = localStorage.getItem("loaiTaiKhoan"); // Lấy loại tài khoản từ localStorage nếu cần
 
     // Gọi prop function thay vì xử lý trực tiếp
     const handleAddMember = () => {
@@ -98,7 +99,9 @@ const MembersTabContent = ({ members, onAddMemberClick, onEditMemberClick, onDel
             {/* Tiêu đề và Nút Thêm */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                  <h3 style={{ margin: 0, fontWeight: 'bold', fontSize: '1.2rem' }}>Danh sách thành viên</h3>
-                 <button className='green-btn btn' onClick={handleAddMember}>+ Thêm thành viên</button>
+                {loaiTaiKhoan === "Chủ trọ" && (
+                    <button className='green-btn btn' onClick={handleAddMember}>+ Thêm thành viên</button>
+                )}
             </div>
 
             {/* Bảng dữ liệu */}
@@ -135,29 +138,38 @@ const MembersTabContent = ({ members, onAddMemberClick, onEditMemberClick, onDel
                                         <td style={{ ...tdLeftStyle, maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={member.GhiChu || ''}>
                                             {member.GhiChu || 'N/A'}
                                         </td>
-                                        <td style={{ ...tdCenterStyle, whiteSpace: 'nowrap' }}>
-                                            {/* Nút Sửa */}
-                                            <button onClick={() => handleEditMember(member)} style={{ ...actionButtonStyle, color: '#007bff' }} title="Sửa">
-                                                <FaEdit />
-                                            </button>
-                                            {/* Nút Xóa (Đánh dấu rời đi) */}
-                                            <button onClick={() => handleDeleteMember(member)} style={{ ...actionButtonStyle, color: '#dc3545' }} title="Đánh dấu rời đi">
-                                                <FaTrashAlt />
-                                            </button>
-
-                                            {/* === NÚT MỚI: ĐẶT LÀM NGƯỜI ĐẠI DIỆN === */}
-                                            {/* Chỉ hiển thị nếu có hàm xử lý và thành viên này KHÔNG phải là đại diện hiện tại */}
-                                            {onChangeRepresentative && !isCurrentRep && (
-                                                <button
-                                                    onClick={() => handleChangeRepresentativeClick(member)}
-                                                    style={{ ...actionButtonStyle, color: '#28a745' }} // Màu xanh lá cây
-                                                    title="Đặt làm người đại diện"
-                                                >
-                                                    <FaUserCheck />
+                                        {loaiTaiKhoan === "Chủ trọ" ? (
+                                            <td style={{ ...tdCenterStyle, whiteSpace: 'nowrap' }}>
+                                                {/* Nút Sửa */}
+                                                <button onClick={() => handleEditMember(member)} style={{ ...actionButtonStyle, color: '#007bff' }} title="Sửa">
+                                                    <FaEdit />
                                                 </button>
-                                            )}
-                                            {/* ====================================== */}
-                                        </td>
+                                                {/* Nút Xóa (Đánh dấu rời đi) */}
+                                                <button onClick={() => handleDeleteMember(member)} style={{ ...actionButtonStyle, color: '#dc3545' }} title="Đánh dấu rời đi">
+                                                    <FaTrashAlt />
+                                                </button>
+
+                                                {/* === NÚT MỚI: ĐẶT LÀM NGƯỜI ĐẠI DIỆN === */}
+                                                {/* Chỉ hiển thị nếu có hàm xử lý và thành viên này KHÔNG phải là đại diện hiện tại */}
+                                                {onChangeRepresentative && !isCurrentRep && (
+                                                    <button
+                                                        onClick={() => handleChangeRepresentativeClick(member)}
+                                                        style={{ ...actionButtonStyle, color: '#28a745' }} // Màu xanh lá cây
+                                                        title="Đặt làm người đại diện"
+                                                    >
+                                                        <FaUserCheck />
+                                                    </button>
+                                                )}
+                                            </td>
+                                        ) : (
+                                        // Nếu không phải Chủ trọ, hiển thị thông báo "Bạn không có quyền"
+                                                <td style={{ ...tdCenterStyle, whiteSpace: 'nowrap'}}> {/* Thêm style cho text thông báo */}
+                                                    <button onClick={() => handleEditMember(member)} style={{ ...actionButtonStyle, color: '#007bff' }} title="Xem">
+                                                    <FaEye />
+                                                </button>
+                                                </td>
+                                        )}
+                                        
                                     </tr>
                                 );
                             })
