@@ -213,7 +213,7 @@ const PaymentIndex = (landlordId) => {
                   <button className="payment-index__action--view" onClick={() => handleViewInvoice(item.MaHoaDon)}>
                     <i className="fa fa-eye" />
                   </button>
-                  {item.ConLai > 0 && phanQuyen === "Chủ trọ" && (
+                  {item.ConLai > 0 && (
                     <button className="payment-index__action--pay" onClick={() => setConfirmPayId(item.MaHoaDon)}>
                       <i className="fa fa-money-bill" />
                     </button>
