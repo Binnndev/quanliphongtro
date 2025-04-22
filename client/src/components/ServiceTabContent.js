@@ -6,7 +6,7 @@ import InvoiceDetailPopup from "./invoiceDetailPopup";
 import AddRoomServiceModal from "./AddRoomServiceModal";
 import QuantityInputPopup from "./QuantityInputPopup";
 
-const ServiceTabContent = ({ roomId, renterId }) => {
+const ServiceTabContent = ({ roomId }) => {
   const [services, setServices] = useState([]);
   const [invoiceDetail, setInvoiceDetail] = useState(null);
   const [showPopup, setShowPopup] = useState(false);

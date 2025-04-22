@@ -591,10 +591,10 @@ console.log("Data being sent:", Object.fromEntries(memberFormData)); // Xem dữ
                                     representativeTenantId={renterData?.MaKhachThue || renterData?.id}
                            />
                             )}
-                            {activeTab === 'serice' && (
+                            {activeTab === 'service' && (
                                 <ServiceTabContent
                                 roomId={roomId}
-                                    onViewInvoiceDetail={handleViewInvoiceDetail}
+                                    // onViewInvoiceDetail={handleViewInvoiceDetail}
                                 />
                             )}
                          </>
