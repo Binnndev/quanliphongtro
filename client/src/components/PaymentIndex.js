@@ -124,7 +124,7 @@ const PaymentIndex = (landlordId) => {
 
     try {
       await axios.post('/api/notifications', {
-        MaNguoiGui: landlordId,
+        MaNguoiGui: landlordId.landlordId,
         MaNguoiNhan: invoiceToSend.maTKKhachThue,
         TieuDe: title,
         NoiDung: content,
