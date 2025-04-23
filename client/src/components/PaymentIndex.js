@@ -249,27 +249,47 @@ const PaymentIndex = (landlordId) => {
   <div className="popup-overlay">
     <div className="popup-box">
       <h3>Chọn phương thức thanh toán</h3>
+
       <select value={payMethod} onChange={(e) => setPayMethod(e.target.value)}>
         <option value="">-- Chọn phương thức --</option>
         {methodList.map((m) => (
-          <option key={m.MaPTTT} value={m.MaPTTT}>{m.TenPTTT}</option>
+          <option key={m.MaPTTT} value={m.MaPTTT}>
+            {m.TenPTTT}
+          </option>
         ))}
       </select>
 
-      {payMethod && methodList.find(m => m.MaPTTT == payMethod)?.TenPTTT.includes("Chuyển khoản") && (
+      {payMethod !== "" && methodList.find(m => m.MaPTTT == payMethod)?.TenPTTT.includes("Chuyển khoản") && (
         <div style={{ marginTop: 20 }}>
           <p><strong>Quét mã QR để chuyển khoản:</strong></p>
-          <img src="https://scontent.fsgn2-5.fna.fbcdn.net/v/t1.15752-9/491027177_1647079742595966_5244243642253545871_n.png?_nc_cat=104&ccb=1-7&_nc_sid=9f807c&_nc_ohc=M1JioS_67J0Q7kNvwHPBa78&_nc_oc=AdkHd8Oc-lusM1VGKF74EHBmDF8DaEDYoo2M2FOzA2CpP4fTWZxs6_P9psbE1bHSeBpKkCc_Tl_d2OOIQ5nANo2o&_nc_zt=23&_nc_ht=scontent.fsgn2-5.fna&oh=03_Q7cD2AEAeV_9pYa73cI8yPjTL19Aj2KCT7B2yV_aTXPz4ceC_g&oe=682F36D1" alt="QR code" style={{ width: 200, height: 200 }} />
+          <img
+            src="https://scontent.fsgn2-5.fna.fbcdn.net/v/t1.15752-9/491027177_1647079742595966_5244243642253545871_n.png?_nc_cat=104&ccb=1-7&_nc_sid=9f807c&_nc_ohc=M1JioS_67J0Q7kNvwHPBa78&_nc_oc=AdkHd8Oc-lusM1VGKF74EHBmDF8DaEDYoo2M2FOzA2CpP4fTWZxs6_P9psbE1bHSeBpKkCc_Tl_d2OOIQ5nANo2o&_nc_zt=23&_nc_ht=scontent.fsgn2-5.fna&oh=03_Q7cD2AEAeV_9pYa73cI8yPjTL19Aj2KCT7B2yV_aTXPz4ceC_g&oe=682F36D1"
+            alt="QR code"
+            style={{ width: 200, height: 200 }}
+          />
           <p style={{ marginTop: 10 }}>Ngân hàng: Vietcombank</p>
           <p>Số tài khoản: 0123456789</p>
           <p>Chủ tài khoản: NGUYEN VAN A</p>
         </div>
       )}
 
-      <div className="popup-actions" style={{ marginTop: 20 }}>
-        <button className="btn green" disabled={!payMethod} onClick={handlePayInvoice}>Tôi đã chuyển khoản</button>
-        <button className="btn gray" onClick={() => setConfirmPayId(null)}>Hủy</button>
-      </div>
+      {payMethod !== "" && methodList.find(m => m.MaPTTT == payMethod)?.TenPTTT.includes("Tiền mặt") && (
+        <div style={{ marginTop: 20 }}>
+          <p><strong>Bạn đã đưa tiền cho chủ trọ chưa?</strong></p>
+          <p>Ấn “Tôi đã đưa tiền” để xác nhận thanh toán.</p>
+        </div>
+      )}
+
+      {payMethod !== "" && (
+        <div className="popup-actions" style={{ marginTop: 20 }}>
+          <button className="btn green" onClick={handlePayInvoice}>
+            {methodList.find(m => m.MaPTTT == payMethod)?.TenPTTT.includes("Chuyển khoản")
+              ? "Tôi đã chuyển khoản"
+              : "Tôi đã đưa tiền"}
+          </button>
+          <button className="btn gray" onClick={() => setConfirmPayId(null)}>Hủy</button>
+        </div>
+      )}
     </div>
   </div>
 )}
