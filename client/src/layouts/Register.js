@@ -212,22 +212,57 @@ export default function Register() {
             <>
               {formData.LoaiTaiKhoan === "Chủ Trọ" ? (
                 <>
-                  <h2 className="text-center text-white text-2xl mb-6">
-                    Thông Tin Chủ Trọ
-                  </h2>
-                  <Input label="Họ tên" name="HoTen" />
-                  <Input label="Số điện thoại" name="SoDienThoai" />
-                  <Input label="Email" name="Email" />
-                  <Input label="Địa chỉ" name="DiaChi" />
+                  <h2>Thông Tin Chủ Trọ</h2>
+                  <Input
+                    label="Họ tên"
+                    name="HoTen"
+                    value={formData.HoTen}
+                    onChange={handleChange}
+                    error={errors.HoTen}
+                  />
+                  <Input
+                    label="Số điện thoại"
+                    name="SoDienThoai"
+                    value={formData.SoDienThoai}
+                    onChange={handleChange}
+                    error={errors.SoDienThoai}
+                  />
+                  <Input
+                    label="Email"
+                    name="Email"
+                    type="email"
+                    value={formData.Email}
+                    onChange={handleChange}
+                    error={errors.Email}
+                  />
+                  <Input
+                    label="Địa chỉ"
+                    name="DiaChi"
+                    value={formData.DiaChi}
+                    onChange={handleChange}
+                    error={errors.DiaChi}
+                  />
                 </>
               ) : (
                 <>
-                  <h2 className="text-center text-white text-2xl mb-6">
-                    Thông Tin Khách Thuê
-                  </h2>
-                  <Input label="CCCD" name="CCCD" />
-                  <Input label="Ngày sinh" name="NgaySinh" type="date" />
+                  <h2>Thông Tin Khách Thuê</h2>
+                  <Input
+                    label="CCCD"
+                    name="CCCD"
+                    value={formData.CCCD}
+                    onChange={handleChange}
+                    error={errors.CCCD}
+                  />
+                  <Input
+                    label="Ngày sinh"
+                    name="NgaySinh"
+                    type="date"
+                    value={formData.NgaySinh}
+                    onChange={handleChange}
+                    error={errors.NgaySinh}
+                  />
                   <div className="mb-4 text-white">
+                    <label className="mr-2">Giới tính:</label>
                     <select
                       name="GioiTinh"
                       value={formData.GioiTinh}
