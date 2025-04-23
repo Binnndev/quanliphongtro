@@ -33,6 +33,45 @@ export const getDsPhongByChuTro = async (maTK) => {
       return [];
     }
 };
+
+export const getDsPhongByNhaTro = async (nhaTroId) => {
+    // 1. Kiểm tra đầu vào
+    if (!nhaTroId) {
+      console.error("getDsPhongByNhaTro: Thiếu tham số nhaTroId.");
+      return []; // Trả về mảng rỗng nếu không có ID nhà trọ
+    }
+  
+    // 2. Chuẩn bị request (có thể cần xác thực)
+    const token = localStorage.getItem("token");
+    const config = {
+      headers: {},
+    };
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    } else {
+       console.warn("getDsPhongByNhaTro: Không tìm thấy token. API có thể yêu cầu xác thực.");
+    }
+  
+    // 3. Gọi API
+    const endpoint = `/api/houses/${nhaTroId}/rooms`; // Endpoint ví dụ, chỉnh lại nếu cần
+    console.log(`Gọi API: GET ${endpoint}`);
+    try {
+      // Sử dụng instance 'api' để có baseURL tự động
+      const response = await api.get(endpoint, config);
+  
+      // 4. Kiểm tra và trả về kết quả
+      if (response.status === 200 && Array.isArray(response.data)) {
+          console.log(`getDsPhongByNhaTro: Lấy thành công ${response.data.length} phòng cho nhà ${nhaTroId}.`);
+          return response.data;
+      } else {
+          console.warn(`getDsPhongByNhaTro: Response không hợp lệ cho nhà ${nhaTroId}. Status: ${response.status}`, response.data);
+          return [];
+      }
+    } catch (error) {
+      console.error(`getDsPhongByNhaTro: Lỗi khi gọi API lấy phòng cho nhà trọ ${nhaTroId}:`, error.response?.data || error.message);
+      return []; // Trả về mảng rỗng khi có lỗi
+    }
+  };
   
 export const getNhaTroByChuTro = async (maTK) => {
     if (!maTK) {

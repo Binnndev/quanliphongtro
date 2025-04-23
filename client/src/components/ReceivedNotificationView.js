@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns'; // Thư viện định dạng thời gian
 import vi from 'date-fns/locale/vi'; // Tiếng Việt cho date-fns
+import { getNhaTroByChuTro, getDsPhongByNhaTro } from '../services/phongService';
 
 // Component này nhận recipientId (là userId của người đang đăng nhập)
 const ReceivedNotificationView = ({ recipientId }) => {
@@ -22,6 +23,16 @@ const ReceivedNotificationView = ({ recipientId }) => {
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
     const debounceTimeoutRef = useRef(null);
 
+    const [houses, setHouses] = useState([]); // Danh sách nhà trọ
+    const [roomsInSelectedHouse, setRoomsInSelectedHouse] = useState([]); // Danh sách phòng trong nhà đã chọn
+    const [selectedHouseId, setSelectedHouseId] = useState(''); // ID nhà trọ đang lọc (' ' = tất cả)
+    const [selectedRoomId, setSelectedRoomId] = useState('');   // ID phòng đang lọc (' ' = tất cả)
+    const [loadingHouses, setLoadingHouses] = useState(false);
+    const [loadingRooms, setLoadingRooms] = useState(false);
+
+    const loaiTaiKhoan = localStorage.getItem("loaiTaiKhoan");
+    const isLandlordRecipient = loaiTaiKhoan === 'Chủ trọ';
+
     // --- Helper Functions ---
     const formatDateTime = (isoString) => {
         if (!isoString) return '';
@@ -35,9 +46,59 @@ const ReceivedNotificationView = ({ recipientId }) => {
         }
     };
 
+    // --- Fetch Houses (Chỉ chạy cho Chủ trọ) ---
+    useEffect(() => {
+        const fetchHousesForLandlord = async () => {
+            // Chỉ fetch nếu người xem là chủ trọ và có recipientId (MaTK của chủ trọ)
+            if (isLandlordRecipient && recipientId) {
+                setLoadingHouses(true);
+                try {
+                    // Sử dụng recipientId như là MaTK của chủ trọ để lấy nhà
+                    const fetchedHouses = await getNhaTroByChuTro(recipientId);
+                    setHouses(fetchedHouses || []);
+                    console.log("Fetched houses for landlord:", fetchedHouses);
+                } catch (err) {
+                    console.error("Lỗi khi tải danh sách nhà trọ:", err);
+                    setHouses([]);
+                } finally {
+                    setLoadingHouses(false);
+                }
+            } else {
+                setHouses([]); // Reset nếu không phải chủ trọ
+            }
+        };
+        fetchHousesForLandlord();
+    }, [recipientId, isLandlordRecipient]);
+
+    // --- Fetch Rooms khi Nhà trọ được chọn (Chỉ chạy cho Chủ trọ) ---
+    useEffect(() => {
+        const fetchRoomsForHouse = async () => {
+            // Chỉ fetch khi là chủ trọ VÀ đã chọn một nhà cụ thể (selectedHouseId có giá trị)
+            if (isLandlordRecipient && selectedHouseId) {
+                setLoadingRooms(true);
+                setRoomsInSelectedHouse([]); // Xóa danh sách phòng cũ
+                try {
+                    console.log(`Workspaceing rooms for house ID: ${selectedHouseId}`);
+                    // Gọi API lấy danh sách phòng theo MaNhaTro
+                    const fetchedRooms = await getDsPhongByNhaTro(selectedHouseId);
+                    setRoomsInSelectedHouse(fetchedRooms || []);
+                    console.log("Fetched rooms:", fetchedRooms);
+                } catch (err) {
+                    console.error(`Lỗi khi tải phòng cho nhà ${selectedHouseId}:`, err);
+                    setRoomsInSelectedHouse([]);
+                } finally {
+                    setLoadingRooms(false);
+                }
+            } else {
+                setRoomsInSelectedHouse([]); // Xóa danh sách phòng nếu chọn "Tất cả nhà trọ"
+            }
+        };
+        fetchRoomsForHouse();
+    }, [selectedHouseId, isLandlordRecipient]);
+
     // --- Fetch Received Notifications (Đã sửa API endpoint) ---
     // Sử dụng useCallback tương tự như code gốc bạn cung cấp
-    const fetchReceivedNotifications = useCallback(async (userId, page, pageSize, search) => {
+    const fetchReceivedNotifications = useCallback(async (userId, page, pageSize, search, houseFilterId, roomFilterId) => {
         if (!userId) { setError("Lỗi: Không xác định được người nhận."); setIsLoading(false); return; }
         console.log(`Workspaceing RECEIVED notifications for User ID (MaTK): ${userId}, Page: ${page}, Limit: ${pageSize}, Search: "${search}"`);
         setIsLoading(true); setError('');
@@ -46,7 +107,10 @@ const ReceivedNotificationView = ({ recipientId }) => {
                 params: {
                     page: page,
                     limit: pageSize,
-                    search: search || undefined
+                    search: search || undefined,
+                    loaiTaiKhoan: loaiTaiKhoan,
+                    nhaTroId: houseFilterId || undefined,
+                    phongId: roomFilterId || undefined
                 }
             });
 
@@ -73,7 +137,7 @@ const ReceivedNotificationView = ({ recipientId }) => {
     // Lưu ý: useCallback với dependency rỗng [] có thể gây vấn đề stale state nếu hàm này
     // phụ thuộc gián tiếp vào state/props khác không được truyền vào.
     // Cân nhắc refactor dùng useEffect lồng hàm fetch như đề xuất trước đó.
-    }, [currentPage]); // Chỉ thêm currentPage để lấy đúng khi trang thay đổi sau khi fetch lỗi/reset
+    }, [currentPage, loaiTaiKhoan]); // Chỉ thêm currentPage để lấy đúng khi trang thay đổi sau khi fetch lỗi/reset
 
 
     // --- Effect cho Debouncing Search Term (Giữ nguyên) ---
@@ -89,15 +153,29 @@ const ReceivedNotificationView = ({ recipientId }) => {
         return () => { if (debounceTimeoutRef.current) { clearTimeout(debounceTimeoutRef.current); } };
     }, [searchTerm, debouncedSearchTerm]);
 
-    // --- Effect chính để Fetch Data (Giữ nguyên, chỉ đổi tên hàm gọi) ---
+    // --- Effect chính để Fetch Data (Thêm filter IDs vào dependencies) ---
     useEffect(() => {
         if (recipientId) {
-            fetchReceivedNotifications(recipientId, currentPage, limit, debouncedSearchTerm);
+             // <<< Truyền thêm selectedHouseId và selectedRoomId >>>
+            fetchReceivedNotifications(recipientId, currentPage, limit, debouncedSearchTerm, selectedHouseId, selectedRoomId);
         }
-         // Đóng các mục đang mở rộng khi chuyển trang hoặc tìm kiếm
-         setExpandedNotificationId(null);
-    }, [recipientId, currentPage, limit, debouncedSearchTerm, fetchReceivedNotifications]); // fetchReceivedNotifications là dependency
+        setExpandedNotificationId(null);
+    // <<< Thêm filter IDs vào dependencies >>>
+    }, [recipientId, currentPage, limit, debouncedSearchTerm, selectedHouseId, selectedRoomId, fetchReceivedNotifications]);
 
+    // --- Handlers cho Filter Dropdowns ---
+    const handleHouseFilterChange = (event) => {
+        const newHouseId = event.target.value;
+        setSelectedHouseId(newHouseId);
+        setSelectedRoomId(''); // Reset bộ lọc phòng khi nhà thay đổi
+        setCurrentPage(1);    // Reset về trang 1 khi đổi filter
+    };
+
+    const handleRoomFilterChange = (event) => {
+        const newRoomId = event.target.value;
+        setSelectedRoomId(newRoomId);
+        setCurrentPage(1); // Reset về trang 1 khi đổi filter
+    };
 
     // --- Mark single notification as read (Giữ nguyên API endpoint) ---
     const markNotificationAsReadAPI = async (notificationId) => {
@@ -235,7 +313,54 @@ const ReceivedNotificationView = ({ recipientId }) => {
                          {isMarkingAll ? 'Đang xử lý...' : 'Đánh dấu tất cả đã đọc'}
                      </button>
                  )}
-             </div>
+            </div>
+            
+            {/* === KHU VỰC FILTER (Chỉ hiển thị cho Chủ trọ) === */}
+            {isLandlordRecipient && (
+                <div style={{ display: 'flex', gap: '20px', marginBottom: '20px', flexWrap: 'wrap', padding: '15px', background: '#fdfdfd', border: '1px solid #eee', borderRadius: '6px' }}>
+                    {/* House Filter */}
+                    <div style={{ flex: 1, minWidth: '200px' }}>
+                        <label htmlFor="house-filter" style={{ display: 'block', marginBottom: '5px', fontSize: '0.9em', color: '#555', fontWeight: '500' }}>Nhà trọ:</label>
+                        <select
+                            id="house-filter"
+                            value={selectedHouseId}
+                            onChange={handleHouseFilterChange}
+                            disabled={loadingHouses || isLoading} // Disable khi đang tải nhà hoặc tải thông báo
+                            style={{ width: '100%', padding: '8px 10px', border: '1px solid #ccc', borderRadius: '4px', background: 'white' }}
+                        >
+                            <option value="">-- Tất cả nhà trọ --</option>
+                            {houses.map(house => (
+                                <option key={house.MaNhaTro} value={house.MaNhaTro}>
+                                    {house.TenNhaTro || `Nhà ${house.MaNhaTro}`}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Room Filter */}
+                    <div style={{ flex: 1, minWidth: '200px' }}>
+                         <label htmlFor="room-filter" style={{ display: 'block', marginBottom: '5px', fontSize: '0.9em', color: '#555', fontWeight: '500' }}>Phòng:</label>
+                         <select
+                             id="room-filter"
+                             value={selectedRoomId}
+                             onChange={handleRoomFilterChange}
+                             disabled={!selectedHouseId || loadingRooms || isLoading} // Disable khi chưa chọn nhà hoặc đang tải
+                             style={{ width: '100%', padding: '8px 10px', border: '1px solid #ccc', borderRadius: '4px', background: !selectedHouseId ? '#eee' : 'white' }}
+                         >
+                             <option value="">-- Tất cả phòng --</option>
+                             {/* Chỉ hiển thị phòng khi loadingRooms=false và có phòng */}
+                             {!loadingRooms && roomsInSelectedHouse.map(room => (
+                                 <option key={room.MaPhong} value={room.MaPhong}>
+                                     {room.TenPhong || `Phòng ${room.MaPhong}`}
+                                 </option>
+                             ))}
+                             {/* Hiển thị loading nếu đang tải phòng */}
+                             {loadingRooms && <option disabled>Đang tải phòng...</option>}
+                         </select>
+                     </div>
+                </div>
+            )}
+            {/* ================================ */}
 
              {/* === Ô Tìm Kiếm === */}
              <div style={searchContainerStyle}>
@@ -283,6 +408,17 @@ const ReceivedNotificationView = ({ recipientId }) => {
                                          <span style={{ color: '#555', fontWeight: 'normal', fontSize:'0.9rem' }}>Từ: </span>
                                          {noti.SenderName || 'Không rõ'}
                                          <br />
+                                         {loaiTaiKhoan === 'Chủ trọ' && (
+                                             <div>
+                                                 <span style={{ color: '#555', fontWeight: 'normal', fontSize: '0.9rem' }}> Nhà trọ: </span>
+                                            {noti.SenderAccount.Tenants[0].Room.RentalHouse.TenNhaTro || 'Không rõ'}
+                                            <br />
+                                            <span style={{ color: '#555', fontWeight: 'normal', fontSize: '0.9rem' }}> Phòng: </span>
+                                            {noti.SenderAccount.Tenants[0].Room.TenPhong || 'Không rõ'}
+                                         <br />
+                                            </div>
+                         )}
+                                            {/* *** HIỂN THỊ TIÊU ĐỀ *** */}
                                          <span style={{ color: '#888', fontWeight: 'normal', fontSize:'0.9rem' }}> Tiêu đề: </span>
                                          {noti.TieuDe}
                                      </h5>

@@ -102,10 +102,10 @@ exports.getLandlordAccountForTenant = async (req, res) => {
                         model: Landlord,
                         as: 'Landlord',
                         required: true,
-                        attributes: ['MaChuTro', 'MaTK'], // Lấy các khóa cần thiết
+                        attributes: ['MaChuTro', 'MaTK', 'HoTen'], // Lấy các khóa cần thiết
                         include: [{ // Level 4: Landlord -> User
                             model: TaiKhoan,
-                            // as: 'User',
+                            as: 'Account',
                             required: true,
                             attributes: ['MaTK', 'TenDangNhap'] // Lấy thông tin User chủ trọ
                         }]
@@ -131,7 +131,7 @@ exports.getLandlordAccountForTenant = async (req, res) => {
         }
 
         // Kiểm tra chuỗi liên kết dữ liệu
-        const landlordUser = tenant.Room?.RentalHouse?.Landlord?.TaiKhoan;
+        const landlordUser = tenant.Room?.RentalHouse?.Landlord?.Account;
 
         if (!landlordUser) {
             // Log 4b: Tìm thấy Tenant nhưng chuỗi liên kết bị đứt hoặc dữ liệu lồng nhau bị thiếu
@@ -153,7 +153,8 @@ exports.getLandlordAccountForTenant = async (req, res) => {
         // Trả về kết quả thành công
         res.status(200).json({
             MaTK: landlordUser.MaTK,
-            TenDangNhap: landlordUser.TenDangNhap
+            TenDangNhap: landlordUser.TenDangNhap,
+            HoTen: tenant.Room.RentalHouse.Landlord.HoTen
         });
 
     } catch (error) {

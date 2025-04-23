@@ -95,7 +95,7 @@ const NotificationManagementPage = () => {
                     </div>
 
                     {/* Tab Content Area */}
-                    <div style={{ flexGrow: 1, overflowY: 'auto', padding: '20px' }}> {/* Thêm padding cho nội dung tab */}
+                    <div style={{ flexGrow: 1, overflowY: 'auto', height: '0px', padding: '20px' }}> {/* Thêm padding cho nội dung tab */}
                         {activeTab === 'received' && (
                             <ReceivedNotificationView recipientId={userId} /> // <<== COMPONENT MỚI
                         )}

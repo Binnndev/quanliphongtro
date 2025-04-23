@@ -12,6 +12,12 @@ const Sidebar = ({ onSelectPage, currentPage }) => {
     return (
         // Bỏ style cố định chiều cao nếu muốn sidebar co giãn theo nội dung
         <div style={{ width: 384, /* height: 912, */ background: '#1B2428' }}>
+            <SidebarItem
+                title="Home" // Trang chủ/Dashboard tùy loại TK
+                inconName='fa-solid fa-house'
+                isActive={currentPage === "home"}
+                onClick={() => onSelectPage("home")}
+            />
             {/* Mục chỉ có Chủ trọ thấy */}
             {loaiTaiKhoan === "Chủ trọ" && (
                 <>
@@ -31,12 +37,7 @@ const Sidebar = ({ onSelectPage, currentPage }) => {
             )}
 
             {/* Mục chung cho cả hai */}
-            <SidebarItem
-                title="Home" // Trang chủ/Dashboard tùy loại TK
-                inconName='fa-solid fa-house'
-                isActive={currentPage === "home"}
-                onClick={() => onSelectPage("home")}
-            />
+            
             {loaiTaiKhoan === "Khách thuê" && (
                 <SidebarItem
                     title="Thông Tin Thuê" // Hoặc "Hồ sơ thuê"

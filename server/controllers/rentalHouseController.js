@@ -1,4 +1,4 @@
-const { Landlord, RentalHouse } = require('../models'); // Assuming you have a House model
+const { Landlord, RentalHouse, Room, RoomType, Tenant } = require('../models'); // Assuming you have a House model
 
 exports.getAllHouses = async (req, res) => {
   try {
@@ -35,6 +35,78 @@ exports.getHouseByName = async (req, res) => {
     res.status(500).json({ message: "Error fetching house", error });
   }
 };
+
+exports.getRoomsByHouse = async (req, res) => {
+    const nhaTroId = req.params.nhaTroId; // Lấy ID nhà trọ từ URL params
+    const requestingUserId = req.userId; // Lấy MaTK của người dùng đang request (từ middleware xác thực)
+
+    // --- Kiểm tra đầu vào ---
+    if (!nhaTroId || isNaN(parseInt(nhaTroId))) {
+        return res.status(400).json({ message: "ID Nhà trọ không hợp lệ." });
+    }
+    if (!requestingUserId) {
+         // Điều này không nên xảy ra nếu có middleware xác thực chạy trước
+        return res.status(401).json({ message: "Yêu cầu xác thực không thành công." });
+    }
+    // -----------------------
+
+    try {
+        // --- KIỂM TRA QUYỀN TRUY CẬP ---
+        // Lấy thông tin nhà trọ để biết chủ sở hữu
+        const house = await RentalHouse.findByPk(nhaTroId, {
+             attributes: ['MaChuTro'] // Chỉ cần lấy MaChuTro để kiểm tra quyền
+        });
+
+        if (!house) {
+            return res.status(404).json({ message: "Nhà trọ không tồn tại." });
+        }
+
+        // *** Quan trọng: Logic kiểm tra quyền sở hữu ***
+        // Giả định 1: NhaTro.MaChuTro lưu trực tiếp MaTK của TaiKhoan chủ trọ
+        // if (house.MaChuTro !== requestingUserId) {
+        //     return res.status(403).json({ message: "Bạn không có quyền xem phòng của nhà trọ này." });
+        // }
+
+        // Giả định 2: NhaTro.MaChuTro lưu MaChuTro từ bảng Landlord, cần liên kết TaiKhoan -> Landlord
+         const landlordProfile = await Landlord.findOne({ where: { MaTK: requestingUserId }, attributes: ['MaChuTro'] });
+         if (!landlordProfile || house.MaChuTro !== landlordProfile.MaChuTro) {
+              return res.status(403).json({ message: "Bạn không có quyền xem phòng của nhà trọ này." });
+         }
+         // *** Chọn 1 trong 2 giả định trên hoặc điều chỉnh theo cấu trúc DB của bạn ***
+         // --------------------------------
+
+        // --- Lấy danh sách phòng ---
+        const rooms = await Room.findAll({
+            where: { MaNhaTro: nhaTroId }, // Lọc theo ID nhà trọ
+            include: [
+                {
+                    model: RoomType,
+                    // as: 'RoomType', // Thêm alias nếu bạn định nghĩa trong association
+                    attributes: ['TenLoai', 'Gia', 'DienTich', 'SoNguoiToiDa'], // Lấy các trường cần thiết của loại phòng
+                    required: false // Dùng LEFT JOIN, phòng vẫn hiển thị dù chưa có loại phòng (nên có)
+                },
+                {
+                     model: Tenant,
+                     // as: 'Tenants', // Thêm alias nếu bạn định nghĩa
+                     attributes: ['MaKhachThue', 'HoTen', 'LaNguoiDaiDien'], // Lấy thông tin cơ bản khách thuê
+                     required: false // Dùng LEFT JOIN, phòng vẫn hiển thị dù chưa có khách
+                     // Có thể thêm include TaiKhoan của Tenant nếu cần thêm thông tin từ đó
+                }
+            ],
+            order: [
+                ['TenPhong', 'ASC'] // Sắp xếp theo tên phòng A-Z (hoặc theo tiêu chí khác)
+            ]
+        });
+
+        console.log(`✅ API: Fetched ${rooms.length} rooms for house ${nhaTroId}`);
+        res.status(200).json(rooms); // Trả về mảng các phòng
+
+    } catch (error) {
+        console.error(`❌ API Error: Error fetching rooms for house ${nhaTroId}:`, error);
+        res.status(500).json({ message: "Lỗi máy chủ khi lấy danh sách phòng." });
+    }
+};
+
 
 exports.getHouseByLandlord = async (req, res) => {
     const landlordUserId = req.params.landlordId; // This is the MaTK from the User account

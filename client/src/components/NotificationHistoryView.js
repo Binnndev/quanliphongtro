@@ -20,6 +20,8 @@ const NotificationHistoryView = ({ senderId }) => {
     const debounceTimeoutRef = useRef(null); // Để lưu timeout ID
     // =========================
 
+    const loaiTaiKhoan = localStorage.getItem("loaiTaiKhoan");
+
     // --- Fetch Notifications (Thêm tham số search) ---
     const fetchHistory = useCallback(async (userId, page, pageSize, search) => {
         if (!userId) return;
@@ -34,7 +36,8 @@ const NotificationHistoryView = ({ senderId }) => {
                 params: {
                     page: page,
                     limit: pageSize,
-                    search: search || undefined // Chỉ gửi nếu có giá trị search
+                    search: search || undefined, // Chỉ gửi nếu có giá trị search
+                    loaiTaiKhoan: loaiTaiKhoan // Gửi loại tài khoản nếu cần
                 }
             });
 
