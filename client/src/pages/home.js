@@ -64,7 +64,7 @@ const modalActionsStyle = {
 
 
 // Receive selectedHouseId as a prop
-const Home = ({ selectedHouseId, setPage, setSelectedRoomIdForTenant }) => {
+const Home = ({ selectedHouseId, setPage, setSelectedRoomIdForTenant, landlordId }) => {
     const navigate = useNavigate(); // Initialize useNavigate
 
     console.log("Home component received selectedHouseId PROP:", selectedHouseId);
@@ -85,6 +85,7 @@ const Home = ({ selectedHouseId, setPage, setSelectedRoomIdForTenant }) => {
         TrangThai: 'Còn phòng', // Default status
         MaNhaTro: '', // Will be set when opening modal
         MaLoaiPhong: '',
+        MaChuTro: '',
         GhiChu: ''
     });
     const [isSubmitting, setIsSubmitting] = useState(false); // Loading state for form submission
@@ -215,6 +216,7 @@ const Home = ({ selectedHouseId, setPage, setSelectedRoomIdForTenant }) => {
                 TrangThai: roomData.TrangThai || 'Còn phòng',
                 MaNhaTro: roomData.MaNhaTro, // Keep existing MaNhaTro
                 GhiChu: roomData.GhiChu || '',
+                MaChuTro: landlordId
             });
         } else { // Add mode or fallback
             setCurrentRoom(null);
@@ -227,6 +229,7 @@ const Home = ({ selectedHouseId, setPage, setSelectedRoomIdForTenant }) => {
                 MaNhaTro: selectedHouseId, // Set the current house ID
                 MaLoaiPhong: '',
                 GhiChu: '',
+                MaChuTro: landlordId
             });
         }
         setIsModalOpen(true);
@@ -236,7 +239,7 @@ const Home = ({ selectedHouseId, setPage, setSelectedRoomIdForTenant }) => {
         setIsModalOpen(false);
         setCurrentRoom(null);
         setFormData({ // Reset form
-            TenPhong: '', DienTich: '', GiaPhong: '', TrangThai: 'Còn phòng', MaNhaTro: '', MaLoaiPhong: ''
+            TenPhong: '', DienTich: '', GiaPhong: '', TrangThai: 'Còn phòng', MaNhaTro: '', MaLoaiPhong: '', MaChuTro: ''
         });
         setError(null); // Clear any form errors
     };
@@ -289,6 +292,7 @@ const Home = ({ selectedHouseId, setPage, setSelectedRoomIdForTenant }) => {
             GhiChu: formData.GhiChu,
             MaNhaTro: formData.MaNhaTro,
             MaLoaiPhong: formData.MaLoaiPhong, // <<<<<<<<<< GỬI MaLoaiPhong
+            MaChuTro: landlordId
         };
         // Không cần gửi DienTich, GiaPhong nếu backend lấy từ MaLoaiPhong
 

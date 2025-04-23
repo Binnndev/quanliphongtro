@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import UserIcon from "./UserIcon";
 import {
   PieChart,
   Pie,
@@ -46,7 +47,20 @@ const ThongKe = () => {
 
   const pieColors = ["#00B894", "#FFA500"];
 
-  return (
+    return (
+        <div style={{ display: "flex", height: '100vh', position: 'fixed', top:0, justifyContent: 'center', width: "100%", overflow: 'hidden' }}>
+        {/* Sidebar */}
+        
+
+        
+
+        {/* Right Content Area */}
+        <div style={{ width: '80%', display: 'flex', flexDirection: 'column', position: 'relative', background: '#F4F4F4' }}>
+             {/* Fixed Header */}
+              <div style={{ height: 83, width: 'calc(80% - 0px)', background: 'white', borderBottom: '1px #D2D2D2 solid', display: "flex", justifyContent: 'space-between', alignItems: "center", position: 'fixed', top: 0, right: 0, zIndex: 10 }}>
+                  <p style={{ fontSize: '1.5rem', fontWeight: 'bold', marginLeft: 20 }}>Thống kê</p>
+                  <div style={{ marginRight: '20px' }}> <UserIcon /> </div>
+              </div>
     <div className="thongke" style={{ width: "100%", display: "flex", flexDirection: "column" }}>
       {/* <h2 className="thongke__title">
         <i className="fas fa-chart-pie" /> Thống kê
@@ -161,7 +175,9 @@ const ThongKe = () => {
           </table>
         </div>
       </div>
-    </div>
+                </div>
+            </div>
+        </div>
   );
 };
 

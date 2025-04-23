@@ -10,6 +10,7 @@ const MembersTabContent = ({ members, onAddMemberClick, onEditMemberClick, onDel
     const navigate = useNavigate(); // Vẫn giữ nếu cần cho việc khác
     const loaiTaiKhoan = localStorage.getItem("loaiTaiKhoan"); // Lấy loại tài khoản từ localStorage nếu cần
 
+    console.log("MembersTabContent RECEIVED props.members:", members); // Log received prop
     // Gọi prop function thay vì xử lý trực tiếp
     const handleAddMember = () => {
         console.log("MembersTabContent: Nút Thêm được nhấn."); // Kiểm tra 1: Nút có hoạt động không?

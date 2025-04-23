@@ -195,7 +195,7 @@ exports.createRoom = async (req, res) => {
         MaLoaiPhong,
         TrangThai = 'Còn phòng', // Gán giá trị mặc định nếu frontend không gửi
         GhiChu = null,
-        maChuTro// Mô tả có thể là null
+        MaChuTro// Mô tả có thể là null
     } = req.body;
 
     // Kiểm tra các trường bắt buộc
@@ -218,7 +218,7 @@ exports.createRoom = async (req, res) => {
         const nhaTro = await RentalHouse.findOne({
             where: {
                 MaNhaTro: MaNhaTro,
-                MaChuTro: maChuTro // Quan trọng: Đảm bảo nhà trọ này là của chủ trọ hiện tại
+                MaChuTro: MaChuTro // Quan trọng: Đảm bảo nhà trọ này là của chủ trọ hiện tại
             }
         });
 

@@ -64,7 +64,7 @@ router.delete("/delete/:id", tenantController.deleteTenant);
 // ⭐⭐⭐ ROUTE MỚI: Đổi người đại diện ⭐⭐⭐
 // Dùng PATCH vì đây là hành động cập nhật trạng thái của nhiều bản ghi liên quan
 router.patch(
-    "/change-representative", // Sử dụng body để gửi roomId và newRepresentativeId
+    "/change-representative/:roomId/:newRepresentativeId", // Sử dụng body để gửi roomId và newRepresentativeId
     tenantController.changeRoomRepresentative
 );
 

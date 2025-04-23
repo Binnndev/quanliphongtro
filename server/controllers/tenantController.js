@@ -368,7 +368,8 @@ exports.deleteTenant = async (req, res) => {
 // ⭐⭐⭐ HÀM MỚI: Thay đổi người đại diện phòng ⭐⭐⭐
 exports.changeRoomRepresentative = async (req, res) => {
     // Lấy roomId và ID người mới từ body như frontend gửi lên
-    const { roomId, newRepresentativeId } = req.body; // Đổi tên key cho khớp frontend
+    const roomId = req.params.roomId;
+    const newRepresentativeId = req.params.newRepresentativeId; // ID của người đại diện mới
     let transaction;
 
     console.log(`[API Change Rep] Request received: Room ID=${roomId}, New Rep ID=${newRepresentativeId}`);

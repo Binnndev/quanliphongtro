@@ -654,7 +654,7 @@ const Homepage = () => {
                             }}
                         >
                             {page === "home" && loaiTaiKhoan === "Chủ trọ" && <Home selectedHouseId={selectedHouseId} setPage={setPage}
-                                setSelectedRoomIdForTenant={setSelectedRoomIdForTenant} />}
+                                setSelectedRoomIdForTenant={setSelectedRoomIdForTenant} landlordId={MaChuTro} />}
                             {page === "home" && loaiTaiKhoan === "Khách thuê" && <TenantDashboard onSelectPage={setPage} />}
                             {page === "loaiPhong" && loaiTaiKhoan === "Chủ trọ" && (
                             <RoomTypeIndex

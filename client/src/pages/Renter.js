@@ -81,6 +81,10 @@ const RenterPage = ({ roomId, setPage }) => {
        }
     }, [roomId]);
 
+    useEffect(() => {
+        console.log("RenterPage STATE UPDATE: membersData changed to:", membersData);
+    }, [membersData]);
+
     const [isLoading, setIsLoading] = useState(true);
     const maxOccupancy = roomData?.RoomType?.SoNguoiToiDa;
 
@@ -182,111 +186,123 @@ const RenterPage = ({ roomId, setPage }) => {
    };
     // ----------------------------------------------------
 
-    const handleSaveMember = async (memberFormData, isEditMode, selectedDocPhoto) => {
-        const endpoint = isEditMode ? `/api/tenants/update/${editingMember.MaKhachThue}` : '/api/tenants/add';
-        const method = isEditMode ? 'PATCH' : 'POST';
+    const handleSaveMember = async (memberFormData, isEditMode) => { // Loại bỏ selectedDocPhoto vì không dùng trực tiếp ở đây
 
-        console.log(`🚀 [${method}] Calling endpoint: ${endpoint}`);
+        // Xác định ID thành viên cần cập nhật (chỉ khi sửa)
+        const memberIdToUpdate = isEditMode ? (editingMember?.MaKhachThue || editingMember?.id) : null;
 
-        console.log("--- Debugging Edit Save ---");
-console.log("Editing Member State:", editingMember); // Kiểm tra toàn bộ object
-console.log("ID being used for endpoint:", editingMember?.MaKhachThue); // Kiểm tra ID
-console.log("Endpoint URL constructed:", endpoint); // Kiểm tra URL cuối cùng
-console.log("HTTP Method:", method); // Kiểm tra phương thức
-console.log("Data being sent:", Object.fromEntries(memberFormData)); // Xem dữ liệu gửi đi (lưu ý: file sẽ không hiển thị trực tiếp)
+        // Kiểm tra ID nếu đang ở chế độ sửa
+        if (isEditMode && !memberIdToUpdate) {
+            console.error("RenterPage - Lỗi khi sửa: Không tìm thấy ID của thành viên đang sửa trong state 'editingMember'.");
+            alert("Lỗi: Không thể xác định thành viên cần cập nhật.");
+            return; // Ngăn chặn gọi API
+        }
 
+        // Xác định endpoint và method dựa trên chế độ
+        const endpoint = isEditMode ? `/api/tenants/update/${memberIdToUpdate}` : '/api/tenants/add';
+        const method = isEditMode ? 'PATCH' : 'POST'; // Dùng PATCH cho update
+
+        console.log(`RenterPage: Chuẩn bị gọi ${method} ${endpoint}`);
+        // Log dữ liệu FormData một cách an toàn (không hiển thị file trực tiếp)
+        console.log("RenterPage: Dữ liệu gửi đi (FormData entries):", Object.fromEntries(memberFormData));
 
         try {
             // --- Gọi API Thực Tế ---
-            console.log("📡 Chuẩn bị gọi API...");
             const response = await axios({
-                 method: method,
-                 url: endpoint,
-                 data: memberFormData,
-                 headers: { 'Content-Type': 'multipart/form-data' }
+                method: method,
+                url: endpoint,
+                data: memberFormData, // Gửi FormData
+                headers: {
+                   'Content-Type': 'multipart/form-data',
+                    // Thêm header Authorization nếu API yêu cầu
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
             });
-            console.log("✅ API Response Status:", response.status);
-            console.log("✅ API Response Data (Raw):", response.data);
 
-            const savedDataFromApi = response.data;
-            if (!savedDataFromApi) {
-                 console.error("‼️ Dữ liệu trả về từ API trống!");
-                 throw new Error("Dữ liệu trả về từ API trống!"); // Dừng lại nếu API không trả về gì
+            console.log("✅ RenterPage - API Response Status:", response.status);
+            console.log("✅ RenterPage - API Response Data (Raw):", response.data);
+
+            // Giả sử backend trả về object tenant đã lưu/cập nhật
+            const savedDataFromApi = response.data?.tenant || response.data; // Kiểm tra nếu backend gói trong key 'tenant'
+
+            // --- KIỂM TRA DỮ LIỆU TRẢ VỀ TỪ API ---
+            if (!savedDataFromApi || typeof savedDataFromApi !== 'object' || !savedDataFromApi.MaKhachThue) {
+                console.error("‼️ RenterPage - Dữ liệu trả về từ API không hợp lệ hoặc thiếu MaKhachThue!", savedDataFromApi);
+                throw new Error("Dữ liệu trả về từ máy chủ không hợp lệ sau khi lưu thành viên."); // Ném lỗi để dừng
             }
-            console.log("📝 Dữ liệu thật sự từ API:", savedDataFromApi);
+            console.log("📝 RenterPage - Dữ liệu thành viên đã lưu từ API:", savedDataFromApi);
 
-            // --- Xử lý dữ liệu THẬT từ API ---
-            console.log("🔄 Chuẩn bị định dạng dữ liệu THẬT...");
-            // Map dữ liệu từ API (savedDataFromApi) sang cấu trúc cần thiết cho state/UI
-            // Đảm bảo các trường cần thiết cho bảng (ví dụ: id, name) có mặt
+            // --- Format lại dữ liệu để nhất quán với state (nếu cần) ---
+            // Đảm bảo có 'id' và các trường khác cần cho bảng hiển thị
             const formattedMember = {
-                // Lấy các trường trực tiếp từ API response nếu tên khớp
                 ...savedDataFromApi,
-                // Map hoặc đảm bảo các trường quan trọng cho UI tồn tại
-                id: savedDataFromApi.MaKhachThue || savedDataFromApi.id, // Ưu tiên MaKhachThue nếu có, lấy ID thật
-                name: savedDataFromApi.HoTen, // Map HoTen sang name để hiển thị nhất quán
-                cccd: savedDataFromApi.CCCD,
-                phone: savedDataFromApi.SoDienThoai,
-                email: savedDataFromApi.Email,
-                dob: savedDataFromApi.NgaySinh, // Giữ nguyên hoặc format lại ngày nếu cần hiển thị khác
-                gender: savedDataFromApi.GioiTinh,
-                notes: savedDataFromApi.GhiChu,
-                // Xác định trạng thái ảnh dựa trên tên file trả về từ API
-                photo: savedDataFromApi.AnhGiayTo ? 'Có' : 'Không', // Cập nhật trạng thái ảnh đúng
-                documentPhotoName: savedDataFromApi.AnhGiayTo || '', // Lưu tên file ảnh thật
+                id: savedDataFromApi.MaKhachThue, // <<< Quan trọng: Dùng MaKhachThue làm id chính
+                // Các trường khác có thể đã được backend trả về đúng tên hoặc cần map lại ở đây
+                HoTen: savedDataFromApi.HoTen,
+                CCCD: savedDataFromApi.CCCD,
+                SoDienThoai: savedDataFromApi.SoDienThoai,
+                Email: savedDataFromApi.Email,
+                NgaySinh: savedDataFromApi.NgaySinh,
+                GioiTinh: savedDataFromApi.GioiTinh,
+                GhiChu: savedDataFromApi.GhiChu,
+                MaPhong: savedDataFromApi.MaPhong, // Giữ lại MaPhong nếu cần
+                MaTK: savedDataFromApi.MaTK,     // Giữ lại MaTK nếu cần
+                // Không cần lưu lại Room, RentalHouse,... trừ khi bảng cần trực tiếp
             };
-            console.log("👍 Dữ liệu THẬT đã định dạng:", formattedMember);
+            console.log("👍 RenterPage - Dữ liệu đã format để cập nhật state:", formattedMember);
 
-            // --- Xóa bỏ khối code giả lập ở đây ---
-            // KHÔNG CÒN KHỐI GIẢ LẬP NỮA
-
-            // --- Cập nhật state với dữ liệu THẬT ---
-            console.log("🔄 Chuẩn bị cập nhật state với dữ liệu THẬT:", formattedMember);
+            // --- CẬP NHẬT STATE membersData ---
+            console.log("🔄 RenterPage - Chuẩn bị cập nhật state membersData...");
             if (isEditMode) {
                 console.log("   -> Cập nhật state (chế độ sửa)...");
-                 // Cập nhật logic sửa nếu cần, dùng formattedMember
-                 setMembersData(prevMembers => prevMembers.map(m => m.MaKhachThue === formattedMember.MaKhachThue ? formattedMember : m));
-            } else {
-                 console.log("   -> Cập nhật state (chế độ thêm mới)...");
-                 setMembersData(prevMembers => {
-                     console.log("      -> State cũ:", prevMembers);
-                     // *** Thêm dữ liệu THẬT đã format vào state ***
-                     const newState = [...prevMembers, formattedMember];
-                     console.log("      -> State mới (dự kiến):", newState);
-                     return newState;
-                 });
+                setMembersData(prevMembers => {
+                    console.log("   -> State trước khi sửa (prevMembers):", prevMembers);
+                    const updated = prevMembers.map(m => {
+                        // So sánh bằng MaKhachThue (ID chính)
+                        const oldId = String(m.MaKhachThue || m.id);
+                        const newId = String(formattedMember.MaKhachThue); // formattedMember đảm bảo có MaKhachThue
+                        console.log(`   -> So sánh: oldId=<span class="math-inline">\{oldId\} vs newId\=</span>{newId}`);
+                        if (oldId === newId) {
+                             console.log(`   -> Match found! Thay thế bằng:`, formattedMember);
+                             return formattedMember; // <<< Trả về object MỚI đã format
+                        } else {
+                             return m; // Giữ nguyên object cũ
+                        }
+                    });
+                    console.log("   -> State sau khi sửa (kết quả map):", updated);
+                    return updated; // Trả về mảng mới
+                });
+            } else { // Chế độ Thêm mới
+                console.log("   -> Cập nhật state (chế độ thêm mới)...");
+                setMembersData(prevMembers => {
+                     console.log("   -> State trước khi thêm (prevMembers):", prevMembers);
+                    // Thêm thành viên mới vào cuối mảng
+                    const added = [...prevMembers, formattedMember];
+                    console.log("   -> State sau khi thêm:", added);
+                    return added; // Trả về mảng mới
+                });
             }
-            console.log("🟢 Đã gọi setMembersData.");
+            console.log("🟢 RenterPage - Đã gọi setMembersData.");
 
-            // --- Các bước tiếp theo ---
-            console.log("🔔 Chuẩn bị hiển thị alert thành công...");
+            // --- Thông báo và đóng form ---
             alert(`Đã ${isEditMode ? 'cập nhật' : 'thêm'} thành viên thành công!`);
-            console.log("👍 Đã hiển thị alert.");
+            handleCloseMemberForm(); // Đóng form sau khi thành công
 
-            console.log("🚪 Chuẩn bị đóng form...");
-            handleCloseMemberForm();
-            console.log("🔒 Đã gọi handleCloseMemberForm.");
-
-            console.log("🎉 Xử lý thành công hoàn tất trong try block.");
-
-        } catch (error) {
-            console.error("❌ Lỗi gốc bị bắt trong handleSaveMember:", error);
-            let displayMessage = "Đã xảy ra lỗi khi xử lý dữ liệu.";
-            if (error.response) {
+        } catch (error) { // Bắt lỗi từ axios hoặc lỗi ném ra ở trên
+            console.error("❌ RenterPage - Lỗi trong quá trình handleSaveMember:", error);
+            let displayMessage = "Đã xảy ra lỗi khi lưu thông tin thành viên.";
+            if (error.response) { // Lỗi từ phản hồi API
                 console.error("❌ Dữ liệu lỗi từ server:", error.response.data);
-                console.error("❌ Status lỗi từ server:", error.response.status);
-                displayMessage = error.response.data?.message || `Lỗi ${error.response.status} từ server`;
-            } else if (error.request) {
-                 console.error("❌ Không nhận được phản hồi:", error.request);
-                 displayMessage = "Không nhận được phản hồi từ máy chủ.";
-            } else {
-                 console.error('❌ Lỗi khác trong quá trình xử lý:', error.message);
-                 displayMessage = error.message || displayMessage;
+                displayMessage = error.response.data?.message || `Lỗi ${error.response.status} từ máy chủ.`;
+            } else { // Lỗi khác (validation, logic, network...)
+                displayMessage = error.message || displayMessage;
             }
             alert(`Lỗi: ${displayMessage}`);
-            console.log(`(Log tại catch) Đã rơi vào catch với lỗi: ${displayMessage}`);
+            // Không đóng form nếu có lỗi để người dùng có thể sửa
         }
+        // Không cần finally setIsLoading ở đây vì state đó thuộc về MemberForm
     };
+    // --- KẾT THÚC HÀM LƯU THÀNH VIÊN ---
     // --- Kết thúc hàm xử lý Member Form ---
 
     // --- HÀM XỬ LÝ XÓA (CẬP NHẬT TRẠNG THÁI) ---
